@@ -1,19 +1,18 @@
 from time import sleep
 import sys
 from PyQt5 import QtCore,  QtWidgets
-from PyQt5.QtWidgets import (QPushButton, QLineEdit, QApplication)
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (QPushButton, QLineEdit, QApplication,QTextEdit,QLabel,QComboBox,QRadioButton)
+from PyQt5.QtCore import Qt,QRect
 from PyQt5.QtGui import QPainter, QPen
 from PyQt5.QtCore import ( QPoint, QSize,Qt)
 from enum import Enum
+import json
 import math
-from pulseapi import  RobotPulse, pose, position, PulseApiException, MT_LINEAR,jog
-from pdhttp import Position,Point,Rotation
+from pulseapi import  RobotPulse, pose, position, PulseApiException, MT_LINEAR,jog,create_box_obstacle
+from pdhttp import Position,Point,Rotation,Pose
 
 
 def position_sum(p1:Position,p2:Position):
-    print(p1)
-    print(p2)
     x = p1.point.x+p2.point.x
     y = p1.point.y+p2.point.y
     z = p1.point.z+p2.point.z
@@ -21,7 +20,6 @@ def position_sum(p1:Position,p2:Position):
     u = check_angle(p1.rotation.pitch + p2.rotation.pitch)
     v = check_angle(p1.rotation.roll  + p2.rotation.roll)
     w = check_angle(p1.rotation.yaw   + p2.rotation.yaw)
-    print(x,y,z,u,v,w)
 
     return [x,y,z] ,[u,v,w]
 def check_angle(angle:float):
@@ -44,6 +42,56 @@ def position_sum2(p1:Position,p2:Position)->Position:
 
     return [x,y,z] ,[u,v,w]
 
+def pose_to_str(p:Pose,separator:str ="\n")->str:
+    angles = p.angles
+    pres = 2
+    return "A1: "+str(round(angles[0],pres))+separator+"A2: "+str(round(angles[1],pres))+separator+"A3: "+str(round(angles[2],pres))+separator+"A4: "+str(round(angles[3],pres))+separator+"A5: "+str(round(angles[4],pres))+separator+"A6: "+str(round(angles[5],pres))
+
+def pose_to_list(p:Pose)->list: 
+    return p.angles
+
+def position_to_str(p:Position,separator:str ="\n")->str:
+    pos = p.point
+    rot = p.rotation
+    pres = 2
+    return "X: "+str(round(1000*pos.x,pres))+separator+"Y: "+str(round(1000*pos.y,pres))+separator+"Z: "+str(round(1000*pos.z,pres))+separator+"Rx: "+str(round(rot.roll,pres))+separator+"Ry: "+str(round(rot.pitch,pres))+separator+"Rz: "+str(round(rot.yaw,pres))
+
+def position_to_list(p:Position)->list:
+    pos = p.point
+    rot = p.rotation
+    return [pos.x,pos.y,pos.z,rot.roll,rot.pitch,rot.yaw]
+
+
+
+class SettingsPulse():
+    tools:dict = None
+    bases:dict = None
+    work_poses:dict = None
+    start_points:dict= None
+
+    def __init__(self,_tools,_bases,_work_poses,_start_points):
+        self.tools = _tools
+        self.bases = _bases
+        self.work_poses = _work_poses
+        self.start_points = _start_points
+
+    def for_ser(self):
+        return [self.tools,self.bases,self.work_poses,self.start_points]
+
+
+class RobPosThread(QtCore.QThread):
+    def __init__(self,pulse_arm:RobotPulse, label:QLabel):
+        QtCore.QThread.__init__(self)   
+        self.pulse_arm = pulse_arm
+        self.label = label
+        self.timeDelt = 0.05
+        self.start()   
+
+    def run(self):
+        while True:
+            if self.pulse_arm is not None:
+                self.label.setText(pose_to_str(self.pulse_arm.get_pose())+"\n\n\n"+position_to_str(self.pulse_arm.get_position())) 
+            sleep(self.timeDelt)
 
 host = "http://10.10.10.20:8081"
 
@@ -64,88 +112,76 @@ class PulseApp(QtWidgets.QWidget):
         # Передаём ссылку на родительский элемент и чтобы виджет
         # отображался как самостоятельное окно указываем тип окна
         super().__init__(parent, QtCore.Qt.Window)
+        self.load_settings()
         self.setWindowTitle("Интерфейс Pulse")
-        self.resize(1750, 800)
+        self.resize(1750, 1000)
         self.build()  
+        
 
     
     def build(self):
         self.build_connection()
         self.build_position()
-
-
-        self.lin_= QtWidgets.QLineEdit(self)
-        self.lin_.setGeometry(QtCore.QRect(520, 220, 140, 30))
-        self.lin_.setText("0")
-
-
-        self.tex_ = QtWidgets.QTextEdit(self)
-        self.tex_.setGeometry(QtCore.QRect(30, 320, 620, 800))
-        self.tex_.setVisible(False)
-
-        self.label1 = QtWidgets.QLabel(self)
-        self.label1.setGeometry(QtCore.QRect(350, 16, 236, 50))
-        self.label1.setText('Не подключено')
-
-
-        self.cBauds_printer = QtWidgets.QComboBox(self)
-        self.cBauds_printer.setGeometry(QtCore.QRect(0, 70, 120, 30))
-        #self.cBauds_printer.addItems(self.bauds)
-        self.cBauds_printer.setCurrentText = self.cBauds_printer.itemText(-1)
+        self.build_coords()
+        self.build_settings()
+        self.build_config()
+        self.build_progr()
 
     def build_connection(self):
-        self.but_connect_robot = QtWidgets.QPushButton('Подключиться', self)
+        self.but_connect_robot = QPushButton('Подключиться', self)
         self.but_connect_robot.setGeometry(QtCore.QRect(100, 100, 140, 30))
         self.but_connect_robot.clicked.connect(self.connect_robot)
 
-        self.but_connect_robot = QtWidgets.QPushButton('Отключиться', self)
+        self.but_connect_robot = QPushButton('Отключиться', self)
         self.but_connect_robot.setGeometry(QtCore.QRect(100, 140, 140, 30))
         self.but_connect_robot.clicked.connect(self.disconnect_robot)
 
     def connect_robot(self):
         self.pulse_robot = RobotPulse(host)
+        self.coords_thread = RobPosThread(self.pulse_robot,self.lab_coord)
 
     def disconnect_robot(self):
         self.pulse_robot = None
 
     def add_axis_buttons(self,name:ax, pos:QtCore.QRect,f_press):
-        but_ax_positive = QtWidgets.QPushButton(str(name)[-1:]+'+', self)
+        but_ax_positive = QPushButton(str(name)[-1:]+'+', self)
         but_ax_positive.setGeometry(pos)
         but_ax_positive.pressed.connect(f_press)
         but_ax_positive.released.connect(self.stop_robot)
         pos2 = QtCore.QRect(pos.x(),pos.y()+pos.height()+10,pos.width(),pos.height())
-        but_ax_negative = QtWidgets.QPushButton(str(name)[-1:]+'-', self)
+        but_ax_negative = QPushButton(str(name)[-1:]+'-', self)
         but_ax_negative.setGeometry(pos2)
         but_ax_negative.pressed.connect(f_press)
         but_ax_negative.released.connect(self.stop_robot)
 
-
     def build_position(self):
-        self.but_home_position = QtWidgets.QPushButton('Изначальное положение', self)
+        self.but_home_position = QPushButton('Изначальное положение', self)
         self.but_home_position.setGeometry(QtCore.QRect(100, 200, 140, 30))
         self.but_home_position.clicked.connect(self.home_position)
 
-        self.but_work_position = QtWidgets.QPushButton('Рабочее положение', self)
+        self.but_work_position = QPushButton('Рабочее положение', self)
         self.but_work_position.setGeometry(QtCore.QRect(100, 240, 140, 30))
         self.but_work_position.clicked.connect(self.work_position)
+
+        self.but_relax_robot = QPushButton('Выключить приводы', self)
+        self.but_relax_robot.setGeometry(QtCore.QRect(100, 280, 140, 30))
+        self.but_relax_robot.clicked.connect(self.relax_robot)
 
         self.add_axis_buttons(ax.X,QtCore.QRect(100, 340, 30, 30),self.axis_jog)
         self.add_axis_buttons(ax.Y,QtCore.QRect(140, 340, 30, 30),self.axis_jog)
         self.add_axis_buttons(ax.Z,QtCore.QRect(180, 340, 30, 30),self.axis_jog)
 
-        self.add_axis_buttons(ax.U,QtCore.QRect(100, 440, 30, 30),self.axis_jog)
-        self.add_axis_buttons(ax.V,QtCore.QRect(140, 440, 30, 30),self.axis_jog)
-        self.add_axis_buttons(ax.W,QtCore.QRect(180, 440, 30, 30),self.axis_jog)
+        self.add_axis_buttons(ax.U,QtCore.QRect(220, 340, 30, 30),self.axis_jog)
+        self.add_axis_buttons(ax.V,QtCore.QRect(260, 340, 30, 30),self.axis_jog)
+        self.add_axis_buttons(ax.W,QtCore.QRect(300, 340, 30, 30),self.axis_jog)
 
-        self.add_axis_buttons(ax.X,QtCore.QRect(100, 540, 30, 30),self.axis_move)
-        self.add_axis_buttons(ax.Y,QtCore.QRect(140, 540, 30, 30),self.axis_move)
-        self.add_axis_buttons(ax.Z,QtCore.QRect(180, 540, 30, 30),self.axis_move)
+        self.add_axis_buttons(ax.X,QtCore.QRect(100, 440, 30, 30),self.axis_move)
+        self.add_axis_buttons(ax.Y,QtCore.QRect(140, 440, 30, 30),self.axis_move)
+        self.add_axis_buttons(ax.Z,QtCore.QRect(180, 440, 30, 30),self.axis_move)
 
-        self.add_axis_buttons(ax.U,QtCore.QRect(100, 640, 30, 30),self.axis_move)
-        self.add_axis_buttons(ax.V,QtCore.QRect(140, 640, 30, 30),self.axis_move)
-        self.add_axis_buttons(ax.W,QtCore.QRect(180, 640, 30, 30),self.axis_move)
-
-
+        self.add_axis_buttons(ax.U,QtCore.QRect(220, 440, 30, 30),self.axis_move)
+        self.add_axis_buttons(ax.V,QtCore.QRect(260, 440, 30, 30),self.axis_move)
+        self.add_axis_buttons(ax.W,QtCore.QRect(300, 440, 30, 30),self.axis_move)
 
     def home_position(self):
         home_pose = pose([0, -90, 0, -90, -90, 0])
@@ -153,15 +189,17 @@ class PulseApp(QtWidgets.QWidget):
         self.pulse_robot.set_pose(home_pose, speed=SPEED)
 
     def work_position(self):
-        position_target = position([-0.42, -0.12, 0.35], [math.pi, 0, 0])
+        position_target = position([-0.42, -0.12, 0.35], [math.pi/2, 0, 0])
         SPEED = 10
         print(position_target)
         self.pulse_robot.set_position(position_target, velocity=SPEED, acceleration=10)
 
+    def relax_robot(self):
+        self.pulse_robot.relax()
 
     def axis_jog(self):
         but = self.sender()
-        acs = 0.5        
+        acs = 0.1        
         x,y,z,Rx,Ry,Rz = self.mask_from_button(but.text())
         self.pulse_robot.jogging(jog(x=acs*x,y=acs*y,z=acs*z,rx=acs*Rx,ry=acs*Ry,rz=acs*Rz))   
 
@@ -169,7 +207,7 @@ class PulseApp(QtWidgets.QWidget):
         but = self.sender()
         acs = 5   
         vel = 4     
-        step = 0.0001
+        step = 0.001
 
         x,y,z,Rx,Ry,Rz = self.mask_from_button(but.text())        
         position_delt = position([step*x, step*y, step*z], [step*Rx, step*Ry, step*Rz])
@@ -178,9 +216,7 @@ class PulseApp(QtWidgets.QWidget):
         #print(self.pulse_robot.get_position())
         #print(pos_rel)
         self.pulse_robot.set_position(pos_rel , velocity=vel, acceleration=acs)
-        self.pulse_robot.await_stop()
-
-
+        #self.pulse_robot.await_stop()
 
     def mask_from_button(self,name):
         
@@ -196,7 +232,7 @@ class PulseApp(QtWidgets.QWidget):
         if name[0]=="X": x = sign
         elif name[0]=="Y": y = sign
         elif name[0]=="Z": z = sign
-        elif name[0]=="U": Rz = sign
+        elif name[0]=="U": Rx = sign
         elif name[0]=="V": Ry = sign
         elif name[0]=="W": Rz = sign
         return x,y,z,Rx,Ry,Rz
@@ -205,7 +241,202 @@ class PulseApp(QtWidgets.QWidget):
 
         self.pulse_robot.freeze()
     
+    buffer_positions:list[Position] = []
+    buffer_poses:list[Pose] = []
 
+    def build_coords(self):
+        self.lab_coord = QLabel(self)
+        self.lab_coord.setGeometry(QtCore.QRect(400, 10, 100, 400))
+        self.lab_coord.setAlignment(Qt.AlignmentFlag.AlignTop|Qt.AlignmentFlag.AlignLeft)
+        self.lab_coord.setText('Координаты')
+        self.coords_thread = None
+
+        self.but_add_position = QPushButton('Добавить позицию', self)
+        self.but_add_position.setGeometry(QtCore.QRect(400, 340, 140, 30))
+        self.but_add_position.clicked.connect(self.add_position)
+
+        self.but_clear_buf_positions = QPushButton('Очистить позиции', self)
+        self.but_clear_buf_positions.setGeometry(QtCore.QRect(400, 380, 140, 30))
+        self.but_clear_buf_positions.clicked.connect(self.clear_buf_positions)
+
+        self.lab_buf_positions = QLabel(self)
+        self.lab_buf_positions.setGeometry(QtCore.QRect(400, 420, 800, 400))
+        self.lab_buf_positions.setAlignment(Qt.AlignmentFlag.AlignTop|Qt.AlignmentFlag.AlignLeft)
+        self.lab_buf_positions.setText('')
+
+        self.but_add_pose= QPushButton('Добавить конфигурацию', self)
+        self.but_add_pose.setGeometry(QtCore.QRect(750, 340, 140, 30))
+        self.but_add_pose.clicked.connect(self.add_pose)
+
+        self.but_clear_buf_poses = QPushButton('Очистить конфигурации', self)
+        self.but_clear_buf_poses.setGeometry(QtCore.QRect(750, 380, 140, 30))
+        self.but_clear_buf_poses.clicked.connect(self.clear_buf_poses)
+
+        self.lab_buf_poses = QLabel(self)
+        self.lab_buf_poses.setGeometry(QtCore.QRect(750, 420, 800, 400))
+        self.lab_buf_poses.setAlignment(Qt.AlignmentFlag.AlignTop|Qt.AlignmentFlag.AlignLeft)
+        self.lab_buf_poses.setText('')
+
+    def add_position(self):
+        self.buffer_positions.append(self.pulse_robot.get_position())
+        self.show_buffers()
+
+    def add_pose(self):
+        self.buffer_poses.append(self.pulse_robot.get_pose())
+        self.show_buffers()
+
+    def clear_buf_positions(self):
+        self.buffer_positions = []
+        self.show_buffers()
+
+    def clear_buf_poses(self):
+        self.buffer_poses = []
+        self.show_buffers()
+
+    def show_buffers(self):
+        self.lab_buf_positions.setText("")
+        self.lab_buf_poses.setText("")
+        for i in range(len(self.buffer_positions)):
+            self.lab_buf_positions.setText(self.lab_buf_positions.text()+"P"+str(i)+" "+position_to_str(self.buffer_positions[i],separator=" ")+"\n")
+        for i in range(len(self.buffer_poses)):
+            self.lab_buf_poses.setText(self.lab_buf_poses.text()+"P"+str(i)+" "+pose_to_str(self.buffer_poses[i],separator=" ")+"\n")
+
+    settings_path = "settings_pulse.json"
+    settins_pulse = SettingsPulse(dict(),dict(),dict(),dict())
+
+
+    def build_settings(self):
+        self.but_load_settings = QPushButton('Загрузить настройки', self)
+        self.but_load_settings.setGeometry(QtCore.QRect(1000, 340, 140, 30))
+        self.but_load_settings.clicked.connect(self.load_settings)
+
+        self.but_save_settings = QPushButton('Сохранить настройки', self)
+        self.but_save_settings.setGeometry(QtCore.QRect(1000, 380, 140, 30))
+        self.but_save_settings.clicked.connect(self.save_settings)
+        #---------------------------------------------------------------------------
+        self.but_save_start_point = QPushButton('Сохранить старт. т.', self)
+        self.but_save_start_point.setGeometry(QtCore.QRect(1150, 340, 140, 30))
+        self.but_save_start_point.clicked.connect(self.save_start_point)
+       
+        self.lin_name_start_point = QLineEdit(self)
+        self.lin_name_start_point.setGeometry(QtCore.QRect(1300, 340, 140, 30))
+        self.lin_name_start_point.setText("new_start_point")
+        #---------------------------------------------------------------------------
+        self.but_save_work_pose = QPushButton('Сохранить раб. конф.', self)
+        self.but_save_work_pose.setGeometry(QtCore.QRect(1150, 380, 140, 30))
+        self.but_save_work_pose.clicked.connect(self.save_work_pose)
+
+        self.lin_name_work_pose = QLineEdit(self)
+        self.lin_name_work_pose.setGeometry(QtCore.QRect(1300, 380, 140, 30))
+        self.lin_name_work_pose.setText("new_work_pose")
+
+    def load_settings(self):
+        list_settings = []
+        with open(self.settings_path) as file:   
+            list_settings=json.load(file)
+        self.settins_pulse = SettingsPulse(list_settings[0],list_settings[1],list_settings[2],list_settings[3])
+
+    def save_settings(self):
+        with open(self.settings_path, "w", encoding="utf-8") as file:
+            json.dump(self.settins_pulse.for_ser(), file,indent=5)
+
+    def save_start_point(self):
+        if len(self.buffer_positions)>0:
+            self.settins_pulse.start_points[self.lin_name_start_point.text()] =  self.buffer_positions[0].to_dict()
+        self.save_settings()
+        self.set_setting_items()
+
+    def save_work_pose(self):
+        if len(self.buffer_poses)>0:
+            self.settins_pulse.work_poses[self.lin_name_work_pose.text()] =  self.buffer_poses[0].to_dict()
+        self.save_settings()
+        self.set_setting_items()
+
+    def build_config(self):
+
+        self.combo_start_points = QComboBox(self)
+        self.combo_start_points.setGeometry(QRect(870, 560, 120, 30))        
+        self.combo_start_points.setCurrentIndex(0)
+
+        self.combo_work_poses = QComboBox(self)
+        self.combo_work_poses.setGeometry(QRect(870, 600, 120, 30))        
+        self.combo_work_poses.setCurrentIndex(0)
+
+        self.combo_tools = QComboBox(self)
+        self.combo_tools.setGeometry(QRect(870, 640, 120, 30))        
+        self.combo_tools.setCurrentIndex(0)
+
+        self.combo_bases = QComboBox(self)
+        self.combo_bases.setGeometry(QRect(870, 680, 120, 30))       
+        self.combo_bases.setCurrentIndex(0)
+
+        
+        self.set_setting_items()
+
+    def set_setting_items(self):
+        self.combo_start_points.clear()
+        self.combo_work_poses.clear()
+        self.combo_tools.clear()
+        self.combo_bases.clear()
+
+        self.combo_start_points.addItems(self.settins_pulse.start_points)
+        self.combo_work_poses.addItems(self.settins_pulse.work_poses)
+        self.combo_tools.addItems(self.settins_pulse.tools)
+        self.combo_bases.addItems(self.settins_pulse.bases)
+
+    def get_cur_item_from_combo(self, combo:QComboBox, data:dict):
+        try:
+            return data[combo.currentText()]
+        except KeyError:
+            print("key err")
+            return None
+
+    cur_start_point = None
+    cur_work_pose = None
+    cur_tool = None
+    cur_base = None
+
+    def apply_settings_to_robot(self):      
+        self.cur_tool = self.get_cur_item_from_combo(self.combo_tools,self.settins_pulse.tools)
+        self.cur_base = self.get_cur_item_from_combo(self.combo_bases,self.settins_pulse.bases)
+        if self.cur_tool is not None:
+            self.pulse_robot.change_tool_info(self.cur_tool)
+        if self.cur_base is not None:
+            self.pulse_robot.change_base(self.cur_base)
+
+    
+    def build_progr(self):
+
+        self.but_set_cur_start_point = QPushButton('Исполнить стартовую т.', self)
+        self.but_set_cur_start_point.setGeometry(QtCore.QRect(1000, 560, 140, 30))
+        self.but_set_cur_start_point.clicked.connect(self.set_cur_start_point)
+
+        self.but_set_cur_work_pose = QPushButton('Исполнить раб. конф.', self)
+        self.but_set_cur_work_pose.setGeometry(QtCore.QRect(1000, 600, 140, 30))
+        self.but_set_cur_work_pose.clicked.connect(self.set_cur_work_pose)
+
+        self.but_start_prog = QPushButton('Исполнить программу', self)
+        self.but_start_prog.setGeometry(QtCore.QRect(1000, 640, 140, 30))
+        self.but_start_prog.clicked.connect(self.exec_prog_arm)
+
+    def set_cur_work_pose(self):
+        self.cur_work_pose = self.get_cur_item_from_combo(self.combo_work_poses,self.settins_pulse.work_poses)
+        if self.cur_work_pose is not None:
+            self.pulse_robot.set_pose(Pose(self.cur_work_pose["angles"]),5)
+            self.pulse_robot.await_stop()
+
+    def set_cur_start_point(self):
+        self.cur_start_point = self.get_cur_item_from_combo(self.combo_start_points,self.settins_pulse.start_points)
+        if self.cur_start_point is not None:
+            self.pulse_robot.set_position(Position(self.cur_start_point["point"],self.cur_start_point["rotation"]),velocity=0.1,acceleration=0.1)
+            self.pulse_robot.await_stop()
+
+    def exec_prog_arm(self):
+        self.apply_settings_to_robot()
+
+     
+
+    
     
 
 if __name__ == '__main__':    
