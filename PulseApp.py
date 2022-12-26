@@ -506,14 +506,23 @@ class PulseApp(QtWidgets.QWidget):
         pc1 = find_center_sphere_4p([ps[0],ps[1],ps[2],ps[3]])
         pc2 = find_center_sphere_4p([ps[0],ps[1],ps[2],ps[4]])
 
-        print(pc1[0].ToString(),pc1[1].ToString())
-        print(pc2[0].ToString(),pc2[1].ToString())
+        #print(pc1[0].ToString(),pc1[1].ToString())
+        #print(pc2[0].ToString(),pc2[1].ToString())
+
+        pc = pc1[0]
+
+        for p in ps:
+            m = pulse_matrix(p.x,p.y,p.z,p.r,p.g,p.b)
+            m_inv = np.linalg.inv(m)
+            tcp = np.dot( m_inv ,np.array([[pc.x],[pc.y],[pc.z],[1.]]))
+            print(tcp)
+
 
         
 
 
     def pos_dict_to_point3d(self,pos_dict:dict):
-        return Point3D(pos_dict["point"]["x"]*1000,pos_dict["point"]["y"]*1000,pos_dict["point"]["z"]*1000)
+        return Point3D(pos_dict["point"]["x"]*1000,pos_dict["point"]["y"]*1000,pos_dict["point"]["z"]*1000,_r = pos_dict["rotation"]["roll"],_g = pos_dict["rotation"]["pitch"],_b = pos_dict["rotation"]["yaw"])
 
 
    

@@ -1,4 +1,6 @@
 import math
+import numpy as np
+import cv2 as cv
 from polygon import Point3D
 
 def find_center_sphere_4p(ps:list[Point3D]):
@@ -30,5 +32,52 @@ def find_center_sphere_4p(ps:list[Point3D]):
     z0 = 0.5 * (Az - Bz + Cz - Dz) / (U + V + W)
     R = math.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0) + (z1 - z0) * (z1 - z0))
     return [Point3D(x0, y0, z0),Point3D(R,R,R)]
+
+
+def rotatedX(alpha):
+    c_A = np.cos(alpha)
+    s_A = np.sin(alpha)
+    return np.array([[1.,0.,0.,0.],[0.,c_A,-s_A,0.],[0.,s_A,c_A,0.],[0.,0.,0.,1.]])
+
+def rotatedY(alpha):
+    c_A = np.cos(alpha)
+    s_A = np.sin(alpha)
+    return np.array([[c_A,0.,s_A,0.],[0.,1.,0.,0.],[-s_A,0.,c_A,0.],[0.,0.,0.,1.]])
+
+def rotatedZ(alpha):
+    c_A = np.cos(alpha)
+    s_A = np.sin(alpha)
+    return np.array([[c_A,-s_A,0.,0.],[s_A,c_A,0.,0.],[0.,0.,1.,0.],[0.,0.,0.,1.]])
+
+def pulse_rot_matrix(Rx,Ry,Rz):
+    mx = rotatedX(Rx)
+    my = rotatedY(Ry)
+    mz = rotatedZ(Rz)
+    mxy = np.dot( mx, my)
+    return np.dot(mxy, mz)
+
+def pulse_matrix(x,y,z,Rx,Ry,Rz):
+    rot = pulse_rot_matrix(Rx,Ry,Rz)
+    rot[0][3] = x
+    rot[1][3] = y
+    rot[2][3] = z
+
+    #rot = np.linalg.inv(rot)
+    return rot
+
+pulse_matrix(-196.8,315.72,208.65,-1.57,0.066,-0.75)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
