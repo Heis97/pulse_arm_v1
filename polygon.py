@@ -11,6 +11,7 @@ class Point3D(object):
     r:float = 0
     g:float = 0
     b:float = 0
+    
     def __init__(self,_x:float,_y:float,_z:float,_extrude:bool = True,_r:float = 0.0,_g:float = 1.,_b:float =1.):
         self.x = _x
         self.y = _y
