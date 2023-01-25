@@ -60,6 +60,7 @@ def position_to_str(p:Position,separator:str ="\n")->str:
     pres = 2
     return "X: "+str(round(1000*pos["x"],pres))+separator+"Y: "+str(round(1000*pos["y"],pres))+separator+"Z: "+str(round(1000*pos["z"],pres))+separator+"Rx: "+str(round(rot["roll"],pres))+separator+"Ry: "+str(round(rot["pitch"],pres))+separator+"Rz: "+str(round(rot["yaw"],pres))
 
+
 def position_to_list(p:Position)->list:
     pos = p.point
     rot = p.rotation
@@ -624,6 +625,35 @@ class PulseApp(QtWidgets.QWidget):
             print(i," ",positions[i])
         
         return positions
+
+
+#-----------------------------------------------------------------------------------
+    def generate_traj_abc(self):
+        
+        ps = parse_g_code(self.text_prog_code.toPlainText())
+        start_point = self.cur_start_point["point"]
+        start_rot =  self.cur_start_point["rotation"]
+
+        points = []
+        p = [start_point["x"],start_point["y"],start_point["z"]]
+        r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
+        pos = position(p,r)
+        points.append(p)
+        positions = [pos]
+        for i in range(len(ps)):               
+            p = [start_point["x"]+ps[i].x,start_point["y"]+ps[i].y,start_point["z"]+ps[i].z]
+            r = [start_rot["roll"]+ps[i].r,start_rot["pitch"]+ps[i].g,start_rot["yaw"]+ps[i].b]
+            
+            pos = position(p,r,blend=0.0001)
+            if self.dist(p,points[-1])>0.00001:
+                positions.append(pos)
+                points.append(p)
+
+        for i in range(len(positions)):
+            print(i," ",positions[i])
+        
+        return positions
+
 
     def dist(self,p1,p2):
         return math.sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2+(p1[2]-p2[2])**2)
