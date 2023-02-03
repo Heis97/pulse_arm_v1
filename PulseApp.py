@@ -107,7 +107,10 @@ class RobPosThread(QtCore.QThread):
         
             sleep(self.timeDelt)
 
+
 host = "http://10.10.10.20:8081"
+
+#host = "http://192.168.0.55:8081"
 
 class ax(Enum):
     X="X"
