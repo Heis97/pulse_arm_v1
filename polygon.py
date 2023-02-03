@@ -1,7 +1,9 @@
-
-import math
+import numpy as np
+import math 
 import enum
 from random import triangular
+
+
 
 class Point3D(object):
     x:float = 0
@@ -11,14 +13,21 @@ class Point3D(object):
     r:float = 0
     g:float = 0
     b:float = 0
+
+    roll:float = 0
+    pitch:float = 0    
+    yaw:float = 0
     
-    def __init__(self,_x:float,_y:float,_z:float,_extrude:bool = True,_r:float = 0.0,_g:float = 1.,_b:float =1.):
+    def __init__(self,_x:float,_y:float,_z:float,_extrude:bool = True,_r:float = 0.0,_g:float = 1.,_b:float =1.,_pitch:float = 0.0,_roll:float = 1.,_yaw:float =1.):
         self.x = _x
         self.y = _y
         self.z = _z
         self.r = _r
         self.g = _g
         self.b = _b
+        self.pitch = _pitch
+        self.roll = _roll
+        self.yaw = _yaw
         self.extrude = _extrude
 
     def normalyse(self):
@@ -74,6 +83,9 @@ class Point3D(object):
     def __mul__(self, other):
         if(type(other)==Point3D):
             return Point3D(self.y*other.z-self.z*other.y, self.z*other.x-self.x*other.z,self.x*other.y-self.y*other.x,self.extrude)
+        elif(type(other)==np.ndarray):
+            x,y,z,Rx,Ry,Rz = position_from_matrix(np.dot(pulse_matrix_p(self),other))
+            return Point3D(x,y,z,_pitch= Rx,_roll=Ry,_yaw=Rz)
         else:
             return Point3D(self.x*other,self.y*other,self.z*other,self.extrude)
 
@@ -377,6 +389,70 @@ class Mesh3D(object):
         list_bl = list_in.copy()
         
 
+def rotatedX(alpha)->np.ndarray:
+    c_A = np.cos(alpha)
+    s_A = np.sin(alpha)
+    return np.array([
+        [1.,0.,0.,0.],
+    [0.,c_A,-s_A,0.],
+    [0.,s_A,c_A,0.],
+    [0.,0.,0.,1.]])
+
+def rotatedY(alpha)->np.ndarray:
+    c_A = np.cos(alpha)
+    s_A = np.sin(alpha)
+    return np.array([
+        [c_A,0.,s_A,0.],
+        [0.,1.,0.,0.],
+        [-s_A,0.,c_A,0.],
+        [0.,0.,0.,1.]])
+
+def rotatedZ(alpha)->np.ndarray:
+    c_A = np.cos(alpha)
+    s_A = np.sin(alpha)
+    return np.array([
+        [c_A,-s_A,0.,0.],
+        [s_A,c_A,0.,0.],
+        [0.,0.,1.,0.],
+        [0.,0.,0.,1.]])
+
+def pulse_rot_matrix(Rx,Ry,Rz)->np.ndarray:
+    mx = rotatedX(Rx)
+    my = rotatedY(Ry)
+    mz = rotatedZ(Rz)
+    mxy = np.dot( mx, my)
+    return np.dot(mxy, mz)
+
+def pulse_matrix(x,y,z,Rx,Ry,Rz)->np.ndarray:
+    rot = pulse_rot_matrix(Rx,Ry,Rz)
+    rot[0][3] = x
+    rot[1][3] = y
+    rot[2][3] = z
+
+    #rot = np.linalg.inv(rot)
+    return rot
+
+def pulse_matrix_p(p:Point3D)->np.ndarray:
+    rot = pulse_rot_matrix(p.pitch,p.roll,p.yaw)
+    rot[0][3] = p.x
+    rot[1][3] = p.y
+    rot[2][3] = p.z
+
+    #rot = np.linalg.inv(rot)
+    return rot
+
+def position_from_matrix(m):
+    x = m[0][3]
+    y = m[1][3]
+    z = m[2][3]
+
+    b =np.arcsin(-m[0][2])
+
+    if np.cos(b) != 0:   
+        a = np.arcsin(m[1][2] / np.cos(b))
+        c = np.arcsin(m[0][1] / np.cos(b))
+
+    return x,y,z,a,b,c
 
 
 

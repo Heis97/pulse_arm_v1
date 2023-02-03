@@ -1,7 +1,7 @@
 import math
 import numpy as np
 import cv2 as cv
-from polygon import Point3D
+from polygon import *
 
 def find_center_sphere_4p(ps:list[Point3D]):
     x1 = ps[0].x; y1 = ps[0].y; z1 = ps[0].z
@@ -34,61 +34,7 @@ def find_center_sphere_4p(ps:list[Point3D]):
     return [Point3D(x0, y0, z0),Point3D(R,R,R)]
 
 
-def rotatedX(alpha):
-    c_A = np.cos(alpha)
-    s_A = np.sin(alpha)
-    return np.array([
-        [1.,0.,0.,0.],
-    [0.,c_A,-s_A,0.],
-    [0.,s_A,c_A,0.],
-    [0.,0.,0.,1.]])
 
-def rotatedY(alpha):
-    c_A = np.cos(alpha)
-    s_A = np.sin(alpha)
-    return np.array([
-        [c_A,0.,s_A,0.],
-        [0.,1.,0.,0.],
-        [-s_A,0.,c_A,0.],
-        [0.,0.,0.,1.]])
-
-def rotatedZ(alpha):
-    c_A = np.cos(alpha)
-    s_A = np.sin(alpha)
-    return np.array([
-        [c_A,-s_A,0.,0.],
-        [s_A,c_A,0.,0.],
-        [0.,0.,1.,0.],
-        [0.,0.,0.,1.]])
-
-def pulse_rot_matrix(Rx,Ry,Rz):
-    mx = rotatedX(Rx)
-    my = rotatedY(Ry)
-    mz = rotatedZ(Rz)
-    mxy = np.dot( mx, my)
-    return np.dot(mxy, mz)
-
-def pulse_matrix(x,y,z,Rx,Ry,Rz):
-    rot = pulse_rot_matrix(Rx,Ry,Rz)
-    rot[0][3] = x
-    rot[1][3] = y
-    rot[2][3] = z
-
-    #rot = np.linalg.inv(rot)
-    return rot
-
-def position_from_matrix(m):
-    x = m[0][3]
-    y = m[1][3]
-    z = m[2][3]
-
-    b =np.arcsin(-m[0][2])
-
-    if np.cos(b) != 0:   
-        a = np.arcsin(m[1][2] / np.cos(b))
-        c = np.arcsin(m[0][1] / np.cos(b))
-
-    return x,y,z,a,b,c
 
 def base_calibration(points):
     ps = poses_dict_to_point3d(points)
@@ -118,7 +64,7 @@ def compute_vector(p1:Point3D,p2:Point3D):
 
 
 def pos_dict_to_point3d(pos_dict:dict):
-        return Point3D(pos_dict["point"]["x"],pos_dict["point"]["y"],pos_dict["point"]["z"],_r = pos_dict["rotation"]["roll"],_g = pos_dict["rotation"]["pitch"],_b = pos_dict["rotation"]["yaw"])
+        return Point3D(pos_dict["point"]["x"],pos_dict["point"]["y"],pos_dict["point"]["z"],_pitch = pos_dict["rotation"]["roll"],_roll = pos_dict["rotation"]["pitch"],_yaw = pos_dict["rotation"]["yaw"])
 
 def poses_dict_to_point3d(pos_dict:list[dict]):
     ps = []
@@ -126,6 +72,7 @@ def poses_dict_to_point3d(pos_dict:list[dict]):
         ps.append(pos_dict_to_point3d(p))
     return ps
     
+#def 
 
 def calibrate_tcp_4p(points:list):
 
@@ -136,7 +83,7 @@ def calibrate_tcp_4p(points:list):
         pc = pc1[0]
 
         tcp_aver = np.array([[0.],[0.],[0.],[0.]])
-
+        print(type(tcp_aver))
         for p in ps:
             m = pulse_matrix(p.x,p.y,p.z,p.r,p.g,p.b)
             m_inv = np.linalg.inv(m)

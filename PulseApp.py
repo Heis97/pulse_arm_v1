@@ -110,12 +110,11 @@ class RobPosThread(QtCore.QThread):
 
 host = "http://10.10.10.20:8081"
 
-#host = "http://192.168.0.55:8081"
 
 class ax(Enum):
-    X="X"
-    Y="Y"
-    Z="Z"
+    X = "X"
+    Y = "Y"
+    Z = "Z"
     U = "U"
     V = "V"
     W = "W"
@@ -132,6 +131,8 @@ class PulseApp(QtWidgets.QWidget):
         self.setWindowTitle("Интерфейс Pulse")
         self.resize(1750, 1000)
         self.build()  
+        ps = [self.settins_pulse.start_points["calib_1_1"],self.settins_pulse.start_points["calib_1_2"],self.settins_pulse.start_points["calib_1_3"],self.settins_pulse.start_points["calib_1_4"],self.settins_pulse.start_points["calib_1_5"]]        
+        tcp = calibrate_tcp_4p(ps)
 
         
 
@@ -624,8 +625,8 @@ class PulseApp(QtWidgets.QWidget):
                 positions.append(pos)
                 points.append(p)
 
-        for i in range(len(positions)):
-            print(i," ",positions[i])
+        #for i in range(len(positions)):
+            #print(i," ",positions[i])
         
         return positions
 
@@ -634,26 +635,24 @@ class PulseApp(QtWidgets.QWidget):
     def generate_traj_abc(self):
         
         ps = parse_g_code(self.text_prog_code.toPlainText())
-        start_point = self.cur_start_point["point"]
-        start_rot =  self.cur_start_point["rotation"]
+
 
         points = []
-        p = [start_point["x"],start_point["y"],start_point["z"]]
-        r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
+
         pos = position(p,r)
         points.append(p)
         positions = [pos]
         for i in range(len(ps)):               
-            p = [start_point["x"]+ps[i].x,start_point["y"]+ps[i].y,start_point["z"]+ps[i].z]
-            r = [start_rot["roll"]+ps[i].r,start_rot["pitch"]+ps[i].g,start_rot["yaw"]+ps[i].b]
+            p = [ps[i].x,ps[i].y,ps[i].z]
+            r = [ps[i].r,ps[i].g,ps[i].b]
             
             pos = position(p,r,blend=0.0001)
             if self.dist(p,points[-1])>0.00001:
                 positions.append(pos)
                 points.append(p)
 
-        for i in range(len(positions)):
-            print(i," ",positions[i])
+        #for i in range(len(positions)):
+            #print(i," ",positions[i])
         
         return positions
 
@@ -663,14 +662,7 @@ class PulseApp(QtWidgets.QWidget):
 
     
 
-
-        
-
-
-    
-
-
-   
+ 
 
 if __name__ == '__main__':    
     app = QApplication(sys.argv)
