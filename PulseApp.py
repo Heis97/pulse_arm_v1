@@ -380,7 +380,7 @@ class PulseApp(QtWidgets.QWidget):
         self.but_save_tool.clicked.connect(self.save_tool)
 
         self.but_create_tool = QPushButton('Создать инструмент', self)
-        self.but_create_tool.setGeometry(QtCore.QRect(250, 720, 140, 30))
+        self.but_create_tool.setGeometry(QtCore.QRect(550, 720, 140, 30))
         self.but_create_tool.clicked.connect(self.create_tool)
 
         self.lin_name_tool = QLineEdit(self)
@@ -413,8 +413,8 @@ class PulseApp(QtWidgets.QWidget):
         #ps = [self.settins_pulse.start_points["calib_1_1"],self.settins_pulse.start_points["calib_1_2"],self.settins_pulse.start_points["calib_1_3"],self.settins_pulse.start_points["calib_1_4"],self.settins_pulse.start_points["calib_1_5"]]        
         ps = self.buffer_positions
         tcp = calibrate_tcp_4p(ps)
-        rot = self.settins_pulse.tools[self.combo_tools.currentText()]['rotation']
-        self.settins_pulse.tools[self.combo_tools.currentText()] = tool_info(position([tcp[0][0],tcp[1][0],tcp[2][0]],[rot['pitch'],rot['roll'],rot['yaw']])).to_dict()
+        rot = self.settins_pulse.tools[self.combo_tools.currentText()]['tcp']['rotation']
+        self.current_tool = tool_info(position([tcp[0][0],tcp[1][0],tcp[2][0]],[rot['pitch'],rot['roll'],rot['yaw']]))
 
 
     def comp_tcp_rotate(self):
@@ -422,6 +422,7 @@ class PulseApp(QtWidgets.QWidget):
 
     def comp_base(self):
         ps = self.buffer_positions
+        self.current_base = base_calibration(ps)
         pass
 
     

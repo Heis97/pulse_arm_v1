@@ -34,13 +34,10 @@ def find_center_sphere_4p(ps:list[Point3D]):
     return [Point3D(x0, y0, z0),Point3D(R,R,R)]
 
 
-
-
 def base_calibration(points):
     ps = poses_dict_to_point3d(points)
     vx = compute_vector(ps[0],ps[1])
-    vy_1 = compute_vector(ps[0],ps[2])
-    vz = (vx*vy_1).normalyse()
+    vz = Flat3D.compFlat(points[0],points[1],points[2]).abc
     vy = (vz*vx).normalyse()
     m = matr_from_vecs(vx,vy,vz,ps[0])
     return position_from_matrix(m)
@@ -48,8 +45,7 @@ def base_calibration(points):
 def orient_tool_calibration(points):
     ps = poses_dict_to_point3d(points)
     vx = compute_vector(ps[0],ps[1])
-    vy_1 = compute_vector(ps[0],ps[2])
-    vz = (vx*vy_1).normalyse()
+    vz = Flat3D.compFlat(points[0],points[1],points[2]).abc
     vy = (vz*vx).normalyse()
     m = matr_from_vecs(vx,vy,vz,ps[0])
     return position_from_matrix(m)
