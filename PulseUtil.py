@@ -66,7 +66,7 @@ def compute_vector(p1:Point3D,p2:Point3D):
 def pos_dict_to_point3d(pos_dict:dict):
         return Point3D(pos_dict["point"]["x"],pos_dict["point"]["y"],pos_dict["point"]["z"],_pitch = pos_dict["rotation"]["roll"],_roll = pos_dict["rotation"]["pitch"],_yaw = pos_dict["rotation"]["yaw"])
 
-def poses_dict_to_point3d(pos_dict:list[dict]):
+def poses_dict_to_point3d(pos_dict:list[dict])->list[Point3D]:
     ps = []
     for p in pos_dict:
         ps.append(pos_dict_to_point3d(p))
@@ -74,7 +74,7 @@ def poses_dict_to_point3d(pos_dict:list[dict]):
     
 #def 
 
-def calibrate_tcp_4p(points:list):
+def calibrate_tcp_4p(points:list[Point3D]):
 
         ps = poses_dict_to_point3d(points)
         pc1 = find_center_sphere_4p([ps[0],ps[1],ps[2],ps[3]])
@@ -83,9 +83,9 @@ def calibrate_tcp_4p(points:list):
         pc = pc1[0]
 
         tcp_aver = np.array([[0.],[0.],[0.],[0.]])
-        print(type(tcp_aver))
+        #print(type(tcp_aver))
         for p in ps:
-            m = pulse_matrix(p.x,p.y,p.z,p.r,p.g,p.b)
+            m = pulse_matrix(p.x,p.y,p.z,p.pitch,p.roll,p.yaw)
             m_inv = np.linalg.inv(m)
             tcp = np.dot( m_inv ,np.array([[pc.x],[pc.y],[pc.z],[1.]]))
             tcp_aver+=tcp
