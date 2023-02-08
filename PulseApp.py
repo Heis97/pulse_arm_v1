@@ -514,10 +514,12 @@ class PulseApp(QtWidgets.QWidget):
         self.combo_tools = QComboBox(self)
         self.combo_tools.setGeometry(QRect(870, 640, 120, 30))        
         self.combo_tools.setCurrentIndex(0)
+        self.combo_tools.activated[str].connect(self.combo_tool_act)
 
         self.combo_bases = QComboBox(self)
         self.combo_bases.setGeometry(QRect(870, 680, 120, 30))       
         self.combo_bases.setCurrentIndex(0)
+        self.combo_bases.activated[str].connect(self.combo_base_act)
 
         self.but_add_position_from_cur = QPushButton('Добавить в буффер', self)
         self.but_add_position_from_cur.setGeometry(QtCore.QRect(720, 560, 100, 30))
@@ -546,6 +548,18 @@ class PulseApp(QtWidgets.QWidget):
         
         self.set_setting_items()
 
+    def combo_tool_act(self,text):
+        tool = self.get_cur_item_from_combo(self.combo_tools,self.settins_pulse.tools)
+        self.cur_tool = tool_info(Position(tool['tcp']))
+
+        if self.pulse_robot is not None: self.pulse_robot.change_tool_info(self.cur_tool)
+
+    def combo_base_act(self,text):
+        base = self.get_cur_item_from_combo(self.combo_bases,self.settins_pulse.bases)
+        self.cur_base = Position(base)
+        
+        if self.pulse_robot is not None: self.pulse_robot.change_base(self.cur_base)
+
     def set_setting_items(self):
         self.combo_start_points.clear()
         self.combo_work_poses.clear()
@@ -571,6 +585,7 @@ class PulseApp(QtWidgets.QWidget):
     def apply_settings_to_robot(self):      
         self.cur_tool = self.get_cur_item_from_combo(self.combo_tools,self.settins_pulse.tools)
         self.cur_base = self.get_cur_item_from_combo(self.combo_bases,self.settins_pulse.bases)
+
         self.cur_start_point = self.get_cur_item_from_combo(self.combo_start_points,self.settins_pulse.start_points)
         if self.cur_tool is not None:
             self.pulse_robot.change_tool_info(self.cur_tool)
@@ -588,12 +603,16 @@ class PulseApp(QtWidgets.QWidget):
         self.but_set_cur_work_pose.setGeometry(QtCore.QRect(1000, 600, 140, 30))
         self.but_set_cur_work_pose.clicked.connect(self.set_cur_work_pose)
 
-        self.but_start_prog = QPushButton('Исполнить программу', self)
-        self.but_start_prog.setGeometry(QtCore.QRect(1000, 640, 140, 30))
-        self.but_start_prog.clicked.connect(self.exec_prog_arm)
+        self.but_start_prog_abs = QPushButton('Исп. прог. абс', self)
+        self.but_start_prog_abs.setGeometry(QtCore.QRect(1000, 800, 140, 30))
+        self.but_start_prog_abs.clicked.connect(self.exec_prog_arm_abs)
+
+        self.but_start_prog_rel = QPushButton('Исп. прог. относ', self)
+        self.but_start_prog_rel.setGeometry(QtCore.QRect(1000, 840, 140, 30))
+        self.but_start_prog_rel.clicked.connect(self.exec_prog_arm_rel)
 
         self.but_stop_robot = QPushButton('Остановить', self)
-        self.but_stop_robot.setGeometry(QtCore.QRect(1000, 680, 140, 30))
+        self.but_stop_robot.setGeometry(QtCore.QRect(1000, 880, 140, 30))
         self.but_stop_robot.clicked.connect(self.stop_ex_robot)
 
         self.text_prog_code = QTextEdit(self)
@@ -612,7 +631,7 @@ class PulseApp(QtWidgets.QWidget):
             self.pulse_robot.set_position(Position(self.cur_start_point["point"],self.cur_start_point["rotation"]),velocity=5,acceleration=1)
             #self.pulse_robot.await_stop()
 
-    def exec_prog_arm(self):
+    def exec_prog_arm_rel(self):
         vel = 5
         acs = 0.1
         self.apply_settings_to_robot()
@@ -624,6 +643,18 @@ class PulseApp(QtWidgets.QWidget):
         acs = 0.1
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
         self.pulse_robot.run_linear_positions(positions,linear_motion_parameters)
+
+    def exec_prog_arm_abs(self):
+        #self.apply_settings_to_robot()
+        
+        positions = self.generate_traj_abc()
+        vel = 0.005
+        acs = 0.1
+        linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
+        self.pulse_robot.set_position(positions[0])
+        self.pulse_robot.run_linear_positions(positions,linear_motion_parameters)
+
+    
 
 
     def stop_ex_robot(self):

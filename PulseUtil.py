@@ -44,10 +44,10 @@ def base_calibration(points):
 
 def orient_tool_calibration(points):
     ps = poses_dict_to_point3d(points)
-    vx = compute_vector(ps[0],ps[1])
-    vz = Flat3D.compFlat(points[0],points[1],points[2]).abc
+    vz = compute_vector(ps[0],ps[1])
+    vx = compute_vector(ps[1],ps[2])
     vy = (vz*vx).normalyse()
-    m = matr_from_vecs(vx,vy,vz,ps[0])
+    m = matr_from_vecs(vx,vy,vz,Point3D(0,0,0))
     return position_from_matrix(m)
 
 def matr_from_vecs(rx:Point3D,ry:Point3D,rz:Point3D,pos:Point3D):

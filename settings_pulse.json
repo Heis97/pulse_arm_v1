@@ -16,6 +16,23 @@
                     "blend": 0.0,
                     "actions": null
                }
+          },
+          "new_tool2": {
+               "name": "unnamed_tool",
+               "tcp": {
+                    "point": {
+                         "x": -0.11664081651820912,
+                         "y": 0.0500384688774841,
+                         "z": 0.08927034141337883
+                    },
+                    "rotation": {
+                         "roll": 0,
+                         "pitch": 0,
+                         "yaw": 0
+                    },
+                    "blend": 0.0,
+                    "actions": null
+               }
           }
      },
      {},
