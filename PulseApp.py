@@ -9,7 +9,7 @@ from enum import Enum
 import json
 import math
 from pulseapi import  RobotPulse, pose, position, PulseApiException, MT_LINEAR,jog,create_box_obstacle,LinearMotionParameters,InterpolationType,tool_info
-from pdhttp import Position,Point,Rotation,Pose,MotorStatus
+from pdhttp import Position,Point,Rotation,Pose,MotorStatus,PoseTimestamp,PositionTimestamp
 from g_code_parser import *
 from PulseUtil import *
 
@@ -44,7 +44,7 @@ def position_sum2(p1:Position,p2:Position)->Position:
     return [x,y,z] ,[u,v,w]
 
 def pose_to_str(p,separator:str ="\n")->str:
-    if type(p) == Pose:
+    if type(p) == Pose or type(p) == PoseTimestamp:
         p = p.to_dict()
     angles = p["angles"]
     pres = 2
@@ -54,7 +54,7 @@ def pose_to_list(p:Pose)->list:
     return p.angles
 
 def position_to_str(p,separator:str ="\n")->str:
-    if type(p) == Position:
+    if type(p) == Position or type(p) == PositionTimestamp:
         p = p.to_dict()
     pos = p["point"]
     rot = p["rotation"]
@@ -101,7 +101,8 @@ class RobPosThread(QtCore.QThread):
         self.start()   
     
     def run(self):
-        while True:           
+        while True:
+            self.label.setText("Joint position:\n"+pose_to_str(self.pulse_arm.get_pose())+"\n\n\n"+"Cartesian position:\n"+position_to_str(self.pulse_arm.get_position())+"\n\n\n"+motor_state_to_str(self.pulse_arm.status_motors()))                            
             try:               
                 self.label.setText("Joint position:\n"+pose_to_str(self.pulse_arm.get_pose())+"\n\n\n"+"Cartesian position:\n"+position_to_str(self.pulse_arm.get_position())+"\n\n\n"+motor_state_to_str(self.pulse_arm.status_motors()))                 
             except BaseException:
@@ -422,8 +423,9 @@ class PulseApp(QtWidgets.QWidget):
 
     def comp_base(self):
         ps = self.buffer_positions
-        self.current_base = base_calibration(ps)
-        pass
+        x,y,z,a,b,c = base_calibration(ps)
+        self.current_base = position([x,y,z],[a,b,c])
+        
 
     
     def create_tool(self):
@@ -467,8 +469,6 @@ class PulseApp(QtWidgets.QWidget):
         self.save_settings()
         self.set_setting_items()
 
-    def comp_base(self):
-        pass
 
     def del_tool(self):
         del self.settins_pulse.tools[self.combo_tools.currentText()]
@@ -550,13 +550,14 @@ class PulseApp(QtWidgets.QWidget):
 
     def combo_tool_act(self,text):
         tool = self.get_cur_item_from_combo(self.combo_tools,self.settins_pulse.tools)
-        self.cur_tool = tool_info(Position(tool['tcp']))
+        self.cur_tool = tool_info(Position(tool['tcp']["point"],tool['tcp']["rotation"]))
 
-        if self.pulse_robot is not None: self.pulse_robot.change_tool_info(self.cur_tool)
+        if self.pulse_robot is not None:  self.pulse_robot.change_tool_info(self.cur_tool)
 
     def combo_base_act(self,text):
         base = self.get_cur_item_from_combo(self.combo_bases,self.settins_pulse.bases)
-        self.cur_base = Position(base)
+        self.cur_base =  Position(base["point"],base["rotation"])
+        print(self.cur_base)
         
         if self.pulse_robot is not None: self.pulse_robot.change_base(self.cur_base)
 
