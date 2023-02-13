@@ -12,6 +12,7 @@ from pulseapi import  RobotPulse, pose, position, PulseApiException, MT_LINEAR,j
 from pdhttp import Position,Point,Rotation,Pose,MotorStatus,PoseTimestamp,PositionTimestamp
 from g_code_parser import *
 from PulseUtil import *
+from KukaRobot import *
 
 def position_sum(p1:Position,p2:Position):
     x = p1.point.x+p2.point.x
@@ -149,14 +150,16 @@ class PulseApp(QtWidgets.QWidget):
         self.build_config()
         self.build_progr()
 
+        self.build_connection_kuka()
+
     def build_connection(self):
         self.but_connect_robot = QPushButton('Подключиться', self)
         self.but_connect_robot.setGeometry(QtCore.QRect(100, 100, 140, 30))
         self.but_connect_robot.clicked.connect(self.connect_robot)
 
-        self.but_connect_robot = QPushButton('Отключиться', self)
-        self.but_connect_robot.setGeometry(QtCore.QRect(100, 140, 140, 30))
-        self.but_connect_robot.clicked.connect(self.disconnect_robot)
+        self.but_disconnect_robot = QPushButton('Отключиться', self)
+        self.but_disconnect_robot.setGeometry(QtCore.QRect(100, 140, 140, 30))
+        self.but_disconnect_robot.clicked.connect(self.disconnect_robot)
 
     def connect_robot(self):
         self.pulse_robot = RobotPulse(host)
@@ -718,8 +721,48 @@ class PulseApp(QtWidgets.QWidget):
 
     def dist(self,p1,p2):
         return math.sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2+(p1[2]-p2[2])**2)
+#--------------------------------------------------------------------------------
+    kuka_robot = None
 
-    
+    def build_connection_kuka(self):
+        self.but_connect_kuka = QPushButton('Подключиться', self)
+        self.but_connect_kuka.setGeometry(QtCore.QRect(1000, 100, 140, 30))
+        self.but_connect_kuka.clicked.connect(self.connect_kuka)
+
+        self.but_disconnect_kuka = QPushButton('Отключиться', self)
+        self.but_disconnect_kuka.setGeometry(QtCore.QRect(1000, 140, 140, 30))
+        self.but_disconnect_kuka.clicked.connect(self.disconnect_kuka)    
+
+        self.but_resiev_kuka = QPushButton('Отправить', self)
+        self.but_resiev_kuka.setGeometry(QtCore.QRect(1000, 240, 140, 30))
+        self.but_resiev_kuka.clicked.connect(self.resiev_kuka)
+
+        self.but_send_kuka = QPushButton('Принять', self)
+        self.but_send_kuka.setGeometry(QtCore.QRect(1000, 280, 140, 30))
+        self.but_send_kuka.clicked.connect(self.send_kuka)
+
+        self.text_mes_kuka = QTextEdit(self)
+        self.text_mes_kuka.setGeometry(QtCore.QRect(1150, 240, 500, 30))
+
+    def connect_kuka(self):
+        self.kuka_robot = KukaRobot()
+        self.kuka_robot.connect()
+
+    def disconnect_kuka(self):
+        self.kuka_robot.close()
+
+    def resiev_kuka(self):
+        self.kuka_robot.send('f\n')
+        sleep(0.01)
+        mes = self.kuka_robot.resieve()
+        self.text_mes_kuka.setText(mes)
+
+    def send_kuka(self):
+        mes = self.text_mes_kuka.toPlainText()+' \n'
+        self.kuka_robot.send(mes)
+
+
+
 
  
 
