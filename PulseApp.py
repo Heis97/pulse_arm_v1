@@ -164,11 +164,11 @@ class PulseApp(QtWidgets.QWidget):
     def connect_robot(self):
         self.pulse_robot = RobotPulse(host)
         #self.pulse_robot.recover()
-        ps = [self.settins_pulse.start_points["calib_1_1"],self.settins_pulse.start_points["calib_1_2"],self.settins_pulse.start_points["calib_1_3"],self.settins_pulse.start_points["calib_1_4"],self.settins_pulse.start_points["calib_1_5"]]
+        #ps = [self.settins_pulse.start_points["calib_1_1"],self.settins_pulse.start_points["calib_1_2"],self.settins_pulse.start_points["calib_1_3"],self.settins_pulse.start_points["calib_1_4"],self.settins_pulse.start_points["calib_1_5"]]
         
-        tcp = calibrate_tcp_4p(ps)
-        tool = tool_info(position([tcp[0][0],tcp[1][0],tcp[2][0]],[0,0,0]))
-        self.pulse_robot.change_tool_info(tool)
+        #tcp = calibrate_tcp_4p(ps)
+        #tool = tool_info(position([tcp[0][0],tcp[1][0],tcp[2][0]],[0,0,0]))
+        #self.pulse_robot.change_tool_info(tool)
 
         self.coords_thread = RobPosThread(self.pulse_robot,self.lab_coord)
 
@@ -422,7 +422,11 @@ class PulseApp(QtWidgets.QWidget):
 
 
     def comp_tcp_rotate(self):
-        pass
+        ps = self.buffer_positions
+        tcp = self.settins_pulse.tools[self.combo_tools.currentText()]['tcp']['point']
+        x,y,z,a,b,c = orient_tool_calibration(ps)
+        self.current_tool = tool_info(position([tcp['x'],tcp['y'],tcp['z']],[a,b,c]))
+
 
     def comp_base(self):
         ps = self.buffer_positions
@@ -560,7 +564,9 @@ class PulseApp(QtWidgets.QWidget):
     def combo_base_act(self,text):
         base = self.get_cur_item_from_combo(self.combo_bases,self.settins_pulse.bases)
         self.cur_base =  Position(base["point"],base["rotation"])
-        print(self.cur_base)
+
+
+        #print(self.cur_base)
         
         if self.pulse_robot is not None: self.pulse_robot.change_base(self.cur_base)
 
@@ -733,11 +739,11 @@ class PulseApp(QtWidgets.QWidget):
         self.but_disconnect_kuka.setGeometry(QtCore.QRect(1000, 140, 140, 30))
         self.but_disconnect_kuka.clicked.connect(self.disconnect_kuka)    
 
-        self.but_resiev_kuka = QPushButton('Отправить', self)
+        self.but_resiev_kuka = QPushButton('Принять', self)
         self.but_resiev_kuka.setGeometry(QtCore.QRect(1000, 240, 140, 30))
         self.but_resiev_kuka.clicked.connect(self.resiev_kuka)
 
-        self.but_send_kuka = QPushButton('Принять', self)
+        self.but_send_kuka = QPushButton('Отправить', self)
         self.but_send_kuka.setGeometry(QtCore.QRect(1000, 280, 140, 30))
         self.but_send_kuka.clicked.connect(self.send_kuka)
 
@@ -749,15 +755,18 @@ class PulseApp(QtWidgets.QWidget):
         self.kuka_robot.connect()
 
     def disconnect_kuka(self):
+        self.kuka_robot.send('q\n')
         self.kuka_robot.close()
 
     def resiev_kuka(self):
         self.kuka_robot.send('f\n')
         sleep(0.01)
         mes = self.kuka_robot.resieve()
+        print(mes)
         self.text_mes_kuka.setText(mes)
 
     def send_kuka(self):
+        self.text_mes_kuka.update()
         mes = self.text_mes_kuka.toPlainText()+' \n'
         self.kuka_robot.send(mes)
 

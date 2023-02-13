@@ -454,6 +454,19 @@ def position_from_matrix(m):
 
     return x,y,z,a,b,c
 
+def position_from_matrix_pulse(m):
+    x = m[0][3]
+    y = m[1][3]
+    z = m[2][3]
+
+    b =np.arcsin(-m[2][0])
+
+    if np.cos(b) != 0:   
+        a = np.arcsin(m[2][1] / np.cos(b))
+        c = np.arcsin(m[1][0] / np.cos(b))
+
+    return x,y,z,a,b,c
+
 
 
 

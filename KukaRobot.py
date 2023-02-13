@@ -22,10 +22,12 @@ class KukaRobot(object):
         if self.s is not None:
             data = self.s.recv(1000)
             res=str(data.decode('utf-8'))
+            
             return res
 
     def send(self,mes:str):
         if self.s is not None:
+            print(mes)
             self.s.send(mes.encode('utf-8'))
 
     def close(self):

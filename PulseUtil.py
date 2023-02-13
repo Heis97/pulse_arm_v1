@@ -40,8 +40,10 @@ def base_calibration(points):
     vz = Flat3D.compFlat(ps[0],ps[1],ps[2]).abc
     vy = (vz*vx).normalyse()
     m = matr_from_vecs(vx,vy,vz,ps[0])
-    m_inv = np.linalg.inv(m)
-    return position_from_matrix(m_inv)
+    m_inv =  np.linalg.inv(m)
+    print(m)
+    print(m_inv)
+    return position_from_matrix_pulse(m_inv)
 
 def orient_tool_calibration(points):
     ps = poses_dict_to_point3d(points)
@@ -49,7 +51,22 @@ def orient_tool_calibration(points):
     vx = compute_vector(ps[1],ps[2])
     vy = (vz*vx).normalyse()
     m = matr_from_vecs(vx,vy,vz,Point3D(0,0,0))
-    return position_from_matrix(m)
+
+    p_fl = pulse_matrix_p(ps[3])
+    p_fl_inv = np.linalg.inv(p_fl)
+    p_t1 = np.dot(p_fl_inv,m)
+
+    return position_from_matrix_pulse(np.linalg.inv(p_t1))
+
+def orient_tool_calibration_1p(p_flange,p_tool):
+    p_fl = pulse_matrix_p(pos_dict_to_point3d(p_flange))
+    p_t = pulse_matrix_p(pos_dict_to_point3d(p_tool))
+
+    p_fl_inv = np.linalg.inv(p_fl)
+
+    p_t1 = np.dot(p_fl_inv,p_t)
+
+    return position_from_matrix_pulse(p_t1)
 
 def matr_from_vecs(rx:Point3D,ry:Point3D,rz:Point3D,pos:Point3D):
     return np.array([[rx.x,rx.y,rx.z,pos.x],[ry.x,ry.y,ry.z,pos.y],[rz.x,rz.y,rz.z,pos.z],[0.,0.,0.,1.]])
