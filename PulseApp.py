@@ -150,7 +150,7 @@ class PulseApp(QtWidgets.QWidget):
                     -97.94929504394531,
                     59.58232116699219,
                     -142.0096893310547])
-        print(p_m)
+        print(p_m-matr_fl )
         print(p_t.ToStringPulse())
         p_d = position_from_matrix_pulse(p_m)
         print(p_d.ToStringPulse())
