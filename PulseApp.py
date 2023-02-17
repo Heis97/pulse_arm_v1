@@ -103,9 +103,12 @@ class RobPosThread(QtCore.QThread):
     
     def run(self):
         while True:
-            self.label.setText("Joint position:\n"+pose_to_str(self.pulse_arm.get_pose())+"\n\n\n"+"Cartesian position:\n"+position_to_str(self.pulse_arm.get_position())+"\n\n\n"+motor_state_to_str(self.pulse_arm.status_motors()))                            
-            try:               
-                self.label.setText("Joint position:\n"+pose_to_str(self.pulse_arm.get_pose())+"\n\n\n"+"Cartesian position:\n"+position_to_str(self.pulse_arm.get_position())+"\n\n\n"+motor_state_to_str(self.pulse_arm.status_motors()))                 
+            try:
+
+
+                self.label.setText("Joint position:\n"+pose_to_str(self.pulse_arm.get_pose())+
+                                   "\n\n\n"+"Cartesian position:\n"+position_to_str(self.pulse_arm.get_position())+
+                                   "\n\n\n"+motor_state_to_str(self.pulse_arm.status_motors()))                 
             except BaseException:
                 pass
         
@@ -138,9 +141,9 @@ class PulseApp(QtWidgets.QWidget):
         ps = [self.settins_pulse.start_points["calib_1_1"],self.settins_pulse.start_points["calib_1_2"],self.settins_pulse.start_points["calib_1_3"],self.settins_pulse.start_points["calib_1_4"],self.settins_pulse.start_points["calib_1_5"]]        
         tcp = calibrate_tcp_4p(ps)
 
-        p_t = pos_dict_to_point3d(ps[3])
-        p_m = pulse_matrix_p(p_t)
-        p_d = position_from_matrix_pulse(p_m)
+        
+        
+
         
 
         matr_fl = calc_forward_kinem(
@@ -150,10 +153,14 @@ class PulseApp(QtWidgets.QWidget):
                     -97.94929504394531,
                     59.58232116699219,
                     -142.0096893310547])
-        print(p_m-matr_fl )
-        print(p_t.ToStringPulse())
-        p_d = position_from_matrix_pulse(p_m)
-        print(p_d.ToStringPulse())
+        
+        for i in range(5):
+            p_t = pos_dict_to_point3d(ps[i])
+            p_m = pulse_matrix_p(p_t)
+            print("________________")
+            print(p_t.ToStringPulse())
+            p_d = position_from_matrix_pulse(p_m)
+            #print(p_d.ToStringPulse())
 
 
 

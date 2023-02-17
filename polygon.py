@@ -490,21 +490,21 @@ def position_from_matrix_pulse(m):
     Ry = np.arcsin(sRy)
     Rz = np.arcsin(sRz)
 
-    print("Rx,Ry,Rz")
+    print("Rx,Ry,Rz1")
     print(Rx,Ry,Rz)
     
     Rx = np.arccos(cRx)
     Ry = np.arccos(cRy)
     Rz = np.arccos(cRz)
 
-    print("Rx,Ry,Rz")
+    #print("Rx,Ry,Rz")
     print(Rx,Ry,Rz)
 
 
 
-    if np.cos(Ry) != 0:   
-        Rz = np.arcsin(-m[0][1] / np.cos(Ry))
-        Rx = np.arccos(-m[2][2] / np.cos(Ry))
+    #if np.cos(Ry) != 0:   
+        #Rz = np.arcsin(-m[0][1] / np.cos(Ry))
+        #Rx = np.arccos(-m[2][2] / np.cos(Ry))
 
     return Point3D(x,y,z,_pitch =  Rx,_roll= Ry, _yaw =Rz)#-np.pi -
 
