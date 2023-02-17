@@ -138,11 +138,23 @@ class PulseApp(QtWidgets.QWidget):
         ps = [self.settins_pulse.start_points["calib_1_1"],self.settins_pulse.start_points["calib_1_2"],self.settins_pulse.start_points["calib_1_3"],self.settins_pulse.start_points["calib_1_4"],self.settins_pulse.start_points["calib_1_5"]]        
         tcp = calibrate_tcp_4p(ps)
 
-        p_t = pos_dict_to_point3d(ps[0])
+        p_t = pos_dict_to_point3d(ps[3])
         p_m = pulse_matrix_p(p_t)
         p_d = position_from_matrix_pulse(p_m)
-        print(ps[0])
+        
+
+        matr_fl = calc_forward_kinem(
+            [-120.85778045654297,
+                    -58.68128967285156,
+                    161.95745849609375,
+                    -97.94929504394531,
+                    59.58232116699219,
+                    -142.0096893310547])
+        print(p_m)
+        print(p_t.ToStringPulse())
+        p_d = position_from_matrix_pulse(p_m)
         print(p_d.ToStringPulse())
+
 
 
         

@@ -106,6 +106,53 @@ def calibrate_tcp_4p(points:list[Point3D]):
         return tcp_aver/len(ps)
 
 
+def create_dhmatr(params:list):
+    theta = params[0]
+    alpha = params[1]
+    a = params[2]
+    d = params[3]
+    cosQ = np.cos(theta)
+    sinQ = np.sin(theta)
+    cosA = np.cos(alpha)
+    sinA = np.sin(alpha)
+    return np.array(
+			[[cosQ,-sinQ*cosA,sinQ*sinA,a*cosQ],
+			[sinQ, cosQ*cosA,-cosQ*sinA,a*sinQ],
+			[0   , sinA     , cosA    ,  d],
+			[0   , 0        , 0       ,  1]])
+
+
+def calc_pos(dh_params:list[list]):
+    matrs = []
+    for dh_param in dh_params:
+        matrs.append(create_dhmatr(dh_param))
+    matr_res = np.eye(4)
+    for matr in matrs:
+        matr_res = np.dot(matr_res,matr)
+    return matr_res
+
+
+def calc_forward_kinem(q:list):
+    q = toRad(q)
+    dh_params = [
+        [q[0], np.pi / 2, 0, 0.2311],
+        [ q[1],  0, -0.450, 0],
+        [ q[2],  0, -0.370, 0],
+        [ q[3], np.pi / 2, 0, 0.1351],
+        [ q[4], -np.pi / 2, 0, 0.1825],
+        [ q[5],  0, 0, 0.1325]
+    ]
+    return calc_pos(dh_params)
+
+def toRad(q:list):
+    qs = []
+    for qi in q:
+        qc = qi*np.pi/180
+        qs.append(qc)
+    return qs
+
+
+
 
 
 
