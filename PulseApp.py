@@ -138,6 +138,13 @@ class PulseApp(QtWidgets.QWidget):
         ps = [self.settins_pulse.start_points["calib_1_1"],self.settins_pulse.start_points["calib_1_2"],self.settins_pulse.start_points["calib_1_3"],self.settins_pulse.start_points["calib_1_4"],self.settins_pulse.start_points["calib_1_5"]]        
         tcp = calibrate_tcp_4p(ps)
 
+        p_t = pos_dict_to_point3d(ps[0])
+        p_m = pulse_matrix_p(p_t)
+        p_d = position_from_matrix_pulse(p_m)
+        print(ps[0])
+        print(p_d.ToStringPulse())
+
+
         
 
 
@@ -169,6 +176,8 @@ class PulseApp(QtWidgets.QWidget):
         #tcp = calibrate_tcp_4p(ps)
         #tool = tool_info(position([tcp[0][0],tcp[1][0],tcp[2][0]],[0,0,0]))
         #self.pulse_robot.change_tool_info(tool)
+
+        self.pulse_robot.set_pose(pose([0,-90,0,-90,0,0]),speed=10)
 
         self.coords_thread = RobPosThread(self.pulse_robot,self.lab_coord)
 
@@ -243,7 +252,7 @@ class PulseApp(QtWidgets.QWidget):
         but = self.sender()
         acs = 5   
         vel = 4     
-        step = 0.001
+        step = 0.1
 
         x,y,z,Rx,Ry,Rz = self.mask_from_button(but.text())        
         position_delt = position([step*x, step*y, step*z], [step*Rx, step*Ry, step*Rz])

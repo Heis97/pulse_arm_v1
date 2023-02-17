@@ -42,6 +42,9 @@ class Point3D(object):
     def ToString(self)->str:
         return str(self.x)+" "+str(self.y)+" "+str(self.z)+";"
 
+    def ToStringPulse(self)->str:
+        return str(self.x)+" "+str(self.y)+" "+str(self.z)+" "+str(self.pitch)+" "+str(self.roll)+" "+str(self.yaw)+";"
+
     def ToStringArr(arr:"list[Point3D]")->str:
         ret = ""
         for i in range(len(arr)):
@@ -454,7 +457,7 @@ def position_from_matrix(m):
 
     return x,y,z,a,b,c
 
-def position_from_matrix_pulse(m):
+def position_from_matrix_kuka(m):
     x = m[0][3]
     y = m[1][3]
     z = m[2][3]
@@ -466,6 +469,19 @@ def position_from_matrix_pulse(m):
         c = np.arcsin(m[1][0] / np.cos(b))
 
     return x,y,z,a,b,c
+
+def position_from_matrix_pulse(m):
+    x = m[0][3]
+    y = m[1][3]
+    z = m[2][3]
+
+    b =np.arcsin(-m[2][0])
+
+    if np.cos(b) != 0:   
+        a = np.arcsin(m[2][1] / np.cos(b))
+        c = np.arcsin(m[1][0] / np.cos(b))
+
+    return Point3D(x,y,z,_pitch = a,_roll= b, _yaw =c)
 
 
 
