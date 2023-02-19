@@ -520,10 +520,10 @@ def position_from_matrix_pulse(m:np.ndarray):
 
     rots = []
     
-    for i in range(10):
-        for j in range(10):
-            for k in range(10):
-                rots.append([comb_angle(Rx,i),comb_angle(Ry,j),comb_angle(Rz,k)])
+    for i in range(6):
+        for j in range(6):
+            for k in range(6):
+                rots.append([comb_angle(Rx,i),comb_angle(Ry,j),comb_angle(Rz,k),i,j,k])
 
     #print("Rx,Ry,Rz")
     m_r = m.copy()
@@ -548,7 +548,7 @@ def position_from_matrix_pulse(m:np.ndarray):
 
         #print(pulse_rot_matrix(rot[0],rot[1],rot[2]))
     
-    print(solv,sum_min)
+    #print(solv,sum_min)
 
 
 
