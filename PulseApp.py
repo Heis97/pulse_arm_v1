@@ -13,14 +13,15 @@ from pdhttp import Position,Point,Rotation,Pose,MotorStatus,PoseTimestamp,Positi
 from g_code_parser import *
 from PulseUtil import *
 from KukaRobot import *
+from PulseRobotExt import *
 
 def position_sum(p1:Position,p2:Position):
     x = p1.point.x+p2.point.x
     y = p1.point.y+p2.point.y
     z = p1.point.z+p2.point.z
 
-    u = check_angle(p1.rotation.pitch + p2.rotation.pitch)
-    v = check_angle(p1.rotation.roll  + p2.rotation.roll)
+    u = check_angle(p1.rotation.roll  + p2.rotation.roll)
+    v = check_angle(p1.rotation.pitch + p2.rotation.pitch)
     w = check_angle(p1.rotation.yaw   + p2.rotation.yaw)
 
     return [x,y,z] ,[u,v,w]
@@ -51,8 +52,10 @@ def pose_to_str(p,separator:str ="\n")->str:
     pres = 2
     return "A1: "+str(round(angles[0],pres))+separator+"A2: "+str(round(angles[1],pres))+separator+"A3: "+str(round(angles[2],pres))+separator+"A4: "+str(round(angles[3],pres))+separator+"A5: "+str(round(angles[4],pres))+separator+"A6: "+str(round(angles[5],pres))
 
-def pose_to_list(p:Pose)->list: 
-    return p.angles
+def pose_to_list(p)->list: 
+    if type(p) == Pose or type(p) == PoseTimestamp:
+        p = p.to_dict()
+    return p["angles"]
 
 def position_to_str(p,separator:str ="\n")->str:
     if type(p) == Position or type(p) == PositionTimestamp:
@@ -60,9 +63,15 @@ def position_to_str(p,separator:str ="\n")->str:
     pos = p["point"]
     rot = p["rotation"]
 
-    pres = 2
+    pres = 3
     return "X: "+str(round(1000*pos["x"],pres))+separator+"Y: "+str(round(1000*pos["y"],pres))+separator+"Z: "+str(round(1000*pos["z"],pres))+separator+"Rx: "+str(round(rot["roll"],pres))+separator+"Ry: "+str(round(rot["pitch"],pres))+separator+"Rz: "+str(round(rot["yaw"],pres))
 
+def position_to_p3d(p)->Point3D:
+    if type(p) == Position or type(p) == PositionTimestamp:
+        p = p.to_dict()
+    pos = p["point"]
+    rot = p["rotation"]
+    return Point3D (pos["x"],pos["y"],pos["z"],_pitch= rot["pitch"],_roll= rot["roll"],_yaw= rot["yaw"])
 
 def position_to_list(p:Position)->list:
     pos = p.point
@@ -94,7 +103,7 @@ class SettingsPulse():
 
 
 class RobPosThread(QtCore.QThread):
-    def __init__(self,pulse_arm:RobotPulse, label:QLabel):
+    def __init__(self,pulse_arm:PulseRobotExt, label:QLabel):
         QtCore.QThread.__init__(self)   
         self.pulse_arm = pulse_arm
         self.label = label
@@ -103,12 +112,30 @@ class RobPosThread(QtCore.QThread):
     
     def run(self):
         while True:
+            
+            cur_posit = self.pulse_arm.get_position()
+
+            cur_posit = self.pulse_arm.get_position()
+
+            cur_posit_m = pulse_matrix_p(position_to_p3d(cur_posit))
+
+            cur_posit_m_comp = pulse_FK(pose_to_list(self.pulse_arm.get_pose()))
+
+            #print(cur_posit_m_comp)
+
+            #print(cur_posit_m)
+
+            cur_posit_comp = position_from_matrix_pulse(cur_posit_m_comp)
+
+
+
+            p3d = p3d_cur_pulse(cur_posit_comp,self.pulse_arm.tool,Point3D(0,0,0))
+            
+            self.label.setText("Joint position:\n"+pose_to_str(self.pulse_arm.get_pose())+
+                                "\n\n\n"+"Cartesian position:\n"+position_to_str(self.pulse_arm.get_position())+"\n\n"+Point3D.ToStringPulse(p3d)+
+                                "\n\n\n"+motor_state_to_str(self.pulse_arm.status_motors()))  
             try:
-
-
-                self.label.setText("Joint position:\n"+pose_to_str(self.pulse_arm.get_pose())+
-                                   "\n\n\n"+"Cartesian position:\n"+position_to_str(self.pulse_arm.get_position())+
-                                   "\n\n\n"+motor_state_to_str(self.pulse_arm.status_motors()))                 
+                pass               
             except BaseException:
                 pass
         
@@ -142,25 +169,13 @@ class PulseApp(QtWidgets.QWidget):
         tcp = calibrate_tcp_4p(ps)
 
         
-        
-
-        
-
-        matr_fl = calc_forward_kinem(
-            [-120.85778045654297,
-                    -58.68128967285156,
-                    161.95745849609375,
-                    -97.94929504394531,
-                    59.58232116699219,
-                    -142.0096893310547])
-        
         for i in range(5):
             p_t = pos_dict_to_point3d(ps[i])
             p_m = pulse_matrix_p(p_t)
             print("________________")
-            print(p_t.ToStringPulse())
-            p_d = position_from_matrix_pulse(p_m)
-            print(p_d.ToStringPulse())
+            print(p_t.ToStringPulse(delim=" "))
+            p_d = position_from_matrix_pulse(p_m,p_t)
+            print(p_d.ToStringPulse(delim=" "))
 
 
 
@@ -188,7 +203,9 @@ class PulseApp(QtWidgets.QWidget):
         self.but_disconnect_robot.clicked.connect(self.disconnect_robot)
 
     def connect_robot(self):
-        self.pulse_robot = RobotPulse(host)
+        #self.pulse_robot = RobotPulse(host)
+
+        self.pulse_robot = PulseRobotExt(host)
         #self.pulse_robot.recover()
         #ps = [self.settins_pulse.start_points["calib_1_1"],self.settins_pulse.start_points["calib_1_2"],self.settins_pulse.start_points["calib_1_3"],self.settins_pulse.start_points["calib_1_4"],self.settins_pulse.start_points["calib_1_5"]]
         
@@ -196,7 +213,9 @@ class PulseApp(QtWidgets.QWidget):
         #tool = tool_info(position([tcp[0][0],tcp[1][0],tcp[2][0]],[0,0,0]))
         #self.pulse_robot.change_tool_info(tool)
 
-        self.pulse_robot.set_pose(pose([0,-90,0,-90,0,0]),speed=10)
+        #self.pulse_robot.set_pose(pose([0,-90,0,-90,0,0]),speed=10)
+
+        #self.pulse_robot.robot.set_position(position([-0.048, 0.315, 0.063],[0.006, -1.651, 0.711]) , velocity=5, acceleration=5)
 
         self.coords_thread = RobPosThread(self.pulse_robot,self.lab_coord)
 
@@ -272,14 +291,13 @@ class PulseApp(QtWidgets.QWidget):
         acs = 5   
         vel = 4     
         step = 0.1
-
         x,y,z,Rx,Ry,Rz = self.mask_from_button(but.text())        
         position_delt = position([step*x, step*y, step*z], [step*Rx, step*Ry, step*Rz])
         pos,rot = position_sum2(self.pulse_robot.get_position(),position_delt)
         pos_rel = position(pos,rot)
         #print(self.pulse_robot.get_position())
         #print(pos_rel)
-        self.pulse_robot.set_position(pos_rel , velocity=vel, acceleration=acs)
+        self.pulse_robot.robot.set_position(pos_rel , velocity=vel, acceleration=acs)
         #self.pulse_robot.await_stop()
 
     def mask_from_button(self,name):
@@ -666,21 +684,31 @@ class PulseApp(QtWidgets.QWidget):
     def set_cur_start_point(self):
         self.cur_start_point = self.get_cur_item_from_combo(self.combo_start_points,self.settins_pulse.start_points)
         if self.cur_start_point is not None:
-            self.pulse_robot.set_position(Position(self.cur_start_point["point"],self.cur_start_point["rotation"]),velocity=5,acceleration=1)
+            self.pulse_robot.robot.set_position(Position(self.cur_start_point["point"],self.cur_start_point["rotation"]),velocity=5,acceleration=1)
             #self.pulse_robot.await_stop()
 
     def exec_prog_arm_rel(self):
-        vel = 5
-        acs = 0.1
-        self.apply_settings_to_robot()
         
-        self.pulse_robot.set_position(Position(self.cur_start_point["point"],self.cur_start_point["rotation"]),velocity=vel,acceleration=acs,motion_type=MT_LINEAR)
+        #self.apply_settings_to_robot()
+        
+        #self.pulse_robot.set_position(Position(self.cur_start_point["point"],self.cur_start_point["rotation"]),velocity=vel,acceleration=acs,motion_type=MT_LINEAR)
 
         positions = self.generate_traj()
-        vel = 0.005
+        
+        print(positions)
+        vel = 50
+        acs = 0.1
+        self.pulse_robot.robot.set_position(positions[0],velocity=vel,acceleration=acs,motion_type=MT_LINEAR)
+        
+        vel = 0.03
         acs = 0.1
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
-        self.pulse_robot.run_linear_positions(positions,linear_motion_parameters)
+        self.pulse_robot.robot.run_linear_positions(positions,linear_motion_parameters)
+        try:
+            pass
+        except BaseException:
+            pass
+
 
     def exec_prog_arm_abs(self):
         #self.apply_settings_to_robot()
@@ -701,7 +729,7 @@ class PulseApp(QtWidgets.QWidget):
 
 #-----------------------------------------------------------------------------------
     def generate_traj(self):
-        
+        self.cur_start_point = self.get_cur_item_from_combo(self.combo_start_points,self.settins_pulse.start_points)
         ps = parse_g_code(self.text_prog_code.toPlainText())
         start_point = self.cur_start_point["point"]
         start_rot =  self.cur_start_point["rotation"]
@@ -713,11 +741,12 @@ class PulseApp(QtWidgets.QWidget):
         points.append(p)
         positions = [pos]
         for i in range(len(ps)):               
-            p = [start_point["x"]+ps[i].x,start_point["y"]+ps[i].y,start_point["z"]+ps[i].z]
+            p = [start_point["x"]+0.001*ps[i].x,start_point["y"]+0.001*ps[i].y,start_point["z"]+0.001*ps[i].z]
             r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
             
-            pos = position(p,r,blend=0.0001)
-            if self.dist(p,points[-1])>0.00001:
+            pos = position(p,r,blend=0.0001) 
+            if self.dist(p,points[-1])>0.003:
+                #print(pos)
                 positions.append(pos)
                 points.append(p)
 

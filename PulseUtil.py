@@ -132,8 +132,10 @@ def calc_pos(dh_params:list[list]):
     return matr_res
 
 
-def calc_forward_kinem(q:list):
+def calc_forward_kinem_pulse(q:list):
+    #print(q)
     q = toRad(q)
+    
     dh_params = [
         [q[0], np.pi / 2, 0, 0.2311],
         [ q[1],  0, -0.450, 0],
@@ -144,12 +146,34 @@ def calc_forward_kinem(q:list):
     ]
     return calc_pos(dh_params)
 
+def pulse_FK(pose:list):
+    return calc_forward_kinem_pulse(pose)
+
 def toRad(q:list):
     qs = []
     for qi in q:
         qc = qi*np.pi/180
         qs.append(qc)
     return qs
+
+def to_degree(q):
+    return q*180/np.pi
+
+
+def p3d_cur_pulse(flange:Point3D,tool:Point3D,base:Point3D):
+    cur_flange_m = pulse_matrix_p(flange)
+
+    cur_base_m = pulse_matrix_p(base)
+    cur_tool_m = pulse_matrix_p(tool)
+
+
+
+    end_p = np.dot(cur_flange_m,cur_tool_m) 
+
+    #print(cur_tool_m)
+
+    return position_from_matrix_pulse(end_p)
+
 
 
 

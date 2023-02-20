@@ -18,7 +18,7 @@ class Point3D(object):
     pitch:float = 0    
     yaw:float = 0
     
-    def __init__(self,_x:float,_y:float,_z:float,_extrude:bool = True,_r:float = 0.0,_g:float = 1.,_b:float =1.,_pitch:float = 0.0,_roll:float = 1.,_yaw:float =1.):
+    def __init__(self,_x:float,_y:float,_z:float,_extrude:bool = True,_r:float = 0.0,_g:float = 1.,_b:float =0.,_pitch:float = 0.0,_roll:float = 0.,_yaw:float =0.):
         self.x = _x
         self.y = _y
         self.z = _z
@@ -42,8 +42,8 @@ class Point3D(object):
     def ToString(self)->str:
         return str(self.x)+" "+str(self.y)+" "+str(self.z)+";"
 
-    def ToStringPulse(self)->str:
-        return str(self.x)+" "+str(self.y)+" "+str(self.z)+" "+str(self.pitch)+" "+str(self.roll)+" "+str(self.yaw)+";"
+    def ToStringPulse(self,pres = 3,delim = "\n")->str:
+        return str(round(self.x,pres))+delim+str(round(self.y,pres))+delim+str(round(self.z,pres))+delim+str(round(self.roll,pres))+delim+str(round(self.pitch,pres))+delim+str(round(self.yaw,pres))+";"
 
     def ToStringArr(arr:"list[Point3D]")->str:
         ret = ""
@@ -436,7 +436,8 @@ def pulse_matrix(x,y,z,Rx,Ry,Rz)->np.ndarray:
     return rot
 
 def pulse_matrix_p(p:Point3D)->np.ndarray:
-    rot = pulse_rot_matrix(p.pitch,p.roll,p.yaw)
+    #print(p.roll,p.pitch,p.yaw)
+    rot = pulse_rot_matrix(p.roll,p.pitch,p.yaw)
     rot[0][3] = p.x
     rot[1][3] = p.y
     rot[2][3] = p.z
@@ -472,8 +473,9 @@ def position_from_matrix_kuka(m):
 
 def comb_angle(angle:float,case:int):
     if case ==0: return angle
-    elif case ==1: return -angle
-    elif case ==2: return angle-np.pi
+    elif case ==1: return angle-np.pi
+    elif case ==2: return -angle
+    
 
     elif case ==3: return angle+np.pi
     elif case ==4: return -angle+np.pi
@@ -485,7 +487,7 @@ def comb_angle(angle:float,case:int):
     elif case ==9: return -angle-np.pi/2
 
 
-def position_from_matrix_pulse(m:np.ndarray):
+def position_from_matrix_pulse(m:np.ndarray,p_ref:Point3D = Point3D(0,0,0)):
     x = m[0][3]
     y = m[1][3]
     z = m[2][3]
@@ -521,10 +523,10 @@ def position_from_matrix_pulse(m:np.ndarray):
     Rz = np.arctan(tRz)
 
     rots = []
-    
-    for i in range(3):
-        for j in range(3):
-            for k in range(3):
+    len_v = 3
+    for i in range(len_v):
+        for j in range(len_v):
+            for k in range(len_v):
                 rots.append([comb_angle(Rx,i),comb_angle(Ry,j),comb_angle(Rz,k),i,j,k])
 
     #print("Rx,Ry,Rz")
@@ -534,7 +536,7 @@ def position_from_matrix_pulse(m:np.ndarray):
     m_r[2][3] = 0
     #print(m)
     #print(m_r)
-    sum_min = 10000
+
     solv = rots[0]
     solvs = []
 
@@ -542,11 +544,12 @@ def position_from_matrix_pulse(m:np.ndarray):
         
         delt = m_r-pulse_rot_matrix(rot[0],rot[1],rot[2])
         sum = np.sum(np.absolute(delt))
-        if sum < 1e-12:
-            sum_min = sum
-            solv = rot
+        if sum < 1e-12:  
             solvs.append(solv)
+            #if abs(rot[0]-p_ref.roll)+abs(rot[1]-p_ref.pitch)+abs(rot[2]-p_ref.yaw)<1e-5:
+            solv = rot
             #print (solv)
+             
 
         #print(pulse_rot_matrix(rot[0],rot[1],rot[2]))
     
@@ -558,7 +561,7 @@ def position_from_matrix_pulse(m:np.ndarray):
         #Rz = np.arcsin(-m[0][1] / np.cos(Ry))
         #Rx = np.arccos(-m[2][2] / np.cos(Ry))
 
-    return Point3D(x,y,z,_pitch =  solv[0],_roll= solv[1], _yaw =solv[2])#-np.pi -
+    return Point3D(x,y,z,_roll =  solv[0],_pitch = solv[1], _yaw =solv[2])#-np.pi -
 
 
 
