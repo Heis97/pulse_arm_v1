@@ -473,9 +473,11 @@ def position_from_matrix_kuka(m):
 def comb_angle(angle:float,case:int):
     if case ==0: return angle
     elif case ==1: return -angle
-    elif case ==2: return angle+np.pi
-    elif case ==3: return -angle+np.pi
-    elif case ==4: return angle-np.pi
+    elif case ==2: return angle-np.pi
+
+    elif case ==3: return angle+np.pi
+    elif case ==4: return -angle+np.pi
+    
     elif case ==5: return -angle-np.pi
     elif case ==6: return angle+np.pi/2
     elif case ==7: return -angle+np.pi/2
@@ -503,7 +505,7 @@ def position_from_matrix_pulse(m:np.ndarray):
     Ry = np.arcsin(sRy)
     Rz = np.arcsin(sRz)
 
-    print("Rx,Ry,Rz1")
+    #print("Rx,Ry,Rz1")
     #print(Rx,Ry,Rz)
     
     Rx = np.arccos(cRx)
@@ -520,9 +522,9 @@ def position_from_matrix_pulse(m:np.ndarray):
 
     rots = []
     
-    for i in range(6):
-        for j in range(6):
-            for k in range(6):
+    for i in range(3):
+        for j in range(3):
+            for k in range(3):
                 rots.append([comb_angle(Rx,i),comb_angle(Ry,j),comb_angle(Rz,k),i,j,k])
 
     #print("Rx,Ry,Rz")
@@ -534,17 +536,17 @@ def position_from_matrix_pulse(m:np.ndarray):
     #print(m_r)
     sum_min = 10000
     solv = rots[0]
+    solvs = []
 
-    i=0
     for rot in rots:
         
         delt = m_r-pulse_rot_matrix(rot[0],rot[1],rot[2])
         sum = np.sum(np.absolute(delt))
         if sum < 1e-12:
             sum_min = sum
-            solv = rots[i]
-            print (solv)
-        i+=1
+            solv = rot
+            solvs.append(solv)
+            #print (solv)
 
         #print(pulse_rot_matrix(rot[0],rot[1],rot[2]))
     
@@ -556,7 +558,7 @@ def position_from_matrix_pulse(m:np.ndarray):
         #Rz = np.arcsin(-m[0][1] / np.cos(Ry))
         #Rx = np.arccos(-m[2][2] / np.cos(Ry))
 
-    return Point3D(x,y,z,_pitch =  Rx,_roll= Ry, _yaw =Rz)#-np.pi -
+    return Point3D(x,y,z,_pitch =  solv[0],_roll= solv[1], _yaw =solv[2])#-np.pi -
 
 
 
