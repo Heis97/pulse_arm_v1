@@ -527,7 +527,7 @@ def position_from_matrix_pulse(m:np.ndarray,p_ref:Point3D = Point3D(0,0,0)):
     for i in range(len_v):
         for j in range(len_v):
             for k in range(len_v):
-                rots.append([comb_angle(Rx,i),comb_angle(Ry,j),comb_angle(Rz,k),i,j,k])
+                rots.append([comb_angle(Rx,0),comb_angle(Ry,j),comb_angle(Rz,k),i,j,k])
 
     #print("Rx,Ry,Rz")
     m_r = m.copy()
