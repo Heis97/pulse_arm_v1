@@ -167,23 +167,23 @@ class PulseApp(QtWidgets.QWidget):
         self.setWindowTitle("Интерфейс Pulse")
         self.resize(1750, 1000)
         self.build()  
-        ps = [self.settins_pulse.start_points["calib_1_1"],self.settins_pulse.start_points["calib_1_2"],self.settins_pulse.start_points["calib_1_3"],self.settins_pulse.start_points["calib_1_4"],self.settins_pulse.start_points["calib_1_5"]]        
+        ps = [self.settins_pulse.start_points["calib_1_1"],self.settins_pulse.start_points["calib_1_2"],self.settins_pulse.start_points["calib_1_3"],self.settins_pulse.start_points["calib_1_4"],self.settins_pulse.start_points["calib_1_5"]]   
+        pose = [self.settins_pulse.work_poses["calib_1_1"],self.settins_pulse.work_poses["calib_1_2"],self.settins_pulse.work_poses["calib_1_3"],self.settins_pulse.work_poses["calib_1_4"],self.settins_pulse.work_poses["calib_1_5"]]          
         tcp = calibrate_tcp_4p(ps)
 
+        debug_inv_kin(pose_to_list(pose[2]),position_to_p3d(ps[2]))
+
+
+
         
-        for i in range(5):
+        """for i in range(5):
             p_t = pos_dict_to_point3d(ps[i])
             p_m = pulse_matrix_p(p_t)
             print("________________")
             print(p_t.ToStringPulse(delim=" "))
             p_d = position_from_matrix_pulse(p_m,p_t)
             print(p_d.ToStringPulse(delim=" "))
-
-
-
-        
-
-
+"""
  
     def build(self):
         self.build_connection()

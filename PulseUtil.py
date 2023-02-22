@@ -171,6 +171,157 @@ def p3d_cur_pulse(flange:Point3D,tool:Point3D,base:Point3D):
 
     return position_from_matrix_pulse(end_p)
 
+def debug_inv_kin(pose,posit):
+    q = toRad(pose)
+    print("orig:_________________")
+    dh_params = [
+        [q[0], np.pi / 2, 0, 0.2311],
+        [ q[1],  0, -0.450, 0],
+        [ q[2],  0, -0.370, 0],
+        [ q[3], np.pi / 2, 0, 0.1351],
+        [ q[4], -np.pi / 2, 0, 0.1825],
+        [ q[5],  0, 0, 0.1325]
+    ]
+    pm = calc_pos(dh_params)
+    p = Point3D(pm[0][3],pm[1][3],pm[2][3])
+    #print("p_or",p.ToString())
+
+    dh_params = [
+        [q[0], np.pi / 2, 0, 0.2311],
+        [ q[1],  0, -0.450, 0],
+        [ q[2],  0, -0.370, 0],
+        [ q[3], np.pi / 2, 0, 0.1351],
+        [ q[4], -np.pi / 2, 0, 0.1825],
+        #[ q[5],  0, 0, 0.1325]
+    ]
+    pm = calc_pos(dh_params)
+    p0 = Point3D(pm[0][3],pm[1][3],pm[2][3])
+    print("p0_or",p0.ToString(),"\n",pm)
+
+    
+
+    dh_params = [
+        [q[0], np.pi / 2, 0, 0.2311],
+        [ q[1],  0, -0.450, 0],
+        [ q[2],  0, -0.370, 0],
+        [ q[3], np.pi / 2, 0, 0.1351],
+        #[ q[4], -np.pi / 2, 0, 0.1825],
+        #[ q[5],  0, 0, 0.1325]
+    ]
+    pm = calc_pos(dh_params)
+    p1 = Point3D(pm[0][3],pm[1][3],pm[2][3])
+    print("p1_or",p1.ToString(),"\n",pm)
+
+    dh_params = [
+        [q[0], np.pi / 2, 0, 0.2311],
+        [ q[1],  0, -0.450, 0],
+        [ q[2],  0, -0.370, 0],
+        #[ q[3], np.pi / 2, 0, 0.1351],
+        #[ q[4], -np.pi / 2, 0, 0.1825],
+        #[ q[5],  0, 0, 0.1325]
+    ]
+    pm = calc_pos(dh_params)
+    p1 = Point3D(pm[0][3],pm[1][3],pm[2][3])
+    print("p2_or",p1.ToString(),"\n",pm)
+
+    #print("d01_or ",(p1-p0).magnitude())
+
+    print("comp:_________________")
+    calc_inverse_kinem_pulse(posit)
+
+
+def calc_inverse_kinem_pulse(position:Point3D)->list:
+    pm = pulse_matrix_p(position)
+    p = Point3D(pm[0][3],pm[1][3],pm[2][3])
+    L4 = 0.1351
+    L5 = 0.1825
+    L6 = 0.1325
+
+    dz = np.array([
+        [1.,0.,0.,0.],
+    [0.,1.,0.,0.],
+    [0.,0.,1.,-L6],
+    [0.,0.,0.,1.]])
+    
+    #---------------p0 ---------------
+    p0 = np.dot(pm,dz)
+    #print("p0\n",p0)
+    p0p = Point3D(p0[0][3],p0[1][3],p0[2][3])
+    #print("p0 ",p0p.ToString())
+    #---------------vz---------------
+    vz = Point3D(pm[0][2],pm[1][2],pm[2][2])
+    #---------------v f---------------
+    xy_d = (p0p.x**2+p0p.y**2)**0.5
+    aa_d = (xy_d**2-L4**2)**0.5
+
+    alpha = np.arctan(p0p.y/p0p.x)
+    gamma = np.arctan(L4/aa_d)
+    beta = alpha - gamma
+    x2 = aa_d * np.cos(beta)
+    y2 = aa_d * np.sin(beta)
+
+    vf = Point3D(x2 - p0p.x, y2 - p0p.y,0)
+
+    vf = vf.normalyse()
+
+    #---------------p1------------------
+
+    dza5 = np.array([
+        [1.,0.,0.,0.],
+    [0.,1.,0.,0.],
+    [0.,0.,1.,-L5],
+    [0.,0.,0.,1.]])
+
+    va5_1,va5_2 = Point3D.vec_perpend_2_vecs(vz,vf)
+
+    #print("vf ",vf.ToString())
+
+    va5_1v = va5_1*L5
+    va5_2v = va5_2*L5
+
+    va5_1va = np.array([
+        [1.,0.,0.,va5_1v.x],
+    [0.,1.,0.,va5_1v.y],
+    [0.,0.,1.,va5_1v.z],
+    [0.,0.,0.,1.]])
+
+    va5_2va = np.array([
+        [1.,0.,0.,va5_2v.x],
+    [0.,1.,0.,va5_2v.y],
+    [0.,0.,1.,va5_2v.z],
+    [0.,0.,0.,1.]])
+
+    p1 =  p0+va5_1va
+    p1a = p0+va5_2va
+    #print("p1\n",p1)
+    p1p  = Point3D(p1[0][3],p1[1][3],p1[2][3])
+    print("p1 ",p1p.ToString())
+
+    #print("d01 ",(p1p-p0p).magnitude())
+    #print("p1a ",Point3D(p1a[0][3],p1a[1][3],p1a[2][3]).ToString())
+
+    #print("p1\n",p1)
+    #print("p1a\n",p1a)
+
+
+
+    #print(va5_1.ToString(),va5_2.ToString())
+
+
+
+    #print(pm)
+
+
+
+
+
+def pulse_RK(position:Point3D):
+    pass
+
+
+
+
+
 
 
 

@@ -89,6 +89,8 @@ class Point3D(object):
         elif(type(other)==np.ndarray):
             x,y,z,Rx,Ry,Rz = position_from_matrix(np.dot(pulse_matrix_p(self),other))
             return Point3D(x,y,z,_pitch= Rx,_roll=Ry,_yaw=Rz)
+        elif(type(other)==float):
+            return Point3D(other*self.x,other*self.y,other*self.z)
         else:
             return Point3D(self.x*other,self.y*other,self.z*other,self.extrude)
 
@@ -108,6 +110,16 @@ class Point3D(object):
         z = matr[2][0]*self.x + matr[2][1]*self.y + matr[2][2]*self.z+matr[2][3]
         return Point3D(x,y,z,self.extrude)
 
+    def vec_perpend_2_vecs(v1:"Point3D",v2:"Point3D"):
+        d = (v1.x**2)*(v2.y**2)+(v1.x**2)*(v2.z**2)-2*v1.x*v1.y*v2.x*v2.y-2*v1.x*v2.x*v1.z*v2.z+(v1.y**2)*(v2.x**2)+(v1.y**2)*(v2.z**2)-2*v1.y*v1.z*v2.y*v2.z+(v2.x**2)*(v1.z**2)+(v1.z**2)*(v2.y**2)
+        vx =  (v1.y*v2.z-v1.z*v2.y)*((1/d)**0.5)
+        vy = -(v1.x*v2.z-v2.x*v1.z)*((1/d)**0.5)
+        vz =  (v1.x*v2.y-v1.y*v2.x)*((1/d)**0.5)
+
+        return Point3D(vx,vy,vz),Point3D(-vx,-vy,-vz)
+
+
+
 class Flat3D(object):
     abc:Point3D
     d:float
@@ -121,6 +133,14 @@ class Flat3D(object):
         abc = (v1*v2).normalyse()
         d = -abc**p1
         return Flat3D(abc,d)
+
+    def compFlatPV(abc:Point3D,p:Point3D):
+        d = -abc**p
+        return Flat3D(abc,d)
+
+
+
+    
         
 class PrimitiveType(enum.Enum):
     points = 1
