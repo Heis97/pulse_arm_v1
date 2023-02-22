@@ -170,8 +170,8 @@ class PulseApp(QtWidgets.QWidget):
         ps = [self.settins_pulse.start_points["calib_1_1"],self.settins_pulse.start_points["calib_1_2"],self.settins_pulse.start_points["calib_1_3"],self.settins_pulse.start_points["calib_1_4"],self.settins_pulse.start_points["calib_1_5"]]   
         pose = [self.settins_pulse.work_poses["calib_1_1"],self.settins_pulse.work_poses["calib_1_2"],self.settins_pulse.work_poses["calib_1_3"],self.settins_pulse.work_poses["calib_1_4"],self.settins_pulse.work_poses["calib_1_5"]]          
         tcp = calibrate_tcp_4p(ps)
-
-        debug_inv_kin(pose_to_list(pose[2]),position_to_p3d(ps[2]))
+        ind = 2
+        debug_inv_kin(pose_to_list(pose[ind]),position_to_p3d(ps[ind]))
 
 
 
