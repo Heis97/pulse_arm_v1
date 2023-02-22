@@ -71,7 +71,7 @@ def position_to_p3d(p)->Point3D:
         p = p.to_dict()
     pos = p["point"]
     rot = p["rotation"]
-    return Point3D (pos["x"],pos["y"],pos["z"],_pitch= rot["pitch"],_roll= rot["roll"],_yaw= rot["yaw"])
+    return Point3D (pos["x"],pos["y"],pos["z"],_roll= rot["roll"],_pitch= rot["pitch"],_yaw= rot["yaw"])
 
 def position_to_list(p:Position)->list:
     pos = p.point
@@ -127,9 +127,11 @@ class RobPosThread(QtCore.QThread):
 
             cur_posit_comp = position_from_matrix_pulse(cur_posit_m_comp)
 
+            #print(Point3D.ToStringPulse(self.pulse_arm.tool,delim=", "),"\n",self.pulse_arm.get_tool_info())
 
+            p3d = p3d_cur_pulse(cur_posit_comp,self.pulse_arm.tool,self.pulse_arm.base)
 
-            p3d = p3d_cur_pulse(cur_posit_comp,self.pulse_arm.tool,Point3D(0,0,0))
+            #print(pulse_matrix_p(position_to_p3d(cur_posit)))
             
             self.label.setText("Joint position:\n"+pose_to_str(self.pulse_arm.get_pose())+
                                 "\n\n\n"+"Cartesian position:\n"+position_to_str(self.pulse_arm.get_position())+"\n\n"+Point3D.ToStringPulse(p3d)+
@@ -470,14 +472,14 @@ class PulseApp(QtWidgets.QWidget):
     def comp_tcp_rotate(self):
         ps = self.buffer_positions
         tcp = self.settins_pulse.tools[self.combo_tools.currentText()]['tcp']['point']
-        x,y,z,a,b,c = orient_tool_calibration(ps)
-        self.current_tool = tool_info(position([tcp['x'],tcp['y'],tcp['z']],[a,b,c]))
+        p = orient_tool_calibration(ps)
+        self.current_tool = tool_info(position([tcp['x'],tcp['y'],tcp['z']],[p.roll,p.pitch,p.yaw]))
 
 
     def comp_base(self):
         ps = self.buffer_positions
-        x,y,z,a,b,c = base_calibration(ps)
-        self.current_base = position([x,y,z],[a,b,c])
+        p = base_calibration(ps)
+        self.current_base = position([p.x,p.y,p.z],[p.roll,p.pitch,p.yaw])
         
 
     

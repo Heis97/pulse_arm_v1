@@ -41,8 +41,6 @@ def base_calibration(points):
     vy = (vz*vx).normalyse()
     m = matr_from_vecs(vx,vy,vz,ps[0])
     m_inv =  np.linalg.inv(m)
-    print(m)
-    print(m_inv)
     return position_from_matrix_pulse(m_inv)
 
 def orient_tool_calibration(points):
@@ -52,11 +50,12 @@ def orient_tool_calibration(points):
     vy = (vz*vx).normalyse()
     m = matr_from_vecs(vx,vy,vz,Point3D(0,0,0))
 
+
     p_fl = pulse_matrix_p(ps[3])
     p_fl_inv = np.linalg.inv(p_fl)
     p_t1 = np.dot(p_fl_inv,m)
 
-    return position_from_matrix_pulse(np.linalg.inv(p_t1))
+    return position_from_matrix_pulse(p_t1)
 
 def orient_tool_calibration_1p(p_flange,p_tool):
     p_fl = pulse_matrix_p(pos_dict_to_point3d(p_flange))
@@ -78,7 +77,7 @@ def compute_vector(p1:Point3D,p2:Point3D):
 
 
 def pos_dict_to_point3d(pos_dict:dict):
-        return Point3D(pos_dict["point"]["x"],pos_dict["point"]["y"],pos_dict["point"]["z"],_pitch = pos_dict["rotation"]["roll"],_roll = pos_dict["rotation"]["pitch"],_yaw = pos_dict["rotation"]["yaw"])
+        return Point3D(pos_dict["point"]["x"],pos_dict["point"]["y"],pos_dict["point"]["z"],_roll = pos_dict["rotation"]["roll"],_pitch = pos_dict["rotation"]["pitch"],_yaw = pos_dict["rotation"]["yaw"])
 
 def poses_dict_to_point3d(pos_dict:list[dict])->list[Point3D]:
     ps = []
@@ -166,10 +165,8 @@ def p3d_cur_pulse(flange:Point3D,tool:Point3D,base:Point3D):
     cur_base_m = pulse_matrix_p(base)
     cur_tool_m = pulse_matrix_p(tool)
 
-
-
     end_p = np.dot(cur_flange_m,cur_tool_m) 
-
+    end_p = np.dot(cur_base_m,end_p) 
     #print(cur_tool_m)
 
     return position_from_matrix_pulse(end_p)

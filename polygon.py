@@ -492,8 +492,6 @@ def position_from_matrix_pulse(m:np.ndarray,p_ref:Point3D = Point3D(0,0,0)):
     y = m[1][3]
     z = m[2][3]
 
-    Ry =np.arcsin(m[0][2])
-
     sRy = m[0][2]
     cRy = (1-sRy**2)**0.5
 
@@ -502,66 +500,12 @@ def position_from_matrix_pulse(m:np.ndarray,p_ref:Point3D = Point3D(0,0,0)):
 
     sRx = -m[1][2]/cRy
     cRx = m[2][2]/cRy
-
-    Rx = np.arcsin(sRx)
-    Ry = np.arcsin(sRy)
-    Rz = np.arcsin(sRz)
-
-    #print("Rx,Ry,Rz1")
-    #print(Rx,Ry,Rz)
     
-    Rx = np.arccos(cRx)
-    Ry = np.arccos(cRy)
-    Rz = np.arccos(cRz)
+    Rx = np.sign(sRx)* np.arccos(cRx)
+    Ry =  np.arcsin(m[0][2])
+    Rz = np.sign(sRz)*np.arccos(cRz)
 
-    #print(Rx,Ry,Rz)
-
-    tRx = -m[1][2]/m[2][2]
-    tRz = -m[0][1]/m[0][0]
-
-    Rx = np.arctan(tRx)
-    Rz = np.arctan(tRz)
-
-    rots = []
-    len_v = 3
-    for i in range(len_v):
-        for j in range(len_v):
-            for k in range(len_v):
-                rots.append([comb_angle(Rx,0),comb_angle(Ry,j),comb_angle(Rz,k),i,j,k])
-
-    #print("Rx,Ry,Rz")
-    m_r = m.copy()
-    m_r[0][3] = 0
-    m_r[1][3] = 0
-    m_r[2][3] = 0
-    #print(m)
-    #print(m_r)
-
-    solv = rots[0]
-    solvs = []
-
-    for rot in rots:
-        
-        delt = m_r-pulse_rot_matrix(rot[0],rot[1],rot[2])
-        sum = np.sum(np.absolute(delt))
-        if sum < 1e-12:  
-            solvs.append(solv)
-            #if abs(rot[0]-p_ref.roll)+abs(rot[1]-p_ref.pitch)+abs(rot[2]-p_ref.yaw)<1e-5:
-            solv = rot
-            #print (solv)
-             
-
-        #print(pulse_rot_matrix(rot[0],rot[1],rot[2]))
-    
-    #print(solv,sum_min)
-
-
-
-    #if np.cos(Ry) != 0:   
-        #Rz = np.arcsin(-m[0][1] / np.cos(Ry))
-        #Rx = np.arccos(-m[2][2] / np.cos(Ry))
-
-    return Point3D(x,y,z,_roll =  solv[0],_pitch = solv[1], _yaw =solv[2])#-np.pi -
+    return Point3D(x,y,z,_roll = Rx,_pitch = Ry, _yaw = Rz)#-np.pi -
 
 
 
