@@ -10,6 +10,7 @@ import json
 import math
 from pulseapi import  RobotPulse, pose, position, PulseApiException, MT_LINEAR,jog,create_box_obstacle,LinearMotionParameters,InterpolationType,tool_info
 from pdhttp import Position,Point,Rotation,Pose,MotorStatus,PoseTimestamp,PositionTimestamp
+from Viewer3D_GL import Paint_in_GL,GLWidget
 from g_code_parser import *
 from PulseUtil import *
 from KukaRobot import *
@@ -160,22 +161,33 @@ class PulseApp(QtWidgets.QWidget):
     pulse_robot = None
     count = 0
     def __init__(self, parent=None):
-        # Передаём ссылку на родительский элемент и чтобы виджет
-        # отображался как самостоятельное окно указываем тип окна
         super().__init__(parent, QtCore.Qt.Window)
         self.load_settings()
         self.setWindowTitle("Интерфейс Pulse")
         self.resize(1750, 1000)
         self.build()  
         ps = [self.settins_pulse.start_points["calib_1_1"],self.settins_pulse.start_points["calib_1_2"],self.settins_pulse.start_points["calib_1_3"],self.settins_pulse.start_points["calib_1_4"],self.settins_pulse.start_points["calib_1_5"]]   
-        pose = [self.settins_pulse.work_poses["calib_1_1"],self.settins_pulse.work_poses["calib_1_2"],self.settins_pulse.work_poses["calib_1_3"],self.settins_pulse.work_poses["calib_1_4"],self.settins_pulse.work_poses["calib_1_5"]]          
+        pose = [self.settins_pulse.work_poses["relax_p2812_1"],self.settins_pulse.work_poses["calib_1_2"],self.settins_pulse.work_poses["calib_1_3"],self.settins_pulse.work_poses["calib_1_4"],self.settins_pulse.work_poses["calib_1_5"]]          
         tcp = calibrate_tcp_4p(ps)
-        ind = 2
-        debug_inv_kin(pose_to_list(pose[ind]),position_to_p3d(ps[ind]))
+        ind = 0
+        solvs = debug_inv_kin(pose_to_list(pose[ind]),position_to_p3d(ps[ind]))
+
+        orig_ps = comp_axes_ps(pose_to_list(pose[ind]),False)
+        self.viewer3d.addLines(orig_ps,0,0.5,0.5,0.3)
+
+        xy = orig_ps[3].Clone()
+        xy.z = 0
+        #print(xy.normalyse().ToString(),"\n_________________")
+
+        for solv in solvs:
+            solv_ps = comp_axes_ps(solv)
+            #print(solv[6][-1].normalyse().ToString())
+            self.viewer3d.addLines(solv_ps[:8],0.5,0.5,0.5,1)
+            self.viewer3d.addLines(solv[6],1,1,0,0.4)
+            self.viewer3d.addPoimts(solv[6],1,0,1,1)
+            #print(solv_ps,"\n",solv[6])
 
 
-
-        
         """for i in range(5):
             p_t = pos_dict_to_point3d(ps[i])
             p_m = pulse_matrix_p(p_t)
@@ -196,6 +208,11 @@ class PulseApp(QtWidgets.QWidget):
         self.build_connection_kuka()
 
     def build_connection(self):
+
+        self.viewer3d = GLWidget(self)
+        self.viewer3d.setGeometry(QtCore.QRect(350, 10, 600, 600))
+        self.viewer3d.draw_start_frame(10.)
+
         self.but_connect_robot = QPushButton('Подключиться', self)
         self.but_connect_robot.setGeometry(QtCore.QRect(100, 100, 140, 30))
         self.but_connect_robot.clicked.connect(self.connect_robot)

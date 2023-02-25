@@ -91,6 +91,8 @@ class Point3D(object):
             return Point3D(x,y,z,_pitch= Rx,_roll=Ry,_yaw=Rz)
         elif(type(other)==float):
             return Point3D(other*self.x,other*self.y,other*self.z)
+        elif(type(other)==int):
+            return Point3D(other*self.x,other*self.y,other*self.z)
         else:
             return Point3D(self.x*other,self.y*other,self.z*other,self.extrude)
 
@@ -116,7 +118,25 @@ class Point3D(object):
         vy = -(v1.x*v2.z-v2.x*v1.z)*((1/d)**0.5)
         vz =  (v1.x*v2.y-v1.y*v2.x)*((1/d)**0.5)
 
-        return Point3D(vx,vy,vz),Point3D(-vx,-vy,-vz)
+        return Point3D(vx,vy,vz)
+    def ang(v1:"Point3D",v2:"Point3D"):
+        cos = v1**v2/(v1.magnitude()*v2.magnitude())
+        if cos>=1: cos = 1
+        elif cos <=-1: cos = -1
+        return np.arccos(cos)
+        
+    
+    def one_dir(v1:"Point3D",v2:"Point3D"):
+        if Point3D.ang(v1,v2)<np.pi/2: return True
+        else: return False
+
+    def sign_r_v(v1:"Point3D",v2:"Point3D",v3:"Point3D"):
+        sign =1
+        t_v3 = v1*v2
+        if not Point3D.one_dir(v3,t_v3):
+            sign = -1
+
+        return sign
 
 
 

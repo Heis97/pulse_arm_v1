@@ -130,10 +130,19 @@ def calc_pos(dh_params:list[list]):
         matr_res = np.dot(matr_res,matr)
     return matr_res
 
+def comp_axes_ps(qs:list,rad:bool = True)->list[Point3D]:
+    ps = [Point3D(0,0,0)]
+    for i in range(len(qs)):
+        pm = calc_forward_kinem_pulse(qs,rad,i+1)
+        p  = Point3D(pm[0][3],pm[1][3],pm[2][3])*100
+        ps.append(p)
+    return ps
 
-def calc_forward_kinem_pulse(q:list):
+
+def calc_forward_kinem_pulse(q:list,rad:bool = False,n = 6):
     #print(q)
-    q = toRad(q)
+    if not rad:
+        q = toRad(q)
     
     dh_params = [
         [q[0], np.pi / 2, 0, 0.2311],
@@ -143,7 +152,7 @@ def calc_forward_kinem_pulse(q:list):
         [ q[4], -np.pi / 2, 0, 0.1825],
         [ q[5],  0, 0, 0.1325]
     ]
-    return calc_pos(dh_params)
+    return calc_pos(dh_params[:n])
 
 def pulse_FK(pose:list):
     return calc_forward_kinem_pulse(pose)
@@ -191,53 +200,175 @@ def debug_inv_kin(pose,posit):
     ]
     pm = calc_pos(dh_params)
     p = Point3D(pm[0][3],pm[1][3],pm[2][3])
-    print("p_or",p.ToString(),"\n",pm)
 
-    dh_params = [
-        [q[0], np.pi / 2, 0, L1],
-        [ q[1],  0, -L2, 0],
-        [ q[2],  0, -L3, 0],
-        [ q[3], np.pi / 2, 0, L4],
-        [ q[4], -np.pi / 2, 0, L5],
-        #[ q[5],  0, 0, L6]
-    ]
-    pm = calc_pos(dh_params)
-    p0 = Point3D(pm[0][3],pm[1][3],pm[2][3])
-    print("p0_or",p0.ToString(),"\n",pm)
-
-    
-
-    dh_params = [
-        [q[0], np.pi / 2, 0, L1],
-        [ q[1],  0, -L2, 0],
-        [ q[2],  0, -L3, 0],
-        [ q[3], np.pi / 2, 0, L4],
-        #[ q[4], -np.pi / 2, 0, 0.1825],
-        #[ q[5],  0, 0, 0.1325]
-    ]
-    pm = calc_pos(dh_params)
-    p1 = Point3D(pm[0][3],pm[1][3],pm[2][3])
-    print("p1_or",p1.ToString(),"\n",pm)
-
-    dh_params = [
-        [q[0], np.pi / 2, 0, L1],
-        [ q[1],  0, -L2, 0],
-        [ q[2],  0, -L3, 0],
-        #[ q[3], np.pi / 2, 0, 0.1351],
-        #[ q[4], -np.pi / 2, 0, 0.1825],
-        #[ q[5],  0, 0, 0.1325]
-    ]
-    pm = calc_pos(dh_params)
-    p2 = Point3D(pm[0][3],pm[1][3],pm[2][3])
-    print("p2_or",p2.ToString(),"\n",pm)
-
-    #print("d01_or ",(p1-p0).magnitude())
+    pos = position_from_matrix_pulse(pm)
+    #print("p_or",p.ToString(),"\n",pm)
     print(q)
     print("comp:_________________")
-    calc_inverse_kinem_pulse(posit)
+    return calc_inverse_kinem_pulse(pos)
+
 
 
 def calc_inverse_kinem_pulse(position:Point3D)->list:
+    vars3 = [[-1,-1,-1],[-1,-1,1],[-1,1,-1],[-1,1,1],[1,-1,-1],[1,-1,1],[1,1,-1],[1,1,1]]
+    vars2 = [[-1,-1,-1],[-1,-1,1],[-1,1,-1],[-1,1,1],[1,-1,-1],[1,-1,1],[1,1,-1],[1,1,1]]
+    solvs = []
+    pm = pulse_matrix_p(position)
+    solvs_fil = []
+    for var in vars3:
+       # for var2 in vars2:
+        solvs.append(calc_inverse_kinem_pulse_priv(position,var[0],var[1],var[2]))            
+        ps = calc_forward_kinem_pulse(solvs[-1],True)
+        #print(solvs[-1][0:6],np.sum( pm-ps),"\n",pm,"\n",ps)
+        if abs(np.sum( pm-ps))<0.001:
+            print("right",solvs[-1][0:6])
+            solvs_fil.append(solvs[-1])
+
+    return solvs
+
+def calc_inters_2circ(x1,y1,x2,y2,R1,R2,sign):
+    x2-=x1
+    y2-=y1
+    sD=sign*((R1**2+2*R1*R2+R2**2-x2**2-y2**2)*(2*R1*R2-R1**2-R2**2+x2**2+y2**2))**0.5
+    x=(R1**2-R2**2+x2**2+y2**2-((y2*(R1**2*y2-R2**2*y2+x2**2*y2+y2**3+x2*sD))/(x2**2+y2**2)))/(2*x2)
+    y=(R1**2*y2-R2**2*y2+x2**2*y2+y2**3+x2*sD)/(2*(x2**2+y2**2))
+    x+=x1
+    y+=y1
+    return (x,y)
+
+def calc_inverse_kinem_pulse_priv(position:Point3D,t1=1,t2=1,t3=1)->list:
+    pm = pulse_matrix_p(position)
+    p = Point3D(pm[0][3],pm[1][3],pm[2][3])
+    L1 = 0.2311
+    L2 = 0.45
+    L3 = 0.37
+    L4 = 0.1351
+    L5 = 0.1825
+    L6 = 0.1325
+
+    dz = np.array([
+        [1.,0.,0.,0.],
+    [0.,1.,0.,0.],
+    [0.,0.,1.,-L6],
+    [0.,0.,0.,1.]])
+    
+    #---------------p0 ---------------
+    p0 = np.dot(pm,dz)
+    #print("p0\n",p0)
+    p0p = Point3D(p0[0][3],p0[1][3],p0[2][3])
+ 
+    #print("p0 ",p0p.ToString())
+    #---------------vz---------------
+    vz = Point3D(pm[0][2],pm[1][2],pm[2][2])
+    #---------------v f---------------
+    xy_d = (p0p.x**2+p0p.y**2)**0.5
+    aa_d = (xy_d**2-L4**2)**0.5
+
+    """p0_xy = p0p.magnitude_xy()
+    alpha = np.arctan(p0p.y/p0p.x)
+    gamma = np.arctan(L4/aa_d)
+    beta = alpha - t1*gamma
+    x2 = aa_d * np.cos(beta)
+    y2 = aa_d * np.sin(beta)"""
+    #t1 = 1
+    #t2 = 1
+    #t3 = 1
+    x2,y2 = calc_inters_2circ(0,0,p0p.x,p0p.y,aa_d,L4,t1)
+
+    vf = Point3D(x2 - p0p.x, y2 - p0p.y,0)
+
+    vf = vf.normalyse()
+
+    #---------------p1------------------
+    ax5y = Point3D.vec_perpend_2_vecs(vz,vf)
+
+    #print(ax5y**vf,ax5y**vz)
+
+    ax5y*= t2
+
+
+    #vf == ax4y
+
+    #print("vf ",vf.ToString())
+    #print("ax5v ",ax5y.ToString())
+
+    p1 =  p0p + ax5y*L5
+    #print("p1 ",p1.ToString())
+    p2 = p1 + vf*L4
+    #print("p2 ",p2.ToString())
+
+    scara = p2 - Point3D(0,0,L1)
+
+    #q1 = np.arctan(scara.y/scara.x) - np.pi
+
+    sq1 = -scara.y/scara.magnitude_xy()
+    cq1 = -scara.x/scara.magnitude_xy()
+
+    q1 = np.sign(sq1)* np.arccos(cq1)
+
+    
+
+
+    
+    Ls = scara.magnitude_xy()
+    Lt = scara.magnitude()
+    #omega = np.arcsin(scara.z/Lt)
+
+    omega = np.arctan(scara.z/Ls)
+
+    #Lt**2 = L2**2 + L3**2 - 2*L2*L3*cos(theta)
+
+    theta = np.arccos((L2**2+L3**2-Lt**2)/(2*L2*L3))
+    omega_ext = np.arccos((L2**2+Lt**2-L3**2)/(2*L2*Lt))
+    omega += t3*omega_ext
+
+
+    q2 = -omega
+    q3 = np.pi-theta
+
+    if t1>0:
+        q1+=np.pi
+        
+        q2*=-1
+        q2-=np.pi
+        q3*=-1
+        pass
+
+    if t3<0:
+        q3*=t3        
+        pass
+
+    ax4z = -ax5y 
+    ax4y = -vf
+    ax4x = ax4y*ax4z
+    dh_params = [
+        [q1, np.pi / 2, 0, L1],
+        [ q2,  0, -L2, 0],
+        [ q3,  0, -L3, 0],
+    ]
+    pm3 = calc_pos(dh_params)
+
+    ax3x = Point3D(pm3[0][0],pm3[1][0],pm3[2][0])
+    s4 = Point3D.sign_r_v(ax3x,ax4x,ax4y)
+    q4 =  s4*np.arccos((ax3x**ax4x)/(ax4x.magnitude()*ax3x.magnitude())) #check sign from ax3z
+
+
+    ax6y = Point3D(pm[0][1],pm[1][1],pm[2][1])
+    ax6z = Point3D(pm[0][2],pm[1][2],pm[2][2])
+
+    s6 = Point3D.sign_r_v(ax5y,ax6y,ax6z)
+    q6 = s6*np.arccos((ax5y**ax6y)/(ax5y.magnitude()*ax6y.magnitude()))#check sign from ax6z
+
+    
+    s5 = Point3D.sign_r_v(ax4y,ax6z,ax4z)
+    q5 = s5*np.arccos((ax4y**ax6z)/(ax4y.magnitude()*ax6z.magnitude()))#check sign from ax4z
+
+    q6+=np.pi
+    k = 100
+    return [q1,q2,q3,q4,q5,q6,[p*k,p0p*k,p1*k,p2*k,Point3D(0,0,L1)*k],t1,t2,t3]
+
+
+def calc_inverse_kinem_pulse_old(position:Point3D)->list:
     pm = pulse_matrix_p(position)
     p = Point3D(pm[0][3],pm[1][3],pm[2][3])
     L1 = 0.2311
@@ -273,6 +404,8 @@ def calc_inverse_kinem_pulse(position:Point3D)->list:
     vf = -Point3D(x2 - p0p.x, y2 - p0p.y,0)
 
     vf = vf.normalyse()
+
+
 
     #---------------p1------------------
     ax5y_1,ax5y_2 = Point3D.vec_perpend_2_vecs(vz,vf)
@@ -330,15 +463,12 @@ def calc_inverse_kinem_pulse(position:Point3D)->list:
 
     ax3x = Point3D(pm3[0][0],pm3[1][0],pm3[2][0])
 
-    q4 = -np.arccos((ax3x**ax4x)/(ax4x.magnitude()*ax3x.magnitude()))#check sign from ax3z
+    q4 = np.arccos((ax3x**ax4x)/(ax4x.magnitude()*ax3x.magnitude()))#check sign from ax3z
 
     #print("pm3",pm3)
 
 
     print("q4",q4,"q5",q5,"q6",q6)
-
-
-
 
 
 
