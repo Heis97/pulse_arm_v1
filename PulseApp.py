@@ -135,7 +135,7 @@ class RobPosThread(QtCore.QThread):
             #print(pulse_matrix_p(position_to_p3d(cur_posit)))
             
             self.label.setText("Joint position:\n"+pose_to_str(self.pulse_arm.get_pose())+
-                                "\n\n\n"+"Cartesian position:\n"+position_to_str(self.pulse_arm.get_position())+"\n\n"+Point3D.ToStringPulse(p3d)+
+                                "\n\n\n"+"Cartesian position:\n"+position_to_str(self.pulse_arm.get_position())+#"\n\n"+Point3D.ToStringPulse(p3d)+
                                 "\n\n\n"+motor_state_to_str(self.pulse_arm.status_motors()))  
             try:
                 pass               
@@ -315,7 +315,8 @@ class PulseApp(QtWidgets.QWidget):
         pos,rot = position_sum2(self.pulse_robot.get_position(),position_delt)
         pos_rel = position(pos,rot)
         #print(self.pulse_robot.get_position())
-        #print(pos_rel)
+        print(pos_rel)
+
         self.pulse_robot.robot.set_position(pos_rel , velocity=vel, acceleration=acs)
         #self.pulse_robot.await_stop()
 
@@ -686,8 +687,12 @@ class PulseApp(QtWidgets.QWidget):
         self.but_start_prog_rel.setGeometry(QtCore.QRect(1000, 840, 140, 30))
         self.but_start_prog_rel.clicked.connect(self.exec_prog_arm_rel)
 
+        self.but_start_prog_abs_xyz = QPushButton('Исп. прог. абс xyz', self)
+        self.but_start_prog_abs_xyz.setGeometry(QtCore.QRect(1000, 880, 140, 30))
+        self.but_start_prog_abs_xyz.clicked.connect(self.exec_prog_arm_abs_xyz)
+
         self.but_stop_robot = QPushButton('Остановить', self)
-        self.but_stop_robot.setGeometry(QtCore.QRect(1000, 880, 140, 30))
+        self.but_stop_robot.setGeometry(QtCore.QRect(1000, 940, 140, 30))
         self.but_stop_robot.clicked.connect(self.stop_ex_robot)
 
         self.text_prog_code = QTextEdit(self)
@@ -722,11 +727,25 @@ class PulseApp(QtWidgets.QWidget):
         vel = 0.03
         acs = 0.1
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
-        self.pulse_robot.robot.run_linear_positions(positions,linear_motion_parameters)
-        try:
-            pass
-        except BaseException:
-            pass
+        self.pulse_robot.robot.run_linear_positions(positions[:800],linear_motion_parameters)
+
+    def exec_prog_arm_abs_xyz(self):
+        
+        #self.apply_settings_to_robot()
+        
+        #self.pulse_robot.set_position(Position(self.cur_start_point["point"],self.cur_start_point["rotation"]),velocity=vel,acceleration=acs,motion_type=MT_LINEAR)
+
+        positions = self.generate_traj_abs_xyz()
+        
+        print(positions)
+        vel = 50
+        acs = 0.1
+        self.pulse_robot.robot.set_position(positions[0],velocity=vel,acceleration=acs,motion_type=MT_LINEAR)
+        
+        vel = 0.03
+        acs = 0.1
+        linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
+        self.pulse_robot.robot.run_linear_positions(positions[:800],linear_motion_parameters)
 
 
     def exec_prog_arm_abs(self):
@@ -754,13 +773,46 @@ class PulseApp(QtWidgets.QWidget):
         start_rot =  self.cur_start_point["rotation"]
 
         points = []
+        #p = [start_point["x"],start_point["y"],start_point["z"]]
+        #r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
+        p = []
+        r = []
+        dz = 6
+        positions = []
+        for i in range(len(ps)):               
+            p = [start_point["x"]+0.001*ps[i].x,start_point["y"]+0.001*ps[i].y,start_point["z"]+0.001*(ps[i].z+dz)]
+            r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
+            
+            pos = position(p,r,blend=0.0001) 
+            if i!=0:
+                if self.dist(p,points[-1])>0.003:
+                    #print(pos)
+                    positions.append(pos)
+                    points.append(p)
+            else:
+                positions.append(pos)
+                points.append(p)
+
+
+        #for i in range(len(positions)):
+            #print(i," ",positions[i])
+        
+        return positions
+
+    def generate_traj_abs_xyz(self):
+        self.cur_start_point = self.get_cur_item_from_combo(self.combo_start_points,self.settins_pulse.start_points)
+        ps = parse_g_code(self.text_prog_code.toPlainText())
+        start_point = self.cur_start_point["point"]
+        start_rot =  self.cur_start_point["rotation"]
+
+        points = []
         p = [start_point["x"],start_point["y"],start_point["z"]]
         r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
         pos = position(p,r)
         points.append(p)
         positions = [pos]
         for i in range(len(ps)):               
-            p = [start_point["x"]+0.001*ps[i].x,start_point["y"]+0.001*ps[i].y,start_point["z"]+0.001*ps[i].z]
+            p = [0.001*ps[i].x,0.001*ps[i].y,0.001*ps[i].z]
             r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
             
             pos = position(p,r,blend=0.0001) 
@@ -773,8 +825,6 @@ class PulseApp(QtWidgets.QWidget):
             #print(i," ",positions[i])
         
         return positions
-
-
 #-----------------------------------------------------------------------------------
     def generate_traj_abc(self):
         
