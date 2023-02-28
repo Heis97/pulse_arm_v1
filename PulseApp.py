@@ -268,7 +268,14 @@ class PulseApp(QtWidgets.QWidget):
         self.but_relax_robot.setGeometry(QtCore.QRect(100, 280, 140, 30))
         self.but_relax_robot.clicked.connect(self.relax_robot)
 
-        self.add_axis_buttons(ax.X,QtCore.QRect(100, 340, 30, 30),self.axis_jog)
+        axis = [ax.X,ax.Y,ax.Z,ax.U,ax.V,ax.W]
+        i=0
+        for axe in axis:           
+            self.add_axis_buttons(axe,QtCore.QRect(100+40*i, 340, 30, 30),self.axis_jog)
+            self.add_axis_buttons(axe,QtCore.QRect(100+40*i, 440, 30, 30),self.axis_move)
+            i+=1
+
+        """self.add_axis_buttons(ax.X,QtCore.QRect(100, 340, 30, 30),self.axis_jog)
         self.add_axis_buttons(ax.Y,QtCore.QRect(140, 340, 30, 30),self.axis_jog)
         self.add_axis_buttons(ax.Z,QtCore.QRect(180, 340, 30, 30),self.axis_jog)
 
@@ -282,7 +289,7 @@ class PulseApp(QtWidgets.QWidget):
 
         self.add_axis_buttons(ax.U,QtCore.QRect(220, 440, 30, 30),self.axis_move)
         self.add_axis_buttons(ax.V,QtCore.QRect(260, 440, 30, 30),self.axis_move)
-        self.add_axis_buttons(ax.W,QtCore.QRect(300, 440, 30, 30),self.axis_move)
+        self.add_axis_buttons(ax.W,QtCore.QRect(300, 440, 30, 30),self.axis_move)"""
 
     def home_position(self):
         home_pose = pose([0, -90, 0, -90, -90, 0])

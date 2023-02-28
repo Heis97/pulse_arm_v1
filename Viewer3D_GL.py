@@ -10,6 +10,7 @@ from PyQt5.QtCore import (pyqtProperty, pyqtSignal, pyqtSlot, QPoint,QPointF, QS
         Qt, QTime, QTimer)
 import OpenGL.GL as gl
 from polygon import Mesh3D, Point3D,PrimitiveType
+import numpy as np
 
 class Paint_in_GL(object):
     visible = True
@@ -25,6 +26,7 @@ class Paint_in_GL(object):
     points:"list[Point3D]"
     p2 = []
     p3 = []
+    matr =np.array([[1.,0.,0.,0.],[0.,1.,0.,0.],[0.,0.,1.,0.],[0.,0.,0.,1.]])
     mesh_obj: Mesh3D = None
     def __init__(self, _red, _green, _blue, _size, _type:PrimitiveType, _mesh_obj:Mesh3D):
         self.red = _red
@@ -215,10 +217,19 @@ class GLWidget(QOpenGLWidget):
             
     def GL_paint(self,  paint_gls: "list[Paint_in_GL]"):
         for i in range(len(paint_gls)):
+            gl.glMatrixMode(gl.GL_MODELVIEW)
+            gl.glLoadIdentity()
+            #model2 = gl.glGetDoublev(gl.GL_MODELVIEW_MATRIX)
+            #gl.glTranslated(0, 0,i*10.)
+            #model2[3][2] = i*2.
+            #print(model2)
+            gl.glLoadMatrixd(paint_gls[i].matr)     
+
             if paint_gls[i].glList==None:
                 paint_gls[i].glList = self.initPaint_in_GL(paint_gls[i])
             else:
-                for gl_list in paint_gls[i].glList:
+                for gl_list in paint_gls[i].glList:                  
+                    
                     if paint_gls[i].obj_type == PrimitiveType.triangles:
                         gl.glEnable(gl.GL_LIGHTING)
                         gl.glLightfv(gl.GL_LIGHT0, gl.GL_POSITION, self.lightZeroPosition)
@@ -230,18 +241,25 @@ class GLWidget(QOpenGLWidget):
 
     def paintGL(self):
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
+        
+        gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
-     
-        gl.glTranslated(self.off_x, self.off_y,-10.)
+        """gl.glTranslated(self.off_x, self.off_y,-10.)
         gl.glRotated(self.xRot, 1.0, 0.0, 0.0)
         gl.glRotated(self.yRot, 0.0, 1.0, 0.0)
-        gl.glRotated(self.zRot, 0.0, 0.0, 1.0)
+        gl.glRotated(self.zRot, 0.0, 0.0, 1.0)"""
         #gl.glScalef(self.zoom,self.zoom,self.zoom)
         self.render_count+=1
         gl.glMatrixMode(gl.GL_PROJECTION)
         gl.glLoadIdentity()
         gl.glOrtho(-self.w/ self.zoom ,self.w/  self.zoom , -self.h/  self.zoom , self.h/  self.zoom , -20000., 50000.0)
-        gl.glMatrixMode(gl.GL_MODELVIEW)
+        gl.glTranslated(self.off_x, self.off_y,-10.)
+        gl.glRotated(self.xRot, 1.0, 0.0, 0.0)
+        gl.glRotated(self.yRot, 0.0, 1.0, 0.0)
+        gl.glRotated(self.zRot, 0.0, 0.0, 1.0)
+        
+
+        
 
         self.GL_paint(self.paint_objs)
         self.GL_paint(self.traj_objs)
