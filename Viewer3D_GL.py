@@ -1,13 +1,9 @@
 
 import struct
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import (QWidget, QPushButton,QSlider, QLineEdit, QOpenGLWidget,QTextEdit,
-    QInputDialog, QApplication,QGridLayout)
+from PyQt5.QtWidgets import QOpenGLWidget
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import *
-from PyQt5.QtGui import QBrush, QColor, QPainter, QPen, QPolygon
-from PyQt5.QtCore import (pyqtProperty, pyqtSignal, pyqtSlot, QPoint,QPointF, QSize,
-        Qt, QTime, QTimer)
+from PyQt5.QtGui import  QColor, QMouseEvent
+from PyQt5.QtCore import ( QPoint,QPointF, QSize, Qt)
 import OpenGL.GL as gl
 from polygon import Mesh3D, Point3D,PrimitiveType
 import numpy as np
@@ -26,7 +22,7 @@ class Paint_in_GL(object):
     points:"list[Point3D]"
     p2 = []
     p3 = []
-    matr =np.array([[1.,0.,0.,0.],[0.,1.,0.,0.],[0.,0.,1.,0.],[0.,0.,0.,1.]])
+    matr = np.array([[1.,0.,0.,0.],[0.,1.,0.,0.],[0.,0.,1.,0.],[0.,0.,0.,1.]])
     mesh_obj: Mesh3D = None
     def __init__(self, _red, _green, _blue, _size, _type:PrimitiveType, _mesh_obj:Mesh3D):
         self.red = _red
@@ -103,6 +99,7 @@ class GLWidget(QOpenGLWidget):
         self.off_y=0.0
         self.zoom=100
 
+#--------------
     def initializeGL(self):
         self.setClearColor(self.trolltechPurple)
         gl.glShadeModel(gl.GL_FLAT)
@@ -257,15 +254,12 @@ class GLWidget(QOpenGLWidget):
         gl.glRotated(self.xRot, 1.0, 0.0, 0.0)
         gl.glRotated(self.yRot, 0.0, 1.0, 0.0)
         gl.glRotated(self.zRot, 0.0, 0.0, 1.0)
-        
-
-        
 
         self.GL_paint(self.paint_objs)
         self.GL_paint(self.traj_objs)
         self.update()
 
-
+#---------------stl-----------------
     def extract_coords_from_stl(self,stl_file):
         result = []
         coords = []
@@ -311,7 +305,7 @@ class GLWidget(QOpenGLWidget):
             coords+= GLWidget.read_triangle(op)
         return coords
 
-
+#---------------stl-----------------
         
     def getOpenglInfo(self):
         
@@ -434,6 +428,17 @@ class GLWidget(QOpenGLWidget):
     def addLinesDef(self, traj:"list[Point3D]",r:float,g:float,b:float,size:float):
         mesh3d_traj = Mesh3D(traj,PrimitiveType.lines_def)
         self.traj_objs.append(Paint_in_GL(r,g,b,size,PrimitiveType.lines,mesh3d_traj))
+
+    def addLines_ret(self, traj:"list[Point3D]",r:float,g:float,b:float,size:float)->int:
+        mesh3d_traj = Mesh3D(traj,PrimitiveType.lines)
+        self.traj_objs.append(Paint_in_GL(r,g,b,size,PrimitiveType.lines,mesh3d_traj))
+        return len(self.traj_objs)-1
+
+    def setMatr(self,matr,ind):
+        #print(ind,matr)
+        self.traj_objs[ind].matr = np.transpose(matr)
+
+    
 
 
     def clear(self):

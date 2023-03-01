@@ -1,6 +1,5 @@
 import math
 import numpy as np
-import cv2 as cv
 from polygon import *
 
 def find_center_sphere_4p(ps:list[Point3D]):
@@ -138,19 +137,31 @@ def comp_axes_ps(qs:list,rad:bool = True)->list[Point3D]:
         ps.append(p)
     return ps
 
+def comp_matrs_ps(qs:list,rad:bool = True)->list[Point3D]:
+    pms = []
+    for i in range(len(qs)):
+        pm = calc_forward_kinem_pulse(qs,rad,i+1)
+        pms.append(pm)
+    return pms
 
 def calc_forward_kinem_pulse(q:list,rad:bool = False,n = 6):
+    L1 = 0.2311
+    L2 = 0.45
+    L3 = 0.37
+    L4 = 0.1351
+    L5 = 0.1825
+    L6 = 0.1325
     #print(q)
     if not rad:
         q = toRad(q)
     
     dh_params = [
-        [q[0], np.pi / 2, 0, 0.2311],
-        [ q[1],  0, -0.450, 0],
-        [ q[2],  0, -0.370, 0],
-        [ q[3], np.pi / 2, 0, 0.1351],
-        [ q[4], -np.pi / 2, 0, 0.1825],
-        [ q[5],  0, 0, 0.1325]
+        [q[0], np.pi / 2, 0, L1],
+        [ q[1],  0, -L2, 0],
+        [ q[2],  0, -L3, 0],
+        [ q[3], np.pi / 2, 0, L4],
+        [ q[4], -np.pi / 2, 0, L5],
+        [ q[5],  0, 0, L6]
     ]
     return calc_pos(dh_params[:n])
 
@@ -211,18 +222,11 @@ def debug_inv_kin(pose,posit):
 
 def calc_inverse_kinem_pulse(position:Point3D)->list:
     vars3 = [[-1,-1,-1],[-1,-1,1],[-1,1,-1],[-1,1,1],[1,-1,-1],[1,-1,1],[1,1,-1],[1,1,1]]
-    vars2 = [[-1,-1,-1],[-1,-1,1],[-1,1,-1],[-1,1,1],[1,-1,-1],[1,-1,1],[1,1,-1],[1,1,1]]
     solvs = []
-    pm = pulse_matrix_p(position)
     solvs_fil = []
     for var in vars3:
-       # for var2 in vars2:
-        solvs.append(calc_inverse_kinem_pulse_priv(position,var[0],var[1],var[2]))            
-        ps = calc_forward_kinem_pulse(solvs[-1],True)
-        #print(solvs[-1][0:6],np.sum( pm-ps),"\n",pm,"\n",ps)
-        if abs(np.sum( pm-ps))<0.001:
-            print("right",solvs[-1][0:6])
-            solvs_fil.append(solvs[-1])
+        solvs.append(calc_inverse_kinem_pulse_priv(position,var[0],var[1],var[2]))
+        solvs_fil.append(solvs[-1])
 
     return solvs
 
@@ -235,6 +239,11 @@ def calc_inters_2circ(x1,y1,x2,y2,R1,R2,sign):
     x+=x1
     y+=y1
     return (x,y)
+
+def arccos(cos):
+    if cos>=1: cos = 1
+    elif cos <=-1: cos = -1
+    return np.arccos(cos)
 
 def calc_inverse_kinem_pulse_priv(position:Point3D,t1=1,t2=1,t3=1)->list:
     pm = pulse_matrix_p(position)
@@ -318,8 +327,8 @@ def calc_inverse_kinem_pulse_priv(position:Point3D,t1=1,t2=1,t3=1)->list:
 
     #Lt**2 = L2**2 + L3**2 - 2*L2*L3*cos(theta)
 
-    theta = np.arccos((L2**2+L3**2-Lt**2)/(2*L2*L3))
-    omega_ext = np.arccos((L2**2+Lt**2-L3**2)/(2*L2*Lt))
+    theta = arccos((L2**2+L3**2-Lt**2)/(2*L2*L3))
+    omega_ext = arccos((L2**2+Lt**2-L3**2)/(2*L2*Lt))
     omega += t3*omega_ext
 
 
@@ -364,8 +373,15 @@ def calc_inverse_kinem_pulse_priv(position:Point3D,t1=1,t2=1,t3=1)->list:
     q5 = s5*np.arccos((ax4y**ax6z)/(ax4y.magnitude()*ax6z.magnitude()))#check sign from ax4z
 
     q6+=np.pi
+
+    q = [q1,q2,q3,q4,q5,q6]
+    for i in range(len(q)):
+        qi = q[i]
+        if qi>np.pi: qi-=2*np.pi
+        if qi<-np.pi: qi+=2*np.pi
+        q[i]= qi
     k = 100
-    return [q1,q2,q3,q4,q5,q6,[p*k,p0p*k,p1*k,p2*k,Point3D(0,0,L1)*k],t1,t2,t3]
+    return [q[0],q[1],q[2],q[3],q[4],q[5],[p*k,p0p*k,p1*k,p2*k,Point3D(0,0,L1)*k],t1,t2,t3]
 
 
 def calc_inverse_kinem_pulse_old(position:Point3D)->list:

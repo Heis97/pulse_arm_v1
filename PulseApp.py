@@ -102,6 +102,25 @@ class SettingsPulse():
     def for_ser(self):
         return [self.tools,self.bases,self.work_poses,self.start_points]
 
+class RobAnimThread(QtCore.QThread):
+    def __init__(self,pulse_arm:"PulseApp"):
+        QtCore.QThread.__init__(self)   
+        self.pulse_arm = pulse_arm
+        self.timeDelt = 0.02
+        self.start()   
+        ps = [pulse_arm.settins_pulse.start_points["calib_1_1"]]   
+        #pose = [self.settins_pulse.work_poses["relax_p2812_1"],self.settins_pulse.work_poses["calib_1_2"],self.settins_pulse.work_poses["calib_1_3"],self.settins_pulse.work_poses["calib_1_4"],self.settins_pulse.work_poses["calib_1_5"]]          
+        ind = 3
+        self.p3d = position_to_p3d(ps[0])
+        #p3d = Point3D(-0.1968046387429365, 0.3157234605035095, 0.20865034899430465,_roll =-1.5787544743183737,_pitch= 0.06680544184390703,_yaw= -0.7587056145763897)
+        self.rob_pulse_draw = pulse_arm.draw_rob()
+
+    
+    def run(self):
+        for i in range(50):
+            self.p3d.x+=0.01
+            self.pulse_arm.draw_line_rob_pos(self.p3d,self.rob_pulse_draw) 
+            sleep(self.timeDelt)
 
 class RobPosThread(QtCore.QThread):
     def __init__(self,pulse_arm:PulseRobotExt, label:QLabel):
@@ -166,36 +185,47 @@ class PulseApp(QtWidgets.QWidget):
         self.setWindowTitle("Интерфейс Pulse")
         self.resize(1750, 1000)
         self.build()  
-        ps = [self.settins_pulse.start_points["calib_1_1"],self.settins_pulse.start_points["calib_1_2"],self.settins_pulse.start_points["calib_1_3"],self.settins_pulse.start_points["calib_1_4"],self.settins_pulse.start_points["calib_1_5"]]   
-        pose = [self.settins_pulse.work_poses["relax_p2812_1"],self.settins_pulse.work_poses["calib_1_2"],self.settins_pulse.work_poses["calib_1_3"],self.settins_pulse.work_poses["calib_1_4"],self.settins_pulse.work_poses["calib_1_5"]]          
-        tcp = calibrate_tcp_4p(ps)
-        ind = 0
-        solvs = debug_inv_kin(pose_to_list(pose[ind]),position_to_p3d(ps[ind]))
+        
+    def draw_line_rob_pos(self,p3d:Point3D,rob_draw:list):
+        q = calc_inverse_kinem_pulse(p3d)[1]       
+        return self.draw_line_rob(rob_draw,q)
 
-        orig_ps = comp_axes_ps(pose_to_list(pose[ind]),False)
-        self.viewer3d.addLines(orig_ps,0,0.5,0.5,0.3)
+    def draw_rob(self):
+        L1 = 0.2311
+        L2 = 0.45
+        L3 = 0.37
+        L4 = 0.1351
+        L5 = 0.1825
+        L6 = 0.1325
+        l = [L1,L2,L3,L4,L5,L6]
+        q_draw = []
+        q_draw.append(self.viewer3d.addLines_ret([Point3D(0,0,0),Point3D(0,-l[0],0)],1,0,0,1))
+        q_draw.append(self.viewer3d.addLines_ret([Point3D(0,0,0),Point3D(l[1],0,0)],1,0,0,1))      
+        q_draw.append(self.viewer3d.addLines_ret([Point3D(0,0,0),Point3D(l[2],0,0)],1,0,0,1))      
+        q_draw.append(self.viewer3d.addLines_ret([Point3D(0,0,0),Point3D(0,-l[3],0)],1,0,0,1))
+        q_draw.append(self.viewer3d.addLines_ret([Point3D(0,0,0),Point3D(0,l[4],0)],1,0,0,1))
+        q_draw.append(self.viewer3d.addLines_ret([Point3D(0,0,0),Point3D(0,0,-l[5])],1,0,0,1))
+        return q_draw
 
-        xy = orig_ps[3].Clone()
-        xy.z = 0
-        #print(xy.normalyse().ToString(),"\n_________________")
+    def draw_line_rob(self,q_draw:list,q:list):
+        solv_pms = comp_matrs_ps(q)
+        for i in range(6):
+            self.viewer3d.setMatr(solv_pms[i],q_draw[i])
 
-        for solv in solvs:
-            solv_ps = comp_axes_ps(solv)
-            #print(solv[6][-1].normalyse().ToString())
-            self.viewer3d.addLines(solv_ps[:8],0.5,0.5,0.5,1)
-            self.viewer3d.addLines(solv[6],1,1,0,0.4)
-            self.viewer3d.addPoimts(solv[6],1,0,1,1)
-            #print(solv_ps,"\n",solv[6])
+    def start_anim_robot(self):
 
+        self.thr = RobAnimThread(self)
+        """ps = [self.settins_pulse.start_points["calib_1_1"],self.settins_pulse.start_points["calib_1_2"],self.settins_pulse.start_points["calib_1_3"],self.settins_pulse.start_points["calib_1_4"],self.settins_pulse.start_points["calib_1_5"]]   
+        #pose = [self.settins_pulse.work_poses["relax_p2812_1"],self.settins_pulse.work_poses["calib_1_2"],self.settins_pulse.work_poses["calib_1_3"],self.settins_pulse.work_poses["calib_1_4"],self.settins_pulse.work_poses["calib_1_5"]]          
+        ind = 3
+        p3d = position_to_p3d(ps[ind])
+        #p3d = Point3D(-0.1968046387429365, 0.3157234605035095, 0.20865034899430465,_roll =-1.5787544743183737,_pitch= 0.06680544184390703,_yaw= -0.7587056145763897)
+        self.rob_pulse_draw = self.draw_rob()
 
-        """for i in range(5):
-            p_t = pos_dict_to_point3d(ps[i])
-            p_m = pulse_matrix_p(p_t)
-            print("________________")
-            print(p_t.ToStringPulse(delim=" "))
-            p_d = position_from_matrix_pulse(p_m,p_t)
-            print(p_d.ToStringPulse(delim=" "))
-"""
+        for i in range(50):
+            p3d.x+=0.01
+            self.draw_line_rob_pos(p3d,self.rob_pulse_draw) 
+            sleep(0.1)"""
  
     def build(self):
         self.build_connection()
@@ -220,6 +250,10 @@ class PulseApp(QtWidgets.QWidget):
         self.but_disconnect_robot = QPushButton('Отключиться', self)
         self.but_disconnect_robot.setGeometry(QtCore.QRect(100, 140, 140, 30))
         self.but_disconnect_robot.clicked.connect(self.disconnect_robot)
+
+        self.but_start_anim_robot = QPushButton('Анимац', self)
+        self.but_start_anim_robot.setGeometry(QtCore.QRect(100, 60, 140, 30))
+        self.but_start_anim_robot.clicked.connect(self.start_anim_robot)
 
     def connect_robot(self):
         #self.pulse_robot = RobotPulse(host)
