@@ -185,6 +185,8 @@ class PulseApp(QtWidgets.QWidget):
         self.setWindowTitle("Интерфейс Pulse")
         self.resize(1750, 1000)
         self.build()  
+        self.viewer3d.addModel_ret(r"C:\Users\1\Documents\GitHub\3d models\rozum\0.STL")
+
         
     def draw_line_rob_pos(self,p3d:Point3D,rob_draw:list):
         q = calc_inverse_kinem_pulse(p3d)[1]       
@@ -256,24 +258,8 @@ class PulseApp(QtWidgets.QWidget):
         self.but_start_anim_robot.clicked.connect(self.start_anim_robot)
 
     def connect_robot(self):
-        #self.pulse_robot = RobotPulse(host)
-
         self.pulse_robot = PulseRobotExt(host)
-        #self.pulse_robot.recover()
-        #ps = [self.settins_pulse.start_points["calib_1_1"],self.settins_pulse.start_points["calib_1_2"],self.settins_pulse.start_points["calib_1_3"],self.settins_pulse.start_points["calib_1_4"],self.settins_pulse.start_points["calib_1_5"]]
-        
-        #tcp = calibrate_tcp_4p(ps)
-        #tool = tool_info(position([tcp[0][0],tcp[1][0],tcp[2][0]],[0,0,0]))
-        #self.pulse_robot.change_tool_info(tool)
-
-        #self.pulse_robot.set_pose(pose([0,-90,0,-90,0,0]),speed=10)
-
-        #self.pulse_robot.robot.set_position(position([-0.048, 0.315, 0.063],[0.006, -1.651, 0.711]) , velocity=5, acceleration=5)
-
         self.coords_thread = RobPosThread(self.pulse_robot,self.lab_coord)
-
-
-    
 
     def disconnect_robot(self):
         self.pulse_robot = None
@@ -355,8 +341,6 @@ class PulseApp(QtWidgets.QWidget):
         position_delt = position([step*x, step*y, step*z], [step*Rx, step*Ry, step*Rz])
         pos,rot = position_sum2(self.pulse_robot.get_position(),position_delt)
         pos_rel = position(pos,rot)
-        #print(self.pulse_robot.get_position())
-        print(pos_rel)
 
         self.pulse_robot.robot.set_position(pos_rel , velocity=vel, acceleration=acs)
         #self.pulse_robot.await_stop()

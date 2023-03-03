@@ -314,23 +314,15 @@ def calc_inverse_kinem_pulse_priv(position:Point3D,t1=1,t2=1,t3=1)->list:
     cq1 = -scara.x/scara.magnitude_xy()
 
     q1 = np.sign(sq1)* np.arccos(cq1)
-
-    
-
-
     
     Ls = scara.magnitude_xy()
     Lt = scara.magnitude()
     #omega = np.arcsin(scara.z/Lt)
 
     omega = np.arctan(scara.z/Ls)
-
-    #Lt**2 = L2**2 + L3**2 - 2*L2*L3*cos(theta)
-
     theta = arccos((L2**2+L3**2-Lt**2)/(2*L2*L3))
     omega_ext = arccos((L2**2+Lt**2-L3**2)/(2*L2*Lt))
     omega += t3*omega_ext
-
 
     q2 = -omega
     q3 = np.pi-theta

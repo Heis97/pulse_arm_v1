@@ -1,11 +1,11 @@
 
-import struct
+
 from PyQt5.QtWidgets import QOpenGLWidget
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import  QColor, QMouseEvent
 from PyQt5.QtCore import ( QPoint,QPointF, QSize, Qt)
 import OpenGL.GL as gl
-from polygon import Mesh3D, Point3D,PrimitiveType
+from polygon import Mesh3D, Point3D,PrimitiveType,extract_coords_from_stl
 import numpy as np
 
 class Paint_in_GL(object):
@@ -59,8 +59,8 @@ class Paint_in_GL(object):
         f.close()
         
 class GLWidget(QOpenGLWidget):
-    paint_objs:"list[Paint_in_GL]"  = []
     traj_objs:"list[Paint_in_GL]"  = []
+    paint_objs:"list[Paint_in_GL]"  = []
     cont_select:bool = False
     rot:bool = True
     trans:bool = True
@@ -216,10 +216,6 @@ class GLWidget(QOpenGLWidget):
         for i in range(len(paint_gls)):
             gl.glMatrixMode(gl.GL_MODELVIEW)
             gl.glLoadIdentity()
-            #model2 = gl.glGetDoublev(gl.GL_MODELVIEW_MATRIX)
-            #gl.glTranslated(0, 0,i*10.)
-            #model2[3][2] = i*2.
-            #print(model2)
             gl.glLoadMatrixd(paint_gls[i].matr)     
 
             if paint_gls[i].glList==None:
@@ -241,10 +237,6 @@ class GLWidget(QOpenGLWidget):
         
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
-        """gl.glTranslated(self.off_x, self.off_y,-10.)
-        gl.glRotated(self.xRot, 1.0, 0.0, 0.0)
-        gl.glRotated(self.yRot, 0.0, 1.0, 0.0)
-        gl.glRotated(self.zRot, 0.0, 0.0, 1.0)"""
         #gl.glScalef(self.zoom,self.zoom,self.zoom)
         self.render_count+=1
         gl.glMatrixMode(gl.GL_PROJECTION)
@@ -259,53 +251,7 @@ class GLWidget(QOpenGLWidget):
         self.GL_paint(self.traj_objs)
         self.update()
 
-#---------------stl-----------------
-    def extract_coords_from_stl(self,stl_file):
-        result = []
-        coords = []
-        
-        for l in open(stl_file):
-            l = l.split()
-            if l[0] == 'facet':
-                result.append(list(map(float, l[-3:])))
-            elif l[0] == 'vertex':
-                vert = list(map(float, l[-3:]))
-                result[-1] += vert
-                coords.append(Point3D(vert[0],vert[1],vert[2]))
-        return coords
 
-    def unpack (f, sig, l):
-        s = f.read (l)
-        #fb.append(s)
-        return struct.unpack(sig, s)
-
-    def read_triangle(f):
-        n = GLWidget.unpack(f,"<3f", 12)
-        p1 = GLWidget.unpack(f,"<3f", 12)
-        p2 = GLWidget.unpack(f,"<3f", 12)
-        p3 = GLWidget.unpack(f,"<3f", 12)
-        b = GLWidget.unpack(f,"<h", 2)
-
-        #l = len(points)
-        return [Point3D(p1[0], p1[1], p1[2]),Point3D(p2[0], p2[1], p2[2]),Point3D(p3[0], p3[1], p3[2])]
-
-    def read_length(f):
-        length = struct.unpack("@i", f.read(4))
-        return length[0]
-
-    def read_header(f):
-        f.seek(f.tell()+80)
-    def extract_coords_from_stl_bin(stl_file):
-        result = []
-        coords = []
-        op = open(stl_file,"rb")
-        GLWidget.read_header(op)
-        l = GLWidget.read_length(op)
-        for i in range(l):
-            coords+= GLWidget.read_triangle(op)
-        return coords
-
-#---------------stl-----------------
         
     def getOpenglInfo(self):
         
@@ -433,10 +379,24 @@ class GLWidget(QOpenGLWidget):
         mesh3d_traj = Mesh3D(traj,PrimitiveType.lines)
         self.traj_objs.append(Paint_in_GL(r,g,b,size,PrimitiveType.lines,mesh3d_traj))
         return len(self.traj_objs)-1
+    
+    def addTriangles_ret(self, traj:"list[Point3D]",r:float,g:float,b:float,size:float)->int:
+        mesh3d_traj = Mesh3D(traj,PrimitiveType.triangles)
+        self.traj_objs.append(Paint_in_GL(r,g,b,size,PrimitiveType.triangles,mesh3d_traj))
+        return len(self.traj_objs)-1
+    
+    def addModel_ret(self, stl_file:str,r:float = 0.5,g:float= 0.5,b:float= 0.5,size:float= 0.5)->int:
+        model = extract_coords_from_stl(stl_file)
+        mesh3d_model = Mesh3D(model,PrimitiveType.triangles)
+        self.paint_objs.append(Paint_in_GL(r,g,b,size,PrimitiveType.triangles,mesh3d_model))
+        return len(self.paint_objs)-1
+    
+
 
     def setMatr(self,matr,ind):
-        #print(ind,matr)
         self.traj_objs[ind].matr = np.transpose(matr)
+
+    
 
     
 

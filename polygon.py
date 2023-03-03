@@ -2,8 +2,8 @@ import numpy as np
 import math 
 import enum
 from random import triangular
-
-
+import struct
+import io
 
 class Point3D(object):
     x:float = 0
@@ -138,8 +138,6 @@ class Point3D(object):
 
         return sign
 
-
-
 class Flat3D(object):
     abc:Point3D
     d:float
@@ -156,11 +154,7 @@ class Flat3D(object):
 
     def compFlatPV(abc:Point3D,p:Point3D):
         d = -abc**p
-        return Flat3D(abc,d)
-
-
-
-    
+        return Flat3D(abc,d)   
         
 class PrimitiveType(enum.Enum):
     points = 1
@@ -279,10 +273,7 @@ class Polygon3D(object):
         p = p1.Clone()
         t = (-flat.d-p**flat.abc)/(v**flat.abc)
         return p + v * t
-    
-
-    
-
+        
 class Mesh3D(object):
     polygons:"list[Polygon3D]" = []
     primTp:PrimitiveType
@@ -548,8 +539,64 @@ def position_from_matrix_pulse(m:np.ndarray,p_ref:Point3D = Point3D(0,0,0)):
     return Point3D(x,y,z,_roll = Rx,_pitch = Ry, _yaw = Rz)#-np.pi -
 
 
+def extract_coords_from_stl(stl_file):
+    ascii = False
+    for l in open(stl_file):
+        if 'facet' in l:
+            ascii = True
+    if ascii:
+        return extract_coords_from_stl_ascii(stl_file)
+    else:
+        return extract_coords_from_stl_bin(stl_file)
 
+#---------------stl--ascii---------------
+def extract_coords_from_stl_ascii(stl_file):
+    result = []
+    coords = []
+    
+    for l in open(stl_file):
+        l = l.split()
+        if l[0] == 'facet':
+            result.append(list(map(float, l[-3:])))
+        elif l[0] == 'vertex':
+            vert = list(map(float, l[-3:]))
+            result[-1] += vert
+            coords.append(Point3D(vert[0],vert[1],vert[2]))
+    return coords
+#---------------stl---bin---------------
+def unpack (f, sig, l):
+    s = f.read(l)
+    #fb.append(s)
+    return struct.unpack(sig, s)
 
+def read_triangle(f):
+    n = unpack(f,"<3f", 12)
+    p1 = unpack(f,"<3f", 12)
+    p2 = unpack(f,"<3f", 12)
+    p3 = unpack(f,"<3f", 12)
+    b = unpack(f,"<h", 2)
+
+    #l = len(points)
+    return [Point3D(p1[0], p1[1], p1[2]),Point3D(p2[0], p2[1], p2[2]),Point3D(p3[0], p3[1], p3[2])]
+
+def read_length(f):
+    length = struct.unpack("@i", f.read(4))
+    return length[0]
+
+def read_header(f):
+    f.seek(f.tell()+80)
+
+def extract_coords_from_stl_bin(stl_file):
+    result = []
+    coords = []
+    op = open(stl_file,"rb")
+    read_header(op)
+    l = read_length(op)
+    for i in range(l):
+        coords+= read_triangle(op)
+    return coords
+
+#--------------------------------
 
 
 
