@@ -106,20 +106,17 @@ class RobAnimThread(QtCore.QThread):
     def __init__(self,pulse_arm:"PulseApp"):
         QtCore.QThread.__init__(self)   
         self.pulse_arm = pulse_arm
-        self.timeDelt = 0.02
-        self.start()   
+        self.timeDelt = 0.03        
         ps = [pulse_arm.settins_pulse.start_points["calib_1_1"]]   
-        #pose = [self.settins_pulse.work_poses["relax_p2812_1"],self.settins_pulse.work_poses["calib_1_2"],self.settins_pulse.work_poses["calib_1_3"],self.settins_pulse.work_poses["calib_1_4"],self.settins_pulse.work_poses["calib_1_5"]]          
-        ind = 3
         self.p3d = position_to_p3d(ps[0])
-        #p3d = Point3D(-0.1968046387429365, 0.3157234605035095, 0.20865034899430465,_roll =-1.5787544743183737,_pitch= 0.06680544184390703,_yaw= -0.7587056145763897)
-        self.rob_pulse_draw = pulse_arm.draw_rob()
+        self.start()  
 
     
     def run(self):
         for i in range(50):
             self.p3d.x+=0.01
-            self.pulse_arm.draw_line_rob_pos(self.p3d,self.rob_pulse_draw) 
+            #self.p3d.roll+=0.01
+            self.pulse_arm.draw_3d_rob_pos(self.p3d,self.pulse_arm.q_draw) 
             sleep(self.timeDelt)
 
 class RobPosThread(QtCore.QThread):
@@ -179,18 +176,19 @@ class PulseApp(QtWidgets.QWidget):
     
     pulse_robot = None
     count = 0
+    q_draw = []
     def __init__(self, parent=None):
         super().__init__(parent, QtCore.Qt.Window)
         self.load_settings()
         self.setWindowTitle("Интерфейс Pulse")
         self.resize(1750, 1000)
         self.build()  
-        self.viewer3d.addModel_ret(r"C:\Users\1\Documents\GitHub\3d models\rozum\0.STL")
+        
 
         
-    def draw_line_rob_pos(self,p3d:Point3D,rob_draw:list):
+    def draw_3d_rob_pos(self,p3d:Point3D,rob_draw:list):
         q = calc_inverse_kinem_pulse(p3d)[1]       
-        return self.draw_line_rob(rob_draw,q)
+        return self.draw_3d_rob(rob_draw,q)
 
     def draw_rob(self):
         L1 = 0.2311
@@ -208,10 +206,49 @@ class PulseApp(QtWidgets.QWidget):
         q_draw.append(self.viewer3d.addLines_ret([Point3D(0,0,0),Point3D(0,l[4],0)],1,0,0,1))
         q_draw.append(self.viewer3d.addLines_ret([Point3D(0,0,0),Point3D(0,0,-l[5])],1,0,0,1))
         return q_draw
+    
+    def draw_rob3d(self):
+        L1 = 0.2311
+        L2 = 0.45
+        L3 = 0.37
+        L4 = 0.1351
+        L5 = 0.1825
+        L6 = 0.1325
+        l = [L1,L2,L3,L4,L5,L6]
+        base1 = self.viewer3d.addModel_ret(r"C:\Users\1\Desktop\misis\in situ printer\rozum\lowres\0.STL")
+        base2 = self.viewer3d.addModel_ret(r"C:\Users\1\Desktop\misis\in situ printer\rozum\lowres\1.STL")
+        self.q_draw = []
+        self.q_draw.append(self.viewer3d.addModel_ret(r"C:\Users\1\Desktop\misis\in situ printer\rozum\lowres\2.STL"))
+        self.q_draw.append(self.viewer3d.addModel_ret(r"C:\Users\1\Desktop\misis\in situ printer\rozum\lowres\3.STL"))     
+        self.q_draw.append(self.viewer3d.addModel_ret(r"C:\Users\1\Desktop\misis\in situ printer\rozum\lowres\4.STL"))      
+        self.q_draw.append(self.viewer3d.addModel_ret(r"C:\Users\1\Desktop\misis\in situ printer\rozum\lowres\5.STL"))
+        self.q_draw.append(self.viewer3d.addModel_ret(r"C:\Users\1\Desktop\misis\in situ printer\rozum\lowres\6.STL"))
+        self.q_draw.append(self.viewer3d.addModel_ret(r"C:\Users\1\Desktop\misis\in situ printer\rozum\lowres\7.STL"))
+
+        self.viewer3d.setMatr_off(pulse_matrix(0,0,0,np.pi/2,0,0),base1)
+        self.viewer3d.setMatr_off(pulse_matrix(0,0,0,np.pi/2,0,0),base2)
+        self.viewer3d.setMatr_off(pulse_matrix(0,-L1+0,0,0,np.pi,0),self.q_draw[0])
+
+        self.viewer3d.setMatr_off(np.dot(np.dot(pulse_matrix(0,0,0,0,0,np.pi/2),pulse_matrix(0,-L1-L2+0,0,0,0,0)),pulse_matrix(0,0,0,0,np.pi,0)),self.q_draw[1])
+        self.viewer3d.setMatr_off(np.dot(np.dot(pulse_matrix(0,0,0,0,0,np.pi/2),pulse_matrix(0,-L1-L2-L3+0,0,0,0,0)),pulse_matrix(0,0,0,0,np.pi,0)),self.q_draw[2])
+
+        self.viewer3d.setMatr_off(np.dot(np.dot(pulse_matrix(0,0,0,np.pi/2,0,0),pulse_matrix(0,-L1-L2-L3,L4+0,0,0,0)),pulse_matrix(0,0,0,0,0,0)),self.q_draw[3])
+
+        self.viewer3d.setMatr_off(np.dot(np.dot(pulse_matrix(0,0,0,0,np.pi,np.pi),pulse_matrix(0,-L1-L2-L3-L5,L4+0,0,0,0)),pulse_matrix(0,0,0,0,0,0)),self.q_draw[4])
+
+        self.viewer3d.setMatr_off(np.dot(np.dot(pulse_matrix(0,0,0,np.pi,0,0),pulse_matrix(0,-L1-L2-L3-L5,L4+L6,0,0,0)),pulse_matrix(0,0,0,0,0,0)),self.q_draw[5])
+
+        self.draw_3d_rob(self.q_draw,[0,0,0,0,0,0])
 
     def draw_line_rob(self,q_draw:list,q:list):
         solv_pms = comp_matrs_ps(q)
         for i in range(6):
+            self.viewer3d.setMatr(solv_pms[i],q_draw[i])
+
+    def draw_3d_rob(self,q_draw:list,q:list):
+        solv_pms = comp_matrs_ps(q)
+        for i in range(6):
+            pass
             self.viewer3d.setMatr(solv_pms[i],q_draw[i])
 
     def start_anim_robot(self):
@@ -244,6 +281,7 @@ class PulseApp(QtWidgets.QWidget):
         self.viewer3d = GLWidget(self)
         self.viewer3d.setGeometry(QtCore.QRect(350, 10, 600, 600))
         self.viewer3d.draw_start_frame(10.)
+        self.draw_rob3d()
 
         self.but_connect_robot = QPushButton('Подключиться', self)
         self.but_connect_robot.setGeometry(QtCore.QRect(100, 100, 140, 30))

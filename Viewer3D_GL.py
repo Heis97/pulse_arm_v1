@@ -22,7 +22,9 @@ class Paint_in_GL(object):
     points:"list[Point3D]"
     p2 = []
     p3 = []
+    matr_off = np.array([[1.,0.,0.,0.],[0.,1.,0.,0.],[0.,0.,1.,0.],[0.,0.,0.,1.]])
     matr = np.array([[1.,0.,0.,0.],[0.,1.,0.,0.],[0.,0.,1.,0.],[0.,0.,0.,1.]])
+
     mesh_obj: Mesh3D = None
     def __init__(self, _red, _green, _blue, _size, _type:PrimitiveType, _mesh_obj:Mesh3D):
         self.red = _red
@@ -216,7 +218,7 @@ class GLWidget(QOpenGLWidget):
         for i in range(len(paint_gls)):
             gl.glMatrixMode(gl.GL_MODELVIEW)
             gl.glLoadIdentity()
-            gl.glLoadMatrixd(paint_gls[i].matr)     
+            gl.glLoadMatrixd(np.dot(paint_gls[i].matr_off,paint_gls[i].matr))     
 
             if paint_gls[i].glList==None:
                 paint_gls[i].glList = self.initPaint_in_GL(paint_gls[i])
@@ -246,6 +248,7 @@ class GLWidget(QOpenGLWidget):
         gl.glRotated(self.xRot, 1.0, 0.0, 0.0)
         gl.glRotated(self.yRot, 0.0, 1.0, 0.0)
         gl.glRotated(self.zRot, 0.0, 0.0, 1.0)
+        
 
         self.GL_paint(self.paint_objs)
         self.GL_paint(self.traj_objs)
@@ -377,8 +380,8 @@ class GLWidget(QOpenGLWidget):
 
     def addLines_ret(self, traj:"list[Point3D]",r:float,g:float,b:float,size:float)->int:
         mesh3d_traj = Mesh3D(traj,PrimitiveType.lines)
-        self.traj_objs.append(Paint_in_GL(r,g,b,size,PrimitiveType.lines,mesh3d_traj))
-        return len(self.traj_objs)-1
+        self.paint_objs.append(Paint_in_GL(r,g,b,size,PrimitiveType.lines,mesh3d_traj))
+        return len(self.paint_objs)-1
     
     def addTriangles_ret(self, traj:"list[Point3D]",r:float,g:float,b:float,size:float)->int:
         mesh3d_traj = Mesh3D(traj,PrimitiveType.triangles)
@@ -392,9 +395,11 @@ class GLWidget(QOpenGLWidget):
         return len(self.paint_objs)-1
     
 
-
     def setMatr(self,matr,ind):
-        self.traj_objs[ind].matr = np.transpose(matr)
+        self.paint_objs[ind].matr = np.transpose(matr)
+
+    def setMatr_off(self,matr,ind):
+        self.paint_objs[ind].matr_off = np.transpose(matr)
 
     
 
