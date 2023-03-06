@@ -281,7 +281,7 @@ class PulseApp(QtWidgets.QWidget):
         self.viewer3d = GLWidget(self)
         self.viewer3d.setGeometry(QtCore.QRect(350, 10, 600, 600))
         self.viewer3d.draw_start_frame(10.)
-        self.draw_rob3d()
+        #self.draw_rob3d()
 
         self.but_connect_robot = QPushButton('Подключиться', self)
         self.but_connect_robot.setGeometry(QtCore.QRect(100, 100, 140, 30))
@@ -782,15 +782,27 @@ class PulseApp(QtWidgets.QWidget):
 
         positions = self.generate_traj()
         
-        print(positions)
+        #print(positions)
         vel = 50
         acs = 0.1
         self.pulse_robot.robot.set_position(positions[0],velocity=vel,acceleration=acs,motion_type=MT_LINEAR)
         
-        vel = 0.03
-        acs = 0.1
+        vel = 0.04
+        acs = 0.05
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
-        self.pulse_robot.robot.run_linear_positions(positions[:800],linear_motion_parameters)
+        for i in range(int(len(positions)/500)):
+            vel = 50
+            acs = 0.1
+            self.pulse_robot.robot.set_position(positions[500*i],velocity=vel,acceleration=acs,motion_type=MT_LINEAR)
+        
+            vel = 0.04
+            acs = 0.5
+            linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
+            if len(positions)>500*(i+1)+100:
+                self.pulse_robot.robot.run_linear_positions(positions[500*i:500*(i+1)],linear_motion_parameters)
+            else:
+                self.pulse_robot.robot.run_linear_positions(positions[500*i:],linear_motion_parameters)
+
 
     def exec_prog_arm_abs_xyz(self):
         
@@ -873,7 +885,7 @@ class PulseApp(QtWidgets.QWidget):
         r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
         pos = position(p,r)
         points.append(p)
-        positions = [pos]
+        positions = []
         for i in range(len(ps)):               
             p = [0.001*ps[i].x,0.001*ps[i].y,0.001*ps[i].z]
             r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
