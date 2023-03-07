@@ -254,6 +254,8 @@ class PulseApp(QtWidgets.QWidget):
 
         self.viewer3d.setMatr_off(np.dot(np.dot(pulse_matrix(0,0,0,np.pi,0,0),pulse_matrix(0,-L1-L2-L3-L5,L4+L6,0,0,0)),pulse_matrix(0,0,0,0,0,0)),self.q_draw[5])
 
+        self.q_draw.append(self.viewer3d.addModel_ret(r"C:\Users\1\Desktop\misis\in situ printer\rozum\lowres\t1.STL"))
+
         self.draw_3d_rob(self.q_draw,[0,0,0,0,0,0])
 
     def draw_line_rob(self,q_draw:list,q:list):
