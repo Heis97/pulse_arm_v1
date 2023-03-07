@@ -87,6 +87,20 @@ def motor_state_to_str(ms:list[MotorStatus]):
 
     return txt
 
+def vel_to_st(vel:float):
+    nT = 10000
+    p = 4
+    rev = 200*16*10
+    st = int((nT*p)/(vel*rev))
+    vel = (nT*p)/(st*rev)
+    return st,vel
+
+
+
+
+
+
+
 class SettingsPulse():
     tools:dict = None
     bases:dict = None
@@ -183,6 +197,8 @@ class PulseApp(QtWidgets.QWidget):
         self.setWindowTitle("Интерфейс Pulse")
         self.resize(1750, 1000)
         self.build()  
+        st,vel = vel_to_st(0.148)
+        print(st,vel)
         
 
         
@@ -281,7 +297,7 @@ class PulseApp(QtWidgets.QWidget):
         self.viewer3d = GLWidget(self)
         self.viewer3d.setGeometry(QtCore.QRect(350, 10, 600, 600))
         self.viewer3d.draw_start_frame(10.)
-        #self.draw_rob3d()
+        self.draw_rob3d()
 
         self.but_connect_robot = QPushButton('Подключиться', self)
         self.but_connect_robot.setGeometry(QtCore.QRect(100, 100, 140, 30))
