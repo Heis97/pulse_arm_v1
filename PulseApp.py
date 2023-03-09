@@ -3,8 +3,6 @@ import sys
 from PyQt5 import QtCore,  QtWidgets
 from PyQt5.QtWidgets import (QPushButton, QLineEdit, QApplication,QTextEdit,QLabel,QComboBox,QRadioButton)
 from PyQt5.QtCore import Qt,QRect
-from PyQt5.QtGui import QPainter, QPen
-from PyQt5.QtCore import ( QPoint, QSize,Qt)
 from enum import Enum
 import json
 import math
@@ -15,6 +13,7 @@ from g_code_parser import *
 from PulseUtil import *
 from KukaRobot import *
 from PulseRobotExt import *
+from Plotter import Plotter
 
 def position_sum(p1:Position,p2:Position):
     x = p1.point.x+p2.point.x
@@ -121,14 +120,14 @@ class RobAnimThread(QtCore.QThread):
         QtCore.QThread.__init__(self)   
         self.pulse_arm = pulse_arm
         self.timeDelt = 0.03        
-        ps = [pulse_arm.settins_pulse.start_points["calib_1_1"]]   
+        ps = [pulse_arm.settins_pulse.start_points["pan3"]]   
         self.p3d = position_to_p3d(ps[0])
         self.start()  
 
     
     def run(self):
         for i in range(50):
-            self.p3d.x+=0.01
+            self.p3d.y-=0.01
             #self.p3d.roll+=0.01
             self.pulse_arm.draw_3d_rob_pos(self.p3d,self.pulse_arm.q_draw) 
             sleep(self.timeDelt)
@@ -256,6 +255,8 @@ class PulseApp(QtWidgets.QWidget):
 
         self.q_draw.append(self.viewer3d.addModel_ret(r"C:\Users\1\Desktop\misis\in situ printer\rozum\lowres\t1.STL"))
 
+        self.viewer3d.setMatr_off(pulse_matrix(0,0,0,np.pi/2,-np.pi/4,0),self.q_draw[6])
+
         self.draw_3d_rob(self.q_draw,[0,0,0,0,0,0])
 
     def draw_line_rob(self,q_draw:list,q:list):
@@ -265,24 +266,30 @@ class PulseApp(QtWidgets.QWidget):
 
     def draw_3d_rob(self,q_draw:list,q:list):
         solv_pms = comp_matrs_ps(q)
-        for i in range(6):
-            pass
-            self.viewer3d.setMatr(solv_pms[i],q_draw[i])
+        for i in range(len(q_draw)):
+            if i <len(q):
+                self.viewer3d.setMatr(solv_pms[i],q_draw[i])
+            else:
+                pass
+                self.viewer3d.setMatr(solv_pms[len(q)-1],q_draw[i])
+        
 
     def start_anim_robot(self):
 
         self.thr = RobAnimThread(self)
-        """ps = [self.settins_pulse.start_points["calib_1_1"],self.settins_pulse.start_points["calib_1_2"],self.settins_pulse.start_points["calib_1_3"],self.settins_pulse.start_points["calib_1_4"],self.settins_pulse.start_points["calib_1_5"]]   
-        #pose = [self.settins_pulse.work_poses["relax_p2812_1"],self.settins_pulse.work_poses["calib_1_2"],self.settins_pulse.work_poses["calib_1_3"],self.settins_pulse.work_poses["calib_1_4"],self.settins_pulse.work_poses["calib_1_5"]]          
-        ind = 3
-        p3d = position_to_p3d(ps[ind])
-        #p3d = Point3D(-0.1968046387429365, 0.3157234605035095, 0.20865034899430465,_roll =-1.5787544743183737,_pitch= 0.06680544184390703,_yaw= -0.7587056145763897)
-        self.rob_pulse_draw = self.draw_rob()
+        
+        self.plotter = Plotter(self)
+        self.plotter.show()
 
-        for i in range(50):
-            p3d.x+=0.01
-            self.draw_line_rob_pos(p3d,self.rob_pulse_draw) 
-            sleep(0.1)"""
+    
+
+    def test_plot(self):
+        c = []
+        for i in range(10000):
+            c.append(Point3D(i,0.1*0.1*i*i))
+
+        self.plotter.addPlot(c)
+
  
     def build(self):
         self.build_connection()
@@ -299,7 +306,7 @@ class PulseApp(QtWidgets.QWidget):
         self.viewer3d = GLWidget(self)
         self.viewer3d.setGeometry(QtCore.QRect(350, 10, 600, 600))
         self.viewer3d.draw_start_frame(10.)
-        #self.draw_rob3d()
+        self.draw_rob3d()
 
         self.but_connect_robot = QPushButton('Подключиться', self)
         self.but_connect_robot.setGeometry(QtCore.QRect(100, 100, 140, 30))
@@ -312,6 +319,10 @@ class PulseApp(QtWidgets.QWidget):
         self.but_start_anim_robot = QPushButton('Анимац', self)
         self.but_start_anim_robot.setGeometry(QtCore.QRect(100, 60, 140, 30))
         self.but_start_anim_robot.clicked.connect(self.start_anim_robot)
+
+        self.but_test_plot = QPushButton('Тест', self)
+        self.but_test_plot.setGeometry(QtCore.QRect(100, 20, 140, 30))
+        self.but_test_plot.clicked.connect(self.test_plot)
 
     def connect_robot(self):
         self.pulse_robot = PulseRobotExt(host)

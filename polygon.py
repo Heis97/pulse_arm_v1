@@ -18,7 +18,7 @@ class Point3D(object):
     pitch:float = 0    
     yaw:float = 0
     
-    def __init__(self,_x:float,_y:float,_z:float,_extrude:bool = True,_r:float = 0.0,_g:float = 1.,_b:float =0.,_pitch:float = 0.0,_roll:float = 0.,_yaw:float =0.):
+    def __init__(self,_x:float= 0,_y:float= 0,_z:float = 0,_extrude:bool = True,_r:float = 0.0,_g:float = 1.,_b:float =0.,_pitch:float = 0.0,_roll:float = 0.,_yaw:float =0.):
         self.x = _x
         self.y = _y
         self.z = _z
