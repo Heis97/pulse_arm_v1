@@ -2,7 +2,7 @@ from time import sleep
 import sys
 from PyQt5 import QtCore,  QtWidgets
 from PyQt5.QtWidgets import (QPushButton, QLineEdit, QApplication,QTextEdit,QLabel,QComboBox,QRadioButton)
-from PyQt5.QtCore import Qt,QRect
+from PyQt5.QtCore import Qt,QRect,QPointF
 from enum import Enum
 import json
 import math
@@ -86,10 +86,31 @@ def motor_state_to_str(ms:list[MotorStatus]):
 
     return txt
 
+def div_traj(p1:"Point3D",p2:"Point3D",dist:float)->list[Point3D]:
+    d = (p2-p1).magnitude()
+    div_count = int(d/dist)
+    if div_count==0:
+        return []
+    dp = (p2-p1)*float(1/div_count)
+    ps =[]
+    for i in range(0,div_count):
+        ps.append(p1+dp*i)
+
+    return ps
+
+
+def comp_traj_to_anim(trajectory:"list[Point3D]",dist:float):
+    ps = []
+
+    for i in range(len(trajectory)-1):
+        ps_d = div_traj(trajectory[i],trajectory[i+1],dist)
+        ps+=ps_d
+    return ps
+
 def vel_to_st(vel:float):
-    nT = 10000
-    p = 4
-    rev = 200*16*10
+    nT = 10000    #timer freq
+    p = 4         #step mm
+    rev = 200*16*10# - reduct steps per revol
     st = int((nT*p)/(vel*rev))
     vel = (nT*p)/(st*rev)
     return st,vel
@@ -116,20 +137,21 @@ class SettingsPulse():
         return [self.tools,self.bases,self.work_poses,self.start_points]
 
 class RobAnimThread(QtCore.QThread):
-    def __init__(self,pulse_arm:"PulseApp"):
+    def __init__(self,pulse_arm:"PulseApp",trajectory:"list[Point3D]"):
         QtCore.QThread.__init__(self)   
         self.pulse_arm = pulse_arm
         self.timeDelt = 0.03        
-        ps = [pulse_arm.settins_pulse.start_points["pan3"]]   
-        self.p3d = position_to_p3d(ps[0])
+        self.traj = trajectory
         self.start()  
 
     
     def run(self):
-        for i in range(50):
-            self.p3d.y-=0.01
-            #self.p3d.roll+=0.01
-            self.pulse_arm.draw_3d_rob_pos(self.p3d,self.pulse_arm.q_draw) 
+        vel = 0.03                #mm/s
+        dist = vel*self.timeDelt
+        ps = comp_traj_to_anim(self.traj,dist)
+
+        for p in ps:
+            self.pulse_arm.draw_3d_rob_pos(p,self.pulse_arm.q_draw) 
             sleep(self.timeDelt)
 
 class RobPosThread(QtCore.QThread):
@@ -196,9 +218,6 @@ class PulseApp(QtWidgets.QWidget):
         self.setWindowTitle("Интерфейс Pulse")
         self.resize(1750, 1000)
         self.build()  
-        st,vel = vel_to_st(0.148)
-        print(st,vel)
-        
 
         
     def draw_3d_rob_pos(self,p3d:Point3D,rob_draw:list):
@@ -272,11 +291,17 @@ class PulseApp(QtWidgets.QWidget):
             else:
                 pass
                 self.viewer3d.setMatr(solv_pms[len(q)-1],q_draw[i])
-        
+
 
     def start_anim_robot(self):
+        p1 = Point3D(-0.3748,0.158,0.25,_roll=-1.575,_pitch=0.066,_yaw=-0.757)
+        p2 = p1.Clone()+Point3D(0.3)
+        p3 = p2.Clone()+Point3D(0,0.3)
+        p4 = p3.Clone()+Point3D(-0.3)
+        
+        traj = [p1,p2,p3,p4]
+        self.thr = RobAnimThread(self,traj)
 
-        self.thr = RobAnimThread(self)
         
         self.plotter = Plotter(self)
         self.plotter.show()
@@ -285,10 +310,14 @@ class PulseApp(QtWidgets.QWidget):
 
     def test_plot(self):
         c = []
-        for i in range(10000):
-            c.append(Point3D(i,0.1*0.1*i*i))
+        d = []
+        for i in range(100):
+            c.append(QPointF(i,i*i)) 
+            d.append(QPointF(i,np.sin(i/10)))
 
-        self.plotter.addPlot(c)
+
+        self.plotter.addPlot(c, QPointF(100,10e3))
+        self.plotter.addPlot(d, QPointF(100,1))
 
  
     def build(self):
@@ -306,7 +335,7 @@ class PulseApp(QtWidgets.QWidget):
         self.viewer3d = GLWidget(self)
         self.viewer3d.setGeometry(QtCore.QRect(350, 10, 600, 600))
         self.viewer3d.draw_start_frame(10.)
-        #self.draw_rob3d()
+        self.draw_rob3d()
 
         self.but_connect_robot = QPushButton('Подключиться', self)
         self.but_connect_robot.setGeometry(QtCore.QRect(100, 100, 140, 30))
