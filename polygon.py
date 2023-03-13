@@ -62,7 +62,7 @@ class Point3D(object):
         xa = self.x + other.x
         ya = self.y + other.y
         za = self.z + other.z
-        return Point3D(xa,ya,za,self.extrude)
+        return Point3D(xa,ya,za,self.extrude,self.r,self.g,self.b,self.pitch,self.roll,self.yaw)
 
     def __sub__(self, other):
 
@@ -81,7 +81,7 @@ class Point3D(object):
         return self
 
     def Clone(self):
-        return Point3D(self.x,self.y,self.z,self.extrude,self.r,self.g,self.b)
+        return Point3D(self.x,self.y,self.z,self.extrude,self.r,self.g,self.b,self.pitch,self.roll,self.yaw)
 
     def __mul__(self, other):
         if(type(other)==Point3D):

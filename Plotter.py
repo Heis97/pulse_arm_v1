@@ -9,11 +9,13 @@ class Plot(object):
     koords:"list[QPointF]"= None
     koords_n:"list[QPointF]"= None
     pen:QPen = None
+    name:str = ""
     visible = False
     loc = None
-    def __init__(self,_koords:"list[QPointF]",_color, _width):
-        self.koords = _koords        
-        self.pen = QPen(_color,_width,Qt.SolidLine)
+    def __init__(self,koords:"list[QPointF]",color, width,name):
+        self.koords = koords        
+        self.pen = QPen(color,width,Qt.SolidLine)
+        self.name = name
 
     def setLoc(self,loc:QRect,sim:QPointF = None):
         if sim is not None:
@@ -82,15 +84,17 @@ class Plot(object):
 
 class Plotter(QtWidgets.QWidget):
     plots:"list[Plot]"= []
-    colors = [Qt.blue,Qt.green,Qt.red]
+    colors = [Qt.blue,Qt.green,Qt.red,Qt.blue,Qt.green,Qt.red,Qt.blue,Qt.green,Qt.red]*100
     size_gr:QSize = None
     board = 10
-    def __init__(self, parent=None, size:QSize = QSize(700,200)):
+    col = 1
+    row = 1
+    def __init__(self, parent=None, size:QSize = QSize(400,200)):
         super().__init__(parent, QtCore.Qt.Window)
         self.setWindowTitle("Интерфейс Pulse")
         self.size_gr = size
-        self.resize(size.width(),1)
-        self.setStyleSheet("background-color: white;")
+        self.resize(size.width()+2*self.board,1)
+        self.setStyleSheet("background-color: black;")
 
 
     def paintEvent(self, e):
@@ -106,14 +110,24 @@ class Plotter(QtWidgets.QWidget):
         qp.setPen(plot.pen)
         polig = QPolygonF(plot.koords_n)
         qp.drawPolyline(polig)
-        qp.setPen(QPen(Qt.black,1,Qt.SolidLine))
+        qp.setPen(QPen(Qt.gray,1,Qt.SolidLine))
         qp.drawRect(plot.loc)
+        qp.drawLine(plot.loc.x(),int(plot.loc.y()+plot.loc.height()/2),plot.loc.x()+plot.loc.width(),int(plot.loc.y()+plot.loc.height()/2))
+        qp.setFont(QtGui.QFont("Times", 12, QtGui.QFont.Bold))
+        qp.drawText(plot.loc.x()+13,plot.loc.y()+25,plot.name)
 
-    def addPlot(self,_koords:"list[QPointF]",maxy = None):
-        size = self.size()
-        self.resize(size.width(),size.height()+200)
-        plot = Plot(_koords,self.colors[len(self.plots)],1)
-        plot.setLoc(QRect(self.board,self.board+size.height(),self.size_gr.width(),self.size_gr.height()),maxy)
+    def addPlot(self,koords:"list[QPointF]",maxy = None,name:str = "",row: int = 1,col:int = 1):
+        self.col = max(self.col,col)
+        self.row = max(self.row,row)      
+        self.resize(2*self.board+self.col *(self.board+self.size_gr.width()),
+                    2*self.board+self.row *(self.board+self.size_gr.height()))
+        plot = Plot(koords,self.colors[len(self.plots)],1,name)
+        loc = QRect(self.board+(col-1)*(self.board+self.size_gr.width()),
+                    self.board+(row-1)*(self.board+self.size_gr.height()),
+                    self.size_gr.width(),
+                    self.size_gr.height())
+        plot.setLoc(loc,maxy)
+        
         self.plots.append(plot)
 
     def clearPlots(self):

@@ -107,6 +107,16 @@ def comp_traj_to_anim(trajectory:"list[Point3D]",dist:float):
         ps+=ps_d
     return ps
 
+def diff_plot(plot:"list[QPointF]"):
+    ps = []
+
+    for i in range(len(plot)-1):
+
+        dt = plot[i+1].x()-plot[i].x()
+        dy = plot[i+1].y()-plot[i].y()
+        ps.append(QPointF(plot[i].x(),dy/dt))
+    return ps
+
 def vel_to_st(vel:float):
     nT = 10000    #timer freq
     p = 4         #step mm
@@ -137,11 +147,16 @@ class SettingsPulse():
         return [self.tools,self.bases,self.work_poses,self.start_points]
 
 class RobAnimThread(QtCore.QThread):
+    plotter_signal = QtCore.pyqtSignal(int)
+
     def __init__(self,pulse_arm:"PulseApp",trajectory:"list[Point3D]"):
         QtCore.QThread.__init__(self)   
+        
         self.pulse_arm = pulse_arm
         self.timeDelt = 0.03        
         self.traj = trajectory
+        self.plots = None
+        self.t = None
         self.start()  
 
     
@@ -149,10 +164,26 @@ class RobAnimThread(QtCore.QThread):
         vel = 0.03                #mm/s
         dist = vel*self.timeDelt
         ps = comp_traj_to_anim(self.traj,dist)
+        qs = []
 
         for p in ps:
-            self.pulse_arm.draw_3d_rob_pos(p,self.pulse_arm.q_draw) 
-            sleep(self.timeDelt)
+            q = self.pulse_arm.draw_3d_rob_pos(p,self.pulse_arm.q_draw) 
+            qs.append(q)
+            #sleep(self.timeDelt)
+        
+        plots = []
+        for i in range(6):        
+            plot = []
+            t = 0.0
+            for q in qs:    
+                plot.append(QPointF(t,q[i]))
+                t += self.timeDelt
+            plots.append(plot)
+            
+        self.t = t
+        self.plots = plots
+        self.plotter_signal.emit(0)
+
 
 class RobPosThread(QtCore.QThread):
     def __init__(self,pulse_arm:PulseRobotExt, label:QLabel):
@@ -209,9 +240,11 @@ class ax(Enum):
 
 class PulseApp(QtWidgets.QWidget):
     
+
     pulse_robot = None
     count = 0
     q_draw = []
+    plotter:Plotter = None
     def __init__(self, parent=None):
         super().__init__(parent, QtCore.Qt.Window)
         self.load_settings()
@@ -286,38 +319,45 @@ class PulseApp(QtWidgets.QWidget):
     def draw_3d_rob(self,q_draw:list,q:list):
         solv_pms = comp_matrs_ps(q)
         for i in range(len(q_draw)):
-            if i <len(q):
+            if i < len(q):
                 self.viewer3d.setMatr(solv_pms[i],q_draw[i])
             else:
                 pass
                 self.viewer3d.setMatr(solv_pms[len(q)-1],q_draw[i])
+        return q
 
 
     def start_anim_robot(self):
-        p1 = Point3D(-0.3748,0.158,0.25,_roll=-1.575,_pitch=0.066,_yaw=-0.757)
-        p2 = p1.Clone()+Point3D(0.3)
-        p3 = p2.Clone()+Point3D(0,0.3)
-        p4 = p3.Clone()+Point3D(-0.3)
+        p1 = Point3D(-0.3748,0.358,0.25,_roll=-1.515,_pitch=1.515,_yaw=-0.757)
+        p2 = p1.Clone()+Point3D(0.1)
+        p3 = p2.Clone()+Point3D(0,0.1)
+        p4 = p3.Clone()+Point3D(-0.1)
+
+        print("p1",p1.ToStringPulse(3," "))
+        print("p2",p2.ToStringPulse(3," "))
+        print("p3",p3.ToStringPulse(3," "))
+        print("p4",p4.ToStringPulse(3," "))
         
+        
+
         traj = [p1,p2,p3,p4]
         self.thr = RobAnimThread(self,traj)
 
-        
-        self.plotter = Plotter(self)
-        self.plotter.show()
+        self.thr.plotter_signal.connect(self.test_plot)
 
-    
 
     def test_plot(self):
-        c = []
-        d = []
-        for i in range(100):
-            c.append(QPointF(i,i*i)) 
-            d.append(QPointF(i,np.sin(i/10)))
-
-
-        self.plotter.addPlot(c, QPointF(100,10e3))
-        self.plotter.addPlot(d, QPointF(100,1))
+        self.plotter = Plotter(self)
+        self.plotter.show()
+        i=0
+        for plot in self.thr.plots:            
+            i+=1
+            self.plotter.addPlot(plot,QPointF(self.thr.t,3.0),"q"+str(i),i,1)
+            plot_dif = diff_plot(plot)
+            self.plotter.addPlot(plot_dif,QPointF(self.thr.t,0.3),"v q"+str(i),i,2)
+            plot_dif = diff_plot(plot_dif)
+            self.plotter.addPlot(plot_dif,QPointF(self.thr.t,30),"a q"+str(i),i,3)
+            print("plot_add")
 
  
     def build(self):
