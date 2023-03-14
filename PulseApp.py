@@ -125,6 +125,15 @@ def vel_to_st(vel:float):
     vel = (nT*p)/(st*rev)
     return st,vel
 
+def vel_to_st2(vel_nos:float,d_nos:float,d_syr:float):
+    vel = (vel_nos*d_nos**2)/(d_syr**2)
+    nT = 10000    #timer freq
+    p = 4         #step mm
+    rev = 200*16*10# - reduct steps per revol
+    st = int((nT*p)/(vel*rev))
+    vel = (nT*p)/(st*rev)
+    return st,vel
+
 
 
 
@@ -251,6 +260,8 @@ class PulseApp(QtWidgets.QWidget):
         self.setWindowTitle("Интерфейс Pulse")
         self.resize(1750, 1000)
         self.build()  
+
+        print(vel_to_st2(20,1,23.1))
 
         
     def draw_3d_rob_pos(self,p3d:Point3D,rob_draw:list):
@@ -879,23 +890,24 @@ class PulseApp(QtWidgets.QWidget):
         #self.pulse_robot.set_position(Position(self.cur_start_point["point"],self.cur_start_point["rotation"]),velocity=vel,acceleration=acs,motion_type=MT_LINEAR)
 
         positions = self.generate_traj()
-        
+        vel1 = 40
+        vel2 = 0.02
+
+        acs1 = 1
+        acs2 = 0.05
         #print(positions)
-        vel = 70
-        acs = 0.6
-        self.pulse_robot.robot.set_position(positions[0],velocity=vel,acceleration=acs,motion_type=MT_LINEAR)
+        vel = vel1
+        acs = acs1
+        #self.pulse_robot.robot.set_position(positions[0],velocity=vel,acceleration=acs,motion_type=MT_LINEAR)
         
-        vel = 0.03
-        acs = 0.02
+        vel = vel2
+        acs = acs2
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
         for i in range(int(len(positions)/500)):
-            vel = 50
-            acs = 0.1
-            self.pulse_robot.robot.set_position(positions[500*i],velocity=vel,acceleration=acs,motion_type=MT_LINEAR)
+            self.pulse_robot.robot.set_position(positions[500*i],velocity=vel1,acceleration=acs1,motion_type=MT_LINEAR)
         
-            vel = 0.03
-            acs = 0.05
-            linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
+            linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel2,acceleration=acs2)
+            
             if len(positions)>500*(i+1)+100:
                 self.pulse_robot.robot.run_linear_positions(positions[500*i:500*(i+1)],linear_motion_parameters)
             else:
@@ -951,23 +963,29 @@ class PulseApp(QtWidgets.QWidget):
         p = []
         r = []
         dz = 6
-        positions = []
+        positions:list[Position] = []
         for i in range(len(ps)):               
             p = [start_point["x"]+0.001*ps[i].x,start_point["y"]+0.001*ps[i].y,start_point["z"]+0.001*(ps[i].z+dz)]
             r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
             
-            pos = position(p,r,blend=0.0001) 
+            pos:Position = position(p,r,blend=0.0001) 
+            
             if i!=0:
-                if self.dist(p,points[-1])>0.003:
-                    #print(pos)
+                
+                if self.dist(p,points[-1])>0.008:
+                    
                     positions.append(pos)
                     points.append(p)
             else:
                 positions.append(pos)
                 points.append(p)
+                #print(self.dist(points[-1],points[-2]))
 
 
-        #for i in range(len(positions)):
+        for i in range(1,len(positions)):
+            #print(self.dist(positions[i],positions[i-1]))
+            if(self.dist(positions[i],positions[i-1])<0.003):
+                print("len")
             #print(i," ",positions[i])
         
         return positions
@@ -1025,7 +1043,11 @@ class PulseApp(QtWidgets.QWidget):
 
 
     def dist(self,p1,p2):
-        return math.sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2+(p1[2]-p2[2])**2)
+        if type(p1)==Position:
+            return math.sqrt((p1.point.x-p2.point.x)**2+(p1.point.y-p2.point.y)**2+(p1.point.z-p2.point.z)**2)
+        else:
+            return math.sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2+(p1[2]-p2[2])**2)
+
 #--------------------------------------------------------------------------------
     kuka_robot = None
 
