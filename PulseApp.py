@@ -902,15 +902,19 @@ class PulseApp(QtWidgets.QWidget):
         
         vel = vel2
         acs = acs2
+
+
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
-        for i in range(int(len(positions)/500)):
+        for i in range(int(len(positions)/500)+1):
             self.pulse_robot.robot.set_position(positions[500*i],velocity=vel1,acceleration=acs1,motion_type=MT_LINEAR)
         
             linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel2,acceleration=acs2)
-            
-            if len(positions)>500*(i+1)+100:
+            print("set pos")
+            if len(positions)>500*(i+1)+1:
+                print("1")
                 self.pulse_robot.robot.run_linear_positions(positions[500*i:500*(i+1)],linear_motion_parameters)
             else:
+                print("2")
                 self.pulse_robot.robot.run_linear_positions(positions[500*i:],linear_motion_parameters)
 
 
@@ -963,26 +967,32 @@ class PulseApp(QtWidgets.QWidget):
         p = []
         r = []
         dz = 6
-        positions:list[Position] = []
+        positions = []
         for i in range(len(ps)):               
             p = [start_point["x"]+0.001*ps[i].x,start_point["y"]+0.001*ps[i].y,start_point["z"]+0.001*(ps[i].z+dz)]
             r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
             
             pos:Position = position(p,r,blend=0.0001) 
             
-            if i!=0:
+            if i>2:
                 
-                if self.dist(p,points[-1])>0.008:
-                    
-                    positions.append(pos)
-                    points.append(p)
+                if self.dist(p,points[-1])>0.003:
+                    p1 = Point3D(p[0],p[1],p[2])
+                    p2 = Point3D(points[-1][0],points[-1][1],points[-1][2])
+                    p3 = Point3D(points[-2][0],points[-2][1],points[-2][2])
+                    v1 = p2-p1
+                    v2 = p3-p2
+                    alph = Point3D.ang(v1,v2)
+                    if abs(abs(alph)%np.pi)>0.03:                    
+                        positions.append(pos)
+                        points.append(p)
             else:
                 positions.append(pos)
                 points.append(p)
                 #print(self.dist(points[-1],points[-2]))
 
 
-        for i in range(1,len(positions)):
+        for i in range(2,len(positions)):
             #print(self.dist(positions[i],positions[i-1]))
             if(self.dist(positions[i],positions[i-1])<0.003):
                 print("len")
