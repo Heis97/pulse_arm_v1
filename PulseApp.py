@@ -890,10 +890,10 @@ class PulseApp(QtWidgets.QWidget):
         #self.pulse_robot.set_position(Position(self.cur_start_point["point"],self.cur_start_point["rotation"]),velocity=vel,acceleration=acs,motion_type=MT_LINEAR)
 
         positions = self.generate_traj()
-        vel1 = 40
+        vel1 = 20
         vel2 = 0.02
 
-        acs1 = 1
+        acs1 = 50
         acs2 = 0.05
         #print(positions)
         vel = vel1
@@ -902,20 +902,17 @@ class PulseApp(QtWidgets.QWidget):
         
         vel = vel2
         acs = acs2
-
-
+        print("len all",len(positions))
+        dn = 950
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
-        for i in range(int(len(positions)/500)+1):
-            self.pulse_robot.robot.set_position(positions[500*i],velocity=vel1,acceleration=acs1,motion_type=MT_LINEAR)
-        
+        for i in range(int(len(positions)/dn)+1):
+            self.pulse_robot.robot.set_position(positions[dn*i],velocity=vel1,acceleration=acs1,motion_type=MT_LINEAR)        
             linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel2,acceleration=acs2)
-            print("set pos")
-            if len(positions)>500*(i+1)+1:
-                print("1")
-                self.pulse_robot.robot.run_linear_positions(positions[500*i:500*(i+1)],linear_motion_parameters)
+            print("load",dn)
+            if len(positions)>dn*(i+1)+1:
+                self.pulse_robot.robot.run_linear_positions(positions[dn*i:dn*(i+1)],linear_motion_parameters)
             else:
-                print("2")
-                self.pulse_robot.robot.run_linear_positions(positions[500*i:],linear_motion_parameters)
+                self.pulse_robot.robot.run_linear_positions(positions[dn*i:],linear_motion_parameters)
 
 
     def exec_prog_arm_abs_xyz(self):
@@ -966,7 +963,7 @@ class PulseApp(QtWidgets.QWidget):
         #r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
         p = []
         r = []
-        dz = 6
+        dz = 5.2
         positions = []
         for i in range(len(ps)):               
             p = [start_point["x"]+0.001*ps[i].x,start_point["y"]+0.001*ps[i].y,start_point["z"]+0.001*(ps[i].z+dz)]
