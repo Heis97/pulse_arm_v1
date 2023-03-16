@@ -105,13 +105,38 @@ def comp_traj_to_anim(trajectory:"list[Point3D]",dist:float):
         ps+=ps_d
     return ps
 
+
+def div_traj_2(p1:"Point3D",p2:"Point3D",dist:float,cd:float)->tuple["list[Point3D]",float]:
+    d = (p2-p1).magnitude()
+    div_count = int((d-cd)/dist)
+    if div_count==0:
+        return [],cd-d
+    dp = (p2-p1).normalyse()*dist
+    ps =[]
+    p1s = p1+(p2-p1).normalyse()*cd
+    for i in range(div_count):
+        ps.append(p1s+dp*i)
+
+    return ps,cd
+
+def comp_traj_to_anim_2(trajectory:"list[Point3D]",dist:float):
+    ps = []
+    cd = 0
+    for i in range(len(trajectory)-1):
+        ps_d,cd = div_traj_2(trajectory[i],trajectory[i+1],dist,cd)
+        #print(cd)
+        ps+=ps_d
+    return ps
+
+
+
 def comp_blend_lines(p1:"Point3D",p2:"Point3D",p3:"Point3D",r:float,d:float):
-    v1 = p2-p1
-    v2 = p2-p3
+    v1 = p1-p2
+    v2 = p3-p2
     alph = Point3D.ang(v1,v2)
-    d_alph = d#2*np.pi*r/d
+    d_alph = d/2*np.pi*r
     #print(alph,d_alph)
-    if alph<d_alph or np.pi-alph<d_alph or d>r:
+    if alph<d_alph or np.pi-alph<d_alph:
         return [p2]
     else:
         r_1:float = r/np.sin(alph/2)
@@ -125,9 +150,12 @@ def comp_blend_lines(p1:"Point3D",p2:"Point3D",p3:"Point3D",r:float,d:float):
         dvr = vr1-vr2
         n = int(dvr.magnitude()/d)
         vp2s = []
+        vp2s.append(p2+vr+vr1.normalyse()*r)
         for i in range(1,n):
-            p = (dvr.normalyse()*(d*i) + vr2).normalyse()*r + p2
+            p =  p2+vr+( vr1.normalyse()*np.cos(0.5*np.pi*i/n)+vr2.normalyse()*np.sin(0.5*np.pi*i/n)).normalyse()*r
             vp2s.append(p)
+        vp2s.append(p2+vr+vr2.normalyse()*r)
+        #vp2s = [p2+vr]
 
         return vp2s
     
@@ -136,10 +164,19 @@ def blend_lines(ps:"list[Point3D]",r:float,d:float):
     ps_b = [ps[0]]
     for i in range(1,len(ps)-1):
         ps_b+=comp_blend_lines(ps[i-1],ps[i],ps[i+1],r,d)
-    ps_b.append(ps[-1])
 
+        if i%100==0:
+            print(i,"/",len(ps))
+    ps_b.append(ps[-1])
     return ps_b
 
+def filtr_dist(ps:"list[Point3D]",d):
+    ps_f = [ps[0]]
+    for i in range(1,len(ps)):
+        if (ps[i]-ps_f[-1]).magnitude()>d:
+            ps_f.append(ps[i])
+
+    return ps_f
 
 def diff_plot(plot:"list[QPointF]"):
     ps = []
@@ -203,21 +240,26 @@ class RobAnimThread(QtCore.QThread):
     def run(self):
         vel = 0.03                #mm/s
         dist = vel*self.timeDelt
-        ps = comp_traj_to_anim(self.traj,dist)
+        #ps = comp_traj_to_anim(self.traj,dist)
         qs = []
-
+        ps = self.traj
+        i = 0
         for p in ps:
             q = self.pulse_arm.draw_3d_rob_pos(p,self.pulse_arm.q_draw) 
             qs.append(q)
+            i+=1
+            if i%100==0:
+                print(i,"/",len(ps))
             #sleep(self.timeDelt)
         
         plots = []
+        dt = 1e-5/vel
         for i in range(6):        
             plot = []
             t = 0.0
             for q in qs:    
                 plot.append(QPointF(t,q[i]))
-                t += self.timeDelt
+                t += dt
             plots.append(plot)
             
         self.t = t
@@ -283,7 +325,7 @@ class PulseApp(QtWidgets.QWidget):
 
     pulse_robot = None
     count = 0
-    q_draw = []
+    q_draw = [0,0,0,0,0,0,0]
     plotter:Plotter = None
     def __init__(self, parent=None):
         super().__init__(parent, QtCore.Qt.Window)
@@ -293,16 +335,15 @@ class PulseApp(QtWidgets.QWidget):
         self.build()  
 
         #print(vel_to_st2(20,1,23.1))
-
+        
         traj = [Point3D(0,0,0),Point3D(10,0,0),Point3D(10,10,0),Point3D(0,10,0),Point3D(0,0,0)]
 
-        traj_1 = blend_lines(traj,1,0.01)
-
-        self.viewer3d.addLines_ret(traj_1,1,1,0,2)
+        
 
         
     def draw_3d_rob_pos(self,p3d:Point3D,rob_draw:list):
-        q = calc_inverse_kinem_pulse(p3d)[1]       
+        q = calc_inverse_kinem_pulse(p3d)[1]  
+        #print(q)     
         return self.draw_3d_rob(rob_draw,q)
 
     def draw_rob(self):
@@ -377,19 +418,20 @@ class PulseApp(QtWidgets.QWidget):
 
     def start_anim_robot(self):
         p1 = Point3D(-0.3748,0.358,0.25,_roll=-1.515,_pitch=1.515,_yaw=-0.757)
-        p2 = p1.Clone()+Point3D(0.1)
+        """p2 = p1.Clone()+Point3D(0.1)
         p3 = p2.Clone()+Point3D(0,0.1)
         p4 = p3.Clone()+Point3D(-0.1)
 
         print("p1",p1.ToStringPulse(3," "))
         print("p2",p2.ToStringPulse(3," "))
         print("p3",p3.ToStringPulse(3," "))
-        print("p4",p4.ToStringPulse(3," "))
+        print("p4",p4.ToStringPulse(3," "))"""
         
-        
+        traj = filtr_dist(parse_g_code_pulse(self.text_prog_code.toPlainText()),0.3)
+        traj_1 = comp_traj_to_anim_2( blend_lines(traj,1.4,0.1),0.02)
+        traj_p =Point3D.addList( Point3D.mulList(traj_1,1e-3),p1)
 
-        traj = [p1,p2,p3,p4]
-        self.thr = RobAnimThread(self,traj)
+        self.thr = RobAnimThread(self,traj_p)
 
         self.thr.plotter_signal.connect(self.test_plot)
 
@@ -404,8 +446,15 @@ class PulseApp(QtWidgets.QWidget):
             plot_dif = diff_plot(plot)
             self.plotter.addPlot(plot_dif,QPointF(self.thr.t,0.3),"v q"+str(i),i,2)
             plot_dif = diff_plot(plot_dif)
-            self.plotter.addPlot(plot_dif,QPointF(self.thr.t,30),"a q"+str(i),i,3)
+            self.plotter.addPlot(plot_dif,QPointF(self.thr.t,300),"a q"+str(i),i,3)
             print("plot_add")
+
+    def test1(self):
+        traj = filtr_dist( parse_g_code_pulse(self.text_prog_code.toPlainText()),0.3)
+
+        traj_1 = comp_traj_to_anim_2( blend_lines(traj,1.4,0.05),0.01)
+
+        self.viewer3d.addLines_ret(traj_1,1,1,0,0.4)
 
  
     def build(self):
@@ -439,7 +488,7 @@ class PulseApp(QtWidgets.QWidget):
 
         self.but_test_plot = QPushButton('Тест', self)
         self.but_test_plot.setGeometry(QtCore.QRect(100, 20, 140, 30))
-        self.but_test_plot.clicked.connect(self.test_plot)
+        self.but_test_plot.clicked.connect(self.test1)
 
     def connect_robot(self):
         self.pulse_robot = PulseRobotExt(host)

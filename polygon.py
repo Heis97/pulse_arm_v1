@@ -136,6 +136,16 @@ class Point3D(object):
             sign = -1
 
         return sign
+    
+    def mulList(l:"list[Point3D]",k:float):
+        ps = []
+        for e in l: ps.append(e*k)
+        return ps
+    
+    def addList(l:"list[Point3D]",p_off:"Point3D"):
+        ps = []
+        for e in l: ps.append(p_off+e)
+        return ps
 
 class Flat3D(object):
     abc:Point3D
