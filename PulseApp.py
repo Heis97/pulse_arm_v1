@@ -95,9 +95,7 @@ def div_traj(p1:"Point3D",p2:"Point3D",dist:float)->list[Point3D]:
     ps =[]
     for i in range(0,div_count):
         ps.append(p1+dp*i)
-
     return ps
-
 
 def comp_traj_to_anim(trajectory:"list[Point3D]",dist:float):
     ps = []
@@ -106,6 +104,42 @@ def comp_traj_to_anim(trajectory:"list[Point3D]",dist:float):
         ps_d = div_traj(trajectory[i],trajectory[i+1],dist)
         ps+=ps_d
     return ps
+
+def comp_blend_lines(p1:"Point3D",p2:"Point3D",p3:"Point3D",r:float,d:float):
+    v1 = p2-p1
+    v2 = p2-p3
+    alph = Point3D.ang(v1,v2)
+    d_alph = d#2*np.pi*r/d
+    #print(alph,d_alph)
+    if alph<d_alph or np.pi-alph<d_alph or d>r:
+        return [p2]
+    else:
+        r_1:float = r/np.sin(alph/2)
+        vr = v1.normalyse()+v2.normalyse()
+        vr = vr.normalyse()*r_1
+        rc = p2+vr
+        dr:float = (r_1**2-r**2)**0.5
+        vr1 = v1*dr - vr
+        vr2 = v2*dr - vr
+        alph_r = Point3D.ang(vr1,vr2)
+        dvr = vr1-vr2
+        n = int(dvr.magnitude()/d)
+        vp2s = []
+        for i in range(1,n):
+            p = (dvr.normalyse()*(d*i) + vr2).normalyse()*r + p2
+            vp2s.append(p)
+
+        return vp2s
+    
+
+def blend_lines(ps:"list[Point3D]",r:float,d:float):
+    ps_b = [ps[0]]
+    for i in range(1,len(ps)-1):
+        ps_b+=comp_blend_lines(ps[i-1],ps[i],ps[i+1],r,d)
+    ps_b.append(ps[-1])
+
+    return ps_b
+
 
 def diff_plot(plot:"list[QPointF]"):
     ps = []
@@ -117,6 +151,8 @@ def diff_plot(plot:"list[QPointF]"):
         ps.append(QPointF(plot[i].x(),dy/dt))
     return ps
 
+
+#-----------------------------------------------------------------
 def vel_to_st(vel:float):
     nT = 10000    #timer freq
     p = 4         #step mm
@@ -133,11 +169,6 @@ def vel_to_st2(vel_nos:float,d_nos:float,d_syr:float):
     st = int((nT*p)/(vel*rev))
     vel = (nT*p)/(st*rev)
     return st,vel
-
-
-
-
-
 
 
 class SettingsPulse():
@@ -261,7 +292,13 @@ class PulseApp(QtWidgets.QWidget):
         self.resize(1750, 1000)
         self.build()  
 
-        print(vel_to_st2(20,1,23.1))
+        #print(vel_to_st2(20,1,23.1))
+
+        traj = [Point3D(0,0,0),Point3D(10,0,0),Point3D(10,10,0),Point3D(0,10,0),Point3D(0,0,0)]
+
+        traj_1 = blend_lines(traj,1,0.01)
+
+        self.viewer3d.addLines_ret(traj_1,1,1,0,2)
 
         
     def draw_3d_rob_pos(self,p3d:Point3D,rob_draw:list):

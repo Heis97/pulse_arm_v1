@@ -31,13 +31,12 @@ class Point3D(object):
         self.extrude = _extrude
 
     def normalyse(self):
-        mod = abs(self.x*self.x)+abs(self.y*self.y)+abs(self.z*self.z)
-        norm = math.sqrt(mod)
+        norm = math.sqrt(self.x**2+self.y**2+self.z**2)
         if norm!=0:
             self.x /=norm
             self.y /=norm
             self.z /=norm
-        return Point3D(self.x,self.y,self.z,self.extrude)
+        return self
 
     def ToString(self)->str:
         return str(self.x)+" "+str(self.y)+" "+str(self.z)+";"
