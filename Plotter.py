@@ -11,6 +11,8 @@ class Plot(object):
     pen:QPen = None
     name:str = ""
     visible = False
+    ymm:QPointF = None
+
     loc = None
     def __init__(self,koords:"list[QPointF]",color, width,name):
         self.koords = koords        
@@ -29,7 +31,7 @@ class Plot(object):
 
         if len(koords)==0:
             return
-        
+        xmm:QPointF = None
         kx=abs(loc.width())/abs(maxy.x()) 
         ky=abs(loc.height()/2)/abs(maxy.y())  
         koords_n = [0]*len(koords)
@@ -76,6 +78,40 @@ class Plot(object):
             x1=koords[i].x()
             y1=koords[i].y()
             koords_n[i] = QPointF(x1*k-offX,y1*k-offY)
+
+        return koords_n
+    
+    def normPoints_y(self,koords:"list[QPointF]",loc:QRect,):
+        Xmin=10e20
+        Ymin=10e20
+        Xmax=-10e20
+        Ymax=-10e20
+        Xq1= loc.x()
+        Xq2= Xq1+loc.width()
+        Yq1= loc.y()
+        Yq2= Yq1+loc.height()
+        if len(koords)==0:
+            return
+        for i in range(len(koords)-1):            
+            if koords[i].x()>Xmax:
+                Xmax=koords[i].x()
+            if koords[i].x()<Xmin:
+                Xmin=koords[i].x()
+            if koords[i].y()>Ymax:
+                Ymax=koords[i].y()
+            if koords[i].y()<Ymin:
+                Ymin=koords[i].y()
+        kx=abs(Xq1-Xq2)/abs(Xmax-Xmin)  
+        ky=abs(Yq1-Yq2)/abs(Ymax-Ymin)
+
+        offX=Xmin*kx-Xq1
+        offY=Ymin*ky-Yq1
+        koords_n = [0]*len(koords)
+
+        for i in range(len(koords)):   
+            x1=koords[i].x()
+            y1=koords[i].y()
+            koords_n[i] = QPointF(x1*kx-offX,y1*ky-offY)
 
         return koords_n
     

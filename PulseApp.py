@@ -152,7 +152,8 @@ def comp_blend_lines(p1:"Point3D",p2:"Point3D",p3:"Point3D",r:float,d:float):
         vp2s = []
         vp2s.append(p2+vr+vr1.normalyse()*r)
         for i in range(1,n):
-            p =  p2+vr+( vr1.normalyse()*np.cos(0.5*np.pi*i/n)+vr2.normalyse()*np.sin(0.5*np.pi*i/n)).normalyse()*r
+            ang = 0.5*np.pi*i/n
+            p =  p2+vr+( vr1.normalyse()*np.cos(ang)+vr2.normalyse()*np.sin(ang)).normalyse()*r
             vp2s.append(p)
         vp2s.append(p2+vr+vr2.normalyse()*r)
         #vp2s = [p2+vr]
@@ -230,7 +231,7 @@ class RobAnimThread(QtCore.QThread):
         QtCore.QThread.__init__(self)   
         
         self.pulse_arm = pulse_arm
-        self.timeDelt = 0.03        
+        self.timeDelt = 0.0003        
         self.traj = trajectory
         self.plots = None
         self.t = None
@@ -253,7 +254,8 @@ class RobAnimThread(QtCore.QThread):
             #sleep(self.timeDelt)
         
         plots = []
-        dt = 1e-5/vel
+        dt =self.timeDelt# 0.01*1e-3/vel
+        print(dt)
         for i in range(6):        
             plot = []
             t = 0.0
@@ -428,8 +430,8 @@ class PulseApp(QtWidgets.QWidget):
         print("p4",p4.ToStringPulse(3," "))"""
         
         traj = filtr_dist(parse_g_code_pulse(self.text_prog_code.toPlainText()),0.3)
-        traj_1 = comp_traj_to_anim_2( blend_lines(traj,1.4,0.1),0.02)
-        traj_p =Point3D.addList( Point3D.mulList(traj_1,1e-3),p1)
+        traj_1 = comp_traj_to_anim_2( blend_lines(traj,1.4,0.02),0.01)
+        traj_p = Point3D.addList(Point3D.mulList(traj_1,1e-3),p1)
 
         self.thr = RobAnimThread(self,traj_p)
 
