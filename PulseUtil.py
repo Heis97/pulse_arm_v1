@@ -373,7 +373,7 @@ def calc_inverse_kinem_pulse_priv(position:Point3D,t1=1,t2=1,t3=1)->list:
         if qi<-np.pi: qi+=2*np.pi
         q[i]= qi
     k = 100
-    return [q[0],q[1],q[2],q[3],q[4],q[5],[p*k,p0p*k,p1*k,p2*k,Point3D(0,0,L1)*k],t1,t2,t3]
+    return [q[0],q[1],q[2],q[3],q[4],q[5]]#,[p*k,p0p*k,p1*k,p2*k,Point3D(0,0,L1)*k],t1,t2,t3]
 
 
 def calc_inverse_kinem_pulse_old(position:Point3D)->list:

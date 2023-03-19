@@ -23,7 +23,7 @@ class Plot(object):
         if sim is not None:
             self.koords_n = self.normPoints_sim(self.koords,loc,sim)
         else:
-            self.koords_n = self.normPoints(self.koords,loc)        
+            self.koords_n = self.normPoints_y(self.koords,loc)        
         self.visible = True
         self.loc = loc
 
@@ -101,11 +101,15 @@ class Plot(object):
                 Ymax=koords[i].y()
             if koords[i].y()<Ymin:
                 Ymin=koords[i].y()
-        kx=abs(Xq1-Xq2)/abs(Xmax-Xmin)  
-        ky=abs(Yq1-Yq2)/abs(Ymax-Ymin)
+        
+        kx=abs(Xq1-Xq2)/abs(Xmax-Xmin) 
+        ky = 1
+        if Ymax!=Ymin: 
+            ky=abs(Yq1-Yq2)/abs(Ymax-Ymin)
 
         offX=Xmin*kx-Xq1
         offY=Ymin*ky-Yq1
+        self.ymm = QPointF(Ymin,Ymax)
         koords_n = [0]*len(koords)
 
         for i in range(len(koords)):   
@@ -120,7 +124,7 @@ class Plot(object):
 
 class Plotter(QtWidgets.QWidget):
     plots:"list[Plot]"= []
-    colors = [Qt.blue,Qt.green,Qt.red,Qt.blue,Qt.green,Qt.red,Qt.blue,Qt.green,Qt.red]*100
+    colors = [Qt.yellow,Qt.green,Qt.red]*100
     size_gr:QSize = None
     board = 10
     col = 1
@@ -151,6 +155,9 @@ class Plotter(QtWidgets.QWidget):
         qp.drawLine(plot.loc.x(),int(plot.loc.y()+plot.loc.height()/2),plot.loc.x()+plot.loc.width(),int(plot.loc.y()+plot.loc.height()/2))
         qp.setFont(QtGui.QFont("Times", 12, QtGui.QFont.Bold))
         qp.drawText(plot.loc.x()+13,plot.loc.y()+25,plot.name)
+        if plot.ymm is not None:
+            qp.drawText(plot.loc.x()+43,plot.loc.y()+20,str(round(plot.ymm.y(),4)))
+            qp.drawText(plot.loc.x()+43,plot.loc.y()+plot.loc.height()-20,str(round(plot.ymm.x(),4)))
 
     def addPlot(self,koords:"list[QPointF]",maxy = None,name:str = "",row: int = 1,col:int = 1):
         self.col = max(self.col,col)

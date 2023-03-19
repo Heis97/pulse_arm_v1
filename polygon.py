@@ -146,6 +146,9 @@ class Point3D(object):
         ps = []
         for e in l: ps.append(p_off+e)
         return ps
+    
+    
+
 
 class Flat3D(object):
     abc:Point3D

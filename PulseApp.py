@@ -128,8 +128,7 @@ def comp_traj_to_anim_2(trajectory:"list[Point3D]",dist:float):
         ps+=ps_d
     return ps
 
-
-
+    
 def comp_blend_lines(p1:"Point3D",p2:"Point3D",p3:"Point3D",r:float,d:float):
     v1 = p1-p2
     v2 = p3-p2
@@ -189,6 +188,53 @@ def diff_plot(plot:"list[QPointF]"):
         ps.append(QPointF(plot[i].x(),dy/dt))
     return ps
 
+def filtr_gauss(ps:"list[Point3D]",wind:int):
+    ps_f = ps[:wind]
+    ps_f = []
+    for i in range(wind,len(ps)-wind):
+        p_f = Point3D.fullsum(ps[i-wind:i+wind])
+        #ps_f.append(p_f)
+        ps_f.append(ps[i])
+    return ps_f
+
+def fullsum(l:"list[QPointF]"):
+    p = QPointF(0,0)
+    for e in l: p+=e
+    return p*(1/float(len(l)))
+
+def filtr_gaussQF(ps:"list[QPointF]",wind:int):
+    ps_f = ps[:wind-1]
+    #ps_f = []
+    for i in range(wind,len(ps)-wind):
+        p_f = fullsum(ps[i-wind:i+wind])
+        ps_f.append(p_f)
+        #ps_f.append(ps[i])
+    ps_f+=ps[len(ps)-wind-1:]
+    return ps_f
+
+def fullsum_list(l:"list[list[float]]"):
+    #print(type([[]]))
+    p = [0]*len(l[0])
+    for e in l:
+        for i in range(len(l[0])):
+            #print(p,e)
+            p[i]+=e[i]
+
+    for i in range(len(l[0])):
+        p[i]/=float(len(l))
+    return p
+
+def filtr_gauss_list(ps:"list[list[float]]",wind:int):
+    ps_f = []
+    for i in range(len(ps)):
+        i_b = i-wind
+        i_end = i+wind
+        if i_b<0: i_b = 0
+        if i_end>len(ps): i_end=len(ps)
+        p_f = fullsum_list(ps[i_b:i_end])
+        ps_f.append(p_f)
+
+    return ps_f
 
 #-----------------------------------------------------------------
 def vel_to_st(vel:float):
@@ -227,7 +273,7 @@ class SettingsPulse():
 class RobAnimThread(QtCore.QThread):
     plotter_signal = QtCore.pyqtSignal(int)
 
-    def __init__(self,pulse_arm:"PulseApp",trajectory:"list[Point3D]"):
+    def __init__(self,pulse_arm:"PulseApp",trajectory:"list[Point3D]",div:float):
         QtCore.QThread.__init__(self)   
         
         self.pulse_arm = pulse_arm
@@ -235,6 +281,8 @@ class RobAnimThread(QtCore.QThread):
         self.traj = trajectory
         self.plots = None
         self.t = None
+        self.div = div
+        self.qs = []
         self.start()  
 
     
@@ -253,8 +301,10 @@ class RobAnimThread(QtCore.QThread):
                 print(i,"/",len(ps))
             #sleep(self.timeDelt)
         
+        qs = filtr_gauss_list(qs,100)
+
         plots = []
-        dt =self.timeDelt# 0.01*1e-3/vel
+        dt = self.div*1e-3/vel
         print(dt)
         for i in range(6):        
             plot = []
@@ -266,6 +316,7 @@ class RobAnimThread(QtCore.QThread):
             
         self.t = t
         self.plots = plots
+        self.qs = qs
         self.plotter_signal.emit(0)
 
 
@@ -420,35 +471,49 @@ class PulseApp(QtWidgets.QWidget):
 
     def start_anim_robot(self):
         p1 = Point3D(-0.3748,0.358,0.25,_roll=-1.515,_pitch=1.515,_yaw=-0.757)
-        """p2 = p1.Clone()+Point3D(0.1)
-        p3 = p2.Clone()+Point3D(0,0.1)
-        p4 = p3.Clone()+Point3D(-0.1)
-
-        print("p1",p1.ToStringPulse(3," "))
-        print("p2",p2.ToStringPulse(3," "))
-        print("p3",p3.ToStringPulse(3," "))
-        print("p4",p4.ToStringPulse(3," "))"""
         
         traj = filtr_dist(parse_g_code_pulse(self.text_prog_code.toPlainText()),0.3)
-        traj_1 = comp_traj_to_anim_2( blend_lines(traj,1.4,0.02),0.01)
+        #self.viewer3d.addLines_ret(traj,1,1,0,0.4)
+        traj_d = 0.01
+        traj = blend_lines(traj,1.4,traj_d)
+        #self.viewer3d.addLines_ret(traj,1,1,0,0.4)
+
+        traj_1 = comp_traj_to_anim_2( traj,traj_d)
+        self.viewer3d.addLines_ret(traj_1,1,1,0,0.2)
         traj_p = Point3D.addList(Point3D.mulList(traj_1,1e-3),p1)
+        
 
-        self.thr = RobAnimThread(self,traj_p)
-
+        self.thr = RobAnimThread(self,traj_p,traj_d)
         self.thr.plotter_signal.connect(self.test_plot)
 
 
     def test_plot(self):
+        p1 = Point3D(-0.3748,0.358,0.25,_roll=-1.515,_pitch=1.515,_yaw=-0.757)
+        qs = self.thr.qs
+
+        ps = []
+        for q in qs:
+            ps.append(position_from_matrix_pulse( calc_forward_kinem_pulse(q,True)))
+
+        
+
+        ps = Point3D.mulList(Point3D.addList(ps,-p1),1e3)  
+        print(len(ps),ps[0].ToString())
+        self.viewer3d.addLines_ret(ps,0,1,1,0.2) 
+        
         self.plotter = Plotter(self)
         self.plotter.show()
         i=0
         for plot in self.thr.plots:            
             i+=1
-            self.plotter.addPlot(plot,QPointF(self.thr.t,3.0),"q"+str(i),i,1)
+            maxxy_q = None
+            self.plotter.addPlot(plot,maxxy_q,"q"+str(i),i,1)
             plot_dif = diff_plot(plot)
-            self.plotter.addPlot(plot_dif,QPointF(self.thr.t,0.3),"v q"+str(i),i,2)
+            self.plotter.addPlot(plot_dif,maxxy_q,"v q"+str(i),i,2)
             plot_dif = diff_plot(plot_dif)
-            self.plotter.addPlot(plot_dif,QPointF(self.thr.t,300),"a q"+str(i),i,3)
+            self.plotter.addPlot(plot_dif,maxxy_q,"a q"+str(i),i,3)
+
+        
             print("plot_add")
 
     def test1(self):
@@ -957,6 +1022,8 @@ class PulseApp(QtWidgets.QWidget):
 
         self.text_prog_code = QTextEdit(self)
         self.text_prog_code.setGeometry(QtCore.QRect(1150, 560, 500, 400))
+
+        self.text_prog_code.setText("G1 X1 Y1\nG1 X1 Y3\nG1 X3 Y3")
 
 
     def set_cur_work_pose(self):
