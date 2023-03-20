@@ -254,6 +254,20 @@ def vel_to_st2(vel_nos:float,d_nos:float,d_syr:float):
     vel = (nT*p)/(st*rev)
     return st,vel
 
+#---------------------------json-------------------------
+
+def load_file(file_in):
+    list = []
+    with open(file_in) as file:   
+        list=json.load(file)
+    return list
+
+def save_file(list,file_in):
+    with open(file_in, "w", encoding="utf-8") as file:
+        json.dump(list, file,indent=5)
+
+#----------------------------------------------------------
+
 
 class SettingsPulse():
     tools:dict = None
@@ -321,40 +335,53 @@ class RobAnimThread(QtCore.QThread):
 
 
 class RobPosThread(QtCore.QThread):
-    def __init__(self,pulse_arm:PulseRobotExt, label:QLabel):
+    def __init__(self,pulse_arm:PulseRobotExt, label:QLabel, slot):
         QtCore.QThread.__init__(self)   
         self.pulse_arm = pulse_arm
         self.label = label
-        self.timeDelt = 0.05
+        self.timeDelt = 0.001
         self.start()   
-    
+        self.writing = False
+        self.feedback = []
+        slot.connect(self.set_writing)
+
+    def set_writing(self,val):
+        self.writing = val
+
     def run(self):
         while True:
             
-            cur_posit = self.pulse_arm.get_position()
+            #cur_posit = self.pulse_arm.get_position()
 
-            cur_posit = self.pulse_arm.get_position()
+            #cur_posit = self.pulse_arm.get_position()
 
-            cur_posit_m = pulse_matrix_p(position_to_p3d(cur_posit))
+            #cur_posit_m = pulse_matrix_p(position_to_p3d(cur_posit))
 
-            cur_posit_m_comp = pulse_FK(pose_to_list(self.pulse_arm.get_pose()))
+            #cur_posit_m_comp = pulse_FK(pose_to_list(self.pulse_arm.get_pose()))
 
             #print(cur_posit_m_comp)
 
             #print(cur_posit_m)
+            
 
-            cur_posit_comp = position_from_matrix_pulse(cur_posit_m_comp)
+            pose = self.pulse_arm.get_pose()
+            #motors = self.pulse_arm.status_motors()
+            #position = self.pulse_arm.get_position()
+            if self.writing:
+                self.feedback.append(str(pose))
+                #print(str(pose))
+            
+
+            #cur_posit_comp = position_from_matrix_pulse(cur_posit_m_comp)
 
             #print(Point3D.ToStringPulse(self.pulse_arm.tool,delim=", "),"\n",self.pulse_arm.get_tool_info())
 
-            p3d = p3d_cur_pulse(cur_posit_comp,self.pulse_arm.tool,self.pulse_arm.base)
+            #p3d = p3d_cur_pulse(cur_posit_comp,self.pulse_arm.tool,self.pulse_arm.base)
 
             #print(pulse_matrix_p(position_to_p3d(cur_posit)))
-            
-            self.label.setText("Joint position:\n"+pose_to_str(self.pulse_arm.get_pose())+
-                                "\n\n\n"+"Cartesian position:\n"+position_to_str(self.pulse_arm.get_position())+#"\n\n"+Point3D.ToStringPulse(p3d)+
-                                "\n\n\n"+motor_state_to_str(self.pulse_arm.status_motors()))  
             try:
+           # self.label.setText("Joint position:\n"+pose_to_str(pose)+"\n\n\n"+"Cartesian position:\n"+position_to_str(position)+"\n\n\n"+motor_state_to_str(motors))  
+
                 pass               
             except BaseException:
                 pass
@@ -380,6 +407,9 @@ class PulseApp(QtWidgets.QWidget):
     count = 0
     q_draw = [0,0,0,0,0,0,0]
     plotter:Plotter = None
+    writing_signal = QtCore.pyqtSignal(bool)
+    
+
     def __init__(self, parent=None):
         super().__init__(parent, QtCore.Qt.Window)
         self.load_settings()
@@ -557,9 +587,26 @@ class PulseApp(QtWidgets.QWidget):
         self.but_test_plot.setGeometry(QtCore.QRect(100, 20, 140, 30))
         self.but_test_plot.clicked.connect(self.test1)
 
+        self.but_start_writing = QPushButton('Начать запись', self)
+        self.but_start_writing.setGeometry(QtCore.QRect(250, 20, 140, 30))
+        self.but_start_writing.clicked.connect(self.start_writing)
+
+        self.but_stop_writing = QPushButton('Остановить запись', self)
+        self.but_stop_writing.setGeometry(QtCore.QRect(250, 60, 140, 30))
+        self.but_stop_writing.clicked.connect(self.stop_writing)
+
+
+    def start_writing(self):
+        self.writing_signal.emit(True)
+
+        
+    def stop_writing(self):
+        self.writing_signal.emit(False)
+        save_file( self.coords_thread.feedback,"feedback.json")
+
     def connect_robot(self):
         self.pulse_robot = PulseRobotExt(host)
-        self.coords_thread = RobPosThread(self.pulse_robot,self.lab_coord)
+        self.coords_thread = RobPosThread(self.pulse_robot,self.lab_coord,self.writing_signal)
 
     def disconnect_robot(self):
         self.pulse_robot = None
@@ -1023,7 +1070,7 @@ class PulseApp(QtWidgets.QWidget):
         self.text_prog_code = QTextEdit(self)
         self.text_prog_code.setGeometry(QtCore.QRect(1150, 560, 500, 400))
 
-        self.text_prog_code.setText("G1 X1 Y1\nG1 X1 Y3\nG1 X3 Y3")
+        self.text_prog_code.setText("G1 X1 Y1\nG1 X1 Y30\nG1 X30 Y30")
 
 
     def set_cur_work_pose(self):

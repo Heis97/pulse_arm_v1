@@ -7,6 +7,8 @@ class PulseRobotExt(object):
     base: Point3D = Point3D(0,0,0)
     tool: Point3D= Point3D(0,0,0)
 
+
+
     def __init__(self,host) -> None:
         self.robot = RobotPulse(host)
 
