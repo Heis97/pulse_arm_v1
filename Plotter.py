@@ -159,7 +159,7 @@ class Plotter(QtWidgets.QWidget):
             qp.drawText(plot.loc.x()+43,plot.loc.y()+20,str(round(plot.ymm.y(),4)))
             qp.drawText(plot.loc.x()+43,plot.loc.y()+plot.loc.height()-20,str(round(plot.ymm.x(),4)))
 
-    def addPlot(self,koords:"list[QPointF]",maxy = None,name:str = "",row: int = 1,col:int = 1):
+    def addPlot(self,koords:"list[QPointF]",name:str = "",row: int = 1,col:int = 1,maxy = None):
         self.col = max(self.col,col)
         self.row = max(self.row,row)      
         self.resize(2*self.board+self.col *(self.board+self.size_gr.width()),

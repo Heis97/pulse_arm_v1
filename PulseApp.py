@@ -86,6 +86,7 @@ def motor_state_to_str(ms:list[MotorStatus]):
 
     return txt
 
+#----------------------------------------------------------
 def div_traj(p1:"Point3D",p2:"Point3D",dist:float)->list[Point3D]:
     d = (p2-p1).magnitude()
     div_count = int(d/dist)
@@ -128,7 +129,7 @@ def comp_traj_to_anim_2(trajectory:"list[Point3D]",dist:float):
         ps+=ps_d
     return ps
 
-    
+#------------------------------------------------    
 def comp_blend_lines(p1:"Point3D",p2:"Point3D",p3:"Point3D",r:float,d:float):
     v1 = p1-p2
     v2 = p3-p2
@@ -159,7 +160,6 @@ def comp_blend_lines(p1:"Point3D",p2:"Point3D",p3:"Point3D",r:float,d:float):
 
         return vp2s
     
-
 def blend_lines(ps:"list[Point3D]",r:float,d:float):
     ps_b = [ps[0]]
     for i in range(1,len(ps)-1):
@@ -188,6 +188,7 @@ def diff_plot(plot:"list[QPointF]"):
         ps.append(QPointF(plot[i].x(),dy/dt))
     return ps
 
+#----------------------------------------------------------
 def filtr_gauss(ps:"list[Point3D]",wind:int):
     ps_f = ps[:wind]
     ps_f = []
@@ -226,7 +227,7 @@ def fullsum_list(l:"list[list[float]]"):
 
 def filtr_gauss_list(ps:"list[list[float]]",wind:int):
     ps_f = []
-    for i in range(len(ps)):
+    for i in range(wind,len(ps)-wind):
         i_b = i-wind
         i_end = i+wind
         if i_b<0: i_b = 0
@@ -236,6 +237,30 @@ def filtr_gauss_list(ps:"list[list[float]]",wind:int):
 
     return ps_f
 
+def traj_to_plots(qs:list[list[float]],ts:list[float]):
+    plots = []
+    for i in range(6):        
+        plot = []        
+        for j in range(len(qs)):    
+            plot.append(QPointF(ts[j],qs[j][i]))           
+        plots.append(plot)
+
+    return plots
+
+def plots_qs(widj,plots):
+    plotter = Plotter(widj)
+    plotter.show()
+    i=0
+    for plot in plots:            
+        i+=1
+        plotter.addPlot(plot,"q"+str(i),i,1)
+        plot_dif = diff_plot(plot)
+        plotter.addPlot(plot_dif,"v q"+str(i),i,2)
+        plot_dif = diff_plot(plot_dif)
+        plotter.addPlot(plot_dif,"a q"+str(i),i,3)   
+        print("plot_add")
+
+    return plotter
 #-----------------------------------------------------------------
 def vel_to_st(vel:float):
     nT = 10000    #timer freq
@@ -268,6 +293,29 @@ def save_file(list,file_in):
 
 #----------------------------------------------------------
 
+def timestamp_decod(time_s:str)->float:
+    time_s = time_s.split("T")[-1]
+    time_s = time_s.replace("Z","")
+    date = time_s.split(":")
+    secs = float(date[0])*3600+float(date[1])*60+float(date[2])
+    return secs
+
+def str_to_dict(s:str):
+    json_acceptable_string = s.replace("\n", "").replace(" ", "").replace("'", "\"")
+    return json.loads(json_acceptable_string)
+
+def load_feedback(file)->tuple[list[float],list[float]]:
+    ps = []
+    dts = []
+    traj_l = load_file(file)
+    for frame in traj_l:
+        traj_d = str_to_dict(frame)
+        ps.append(traj_d['angles'])
+        dts.append(timestamp_decod(traj_d['timestamp']))
+
+    return ps,dts
+
+#-----------------------------------------------------------------------
 
 class SettingsPulse():
     tools:dict = None
@@ -294,7 +342,6 @@ class RobAnimThread(QtCore.QThread):
         self.timeDelt = 0.0003        
         self.traj = trajectory
         self.plots = None
-        self.t = None
         self.div = div
         self.qs = []
         self.start()  
@@ -302,34 +349,25 @@ class RobAnimThread(QtCore.QThread):
     
     def run(self):
         vel = 0.03                #mm/s
-        dist = vel*self.timeDelt
-        #ps = comp_traj_to_anim(self.traj,dist)
         qs = []
+        ts = []
         ps = self.traj
+        dt = self.div*1e-3/vel
+        t = 0.0
         i = 0
         for p in ps:
             q = self.pulse_arm.draw_3d_rob_pos(p,self.pulse_arm.q_draw) 
             qs.append(q)
+            ts.append(t)
+            t += dt
             i+=1
             if i%100==0:
                 print(i,"/",len(ps))
             #sleep(self.timeDelt)
         
         qs = filtr_gauss_list(qs,100)
-
-        plots = []
-        dt = self.div*1e-3/vel
-        print(dt)
-        for i in range(6):        
-            plot = []
-            t = 0.0
-            for q in qs:    
-                plot.append(QPointF(t,q[i]))
-                t += dt
-            plots.append(plot)
             
-        self.t = t
-        self.plots = plots
+        self.plots = traj_to_plots(qs,ts)
         self.qs = qs
         self.plotter_signal.emit(0)
 
@@ -418,9 +456,6 @@ class PulseApp(QtWidgets.QWidget):
         self.build()  
 
         #print(vel_to_st2(20,1,23.1))
-        
-        traj = [Point3D(0,0,0),Point3D(10,0,0),Point3D(10,10,0),Point3D(0,10,0),Point3D(0,0,0)]
-
         
 
         
@@ -526,32 +561,21 @@ class PulseApp(QtWidgets.QWidget):
             ps.append(position_from_matrix_pulse( calc_forward_kinem_pulse(q,True)))
 
         
-
         ps = Point3D.mulList(Point3D.addList(ps,-p1),1e3)  
         print(len(ps),ps[0].ToString())
         self.viewer3d.addLines_ret(ps,0,1,1,0.2) 
         
-        self.plotter = Plotter(self)
-        self.plotter.show()
-        i=0
-        for plot in self.thr.plots:            
-            i+=1
-            maxxy_q = None
-            self.plotter.addPlot(plot,maxxy_q,"q"+str(i),i,1)
-            plot_dif = diff_plot(plot)
-            self.plotter.addPlot(plot_dif,maxxy_q,"v q"+str(i),i,2)
-            plot_dif = diff_plot(plot_dif)
-            self.plotter.addPlot(plot_dif,maxxy_q,"a q"+str(i),i,3)
-
-        
-            print("plot_add")
+        self.plotter = plots_qs(self,self.thr.plots)
 
     def test1(self):
-        traj = filtr_dist( parse_g_code_pulse(self.text_prog_code.toPlainText()),0.3)
+        qs,ts = load_feedback("feedback.json")
+        print("LEN PLOT: ",len(ts))
+        qs = filtr_gauss_list(qs,100)
+        plots = traj_to_plots(qs,ts)
+        self.plotter = plots_qs(self,plots)
 
-        traj_1 = comp_traj_to_anim_2( blend_lines(traj,1.4,0.05),0.01)
 
-        self.viewer3d.addLines_ret(traj_1,1,1,0,0.4)
+        #self.viewer3d.addLines_ret(traj_1,1,1,0,0.4)
 
  
     def build(self):

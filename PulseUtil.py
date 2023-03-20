@@ -187,7 +187,6 @@ def p3d_cur_pulse(flange:Point3D,tool:Point3D,base:Point3D):
 
     end_p = np.dot(cur_flange_m,cur_tool_m) 
     end_p = np.dot(cur_base_m,end_p) 
-    #print(cur_tool_m)
 
     return position_from_matrix_pulse(end_p)
 
@@ -477,32 +476,4 @@ def calc_inverse_kinem_pulse_old(position:Point3D)->list:
 
 
     print("q4",q4,"q5",q5,"q6",q6)
-
-
-
-
-def pulse_RK(position:Point3D):
-    pass
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
