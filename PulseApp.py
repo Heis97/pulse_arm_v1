@@ -403,10 +403,18 @@ class RobPosThread(QtCore.QThread):
             
 
             pose = self.pulse_arm.get_pose()
-            #motors = self.pulse_arm.status_motors()
-            #position = self.pulse_arm.get_position()
+            
             if self.writing:
                 self.feedback.append(str(pose))
+
+            else:
+                try:
+                    motors = self.pulse_arm.status_motors()
+                    position = self.pulse_arm.get_position()
+                    self.label.setText("Joint position:\n"+pose_to_str(pose)+"\n\n\n"+"Cartesian position:\n"+position_to_str(position)+"\n\n\n"+motor_state_to_str(motors))  
+                    pass               
+                except BaseException:
+                    pass
                 #print(str(pose))
             
 
@@ -417,12 +425,7 @@ class RobPosThread(QtCore.QThread):
             #p3d = p3d_cur_pulse(cur_posit_comp,self.pulse_arm.tool,self.pulse_arm.base)
 
             #print(pulse_matrix_p(position_to_p3d(cur_posit)))
-            try:
-           # self.label.setText("Joint position:\n"+pose_to_str(pose)+"\n\n\n"+"Cartesian position:\n"+position_to_str(position)+"\n\n\n"+motor_state_to_str(motors))  
-
-                pass               
-            except BaseException:
-                pass
+            
         
             sleep(self.timeDelt)
 
@@ -455,7 +458,7 @@ class PulseApp(QtWidgets.QWidget):
         self.resize(1750, 1000)
         self.build()  
 
-        #print(vel_to_st2(20,1,23.1))
+        print(vel_to_st2(20,1,10.1))
         
 
         
@@ -1189,7 +1192,7 @@ class PulseApp(QtWidgets.QWidget):
         #r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
         p = []
         r = []
-        dz = 5.2
+        dz = 5
         positions = []
         for i in range(len(ps)):               
             p = [start_point["x"]+0.001*ps[i].x,start_point["y"]+0.001*ps[i].y,start_point["z"]+0.001*(ps[i].z+dz)]
