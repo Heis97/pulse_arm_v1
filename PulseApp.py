@@ -247,7 +247,27 @@ def traj_to_plots(qs:list[list[float]],ts:list[float]):
 
     return plots
 
+def traj_to_plots_ps(ps:list[Point3D],ts:list[float]):    
+    plot_x = [] 
+    plot_y = []
+    plot_z = []
+    plot_a = []
+    plot_b = []
+    plot_c = []       
+    for i in range(len(ps)):            
+        plot_x.append(QPointF(ts[i],ps[i].x))  
+        plot_y.append(QPointF(ts[i],ps[i].y)) 
+        plot_z.append(QPointF(ts[i],ps[i].z)) 
+        plot_a.append(QPointF(ts[i],ps[i].roll)) 
+        plot_b.append(QPointF(ts[i],ps[i].pitch)) 
+        plot_c.append(QPointF(ts[i],ps[i].yaw)) 
+
+    plots = [plot_x,plot_y,plot_z,plot_a,plot_b,plot_c]
+
+    return plots
+
 def plots_qs(widj,plots):
+
     plotter = Plotter(widj)
     plotter.show()
     i=0
@@ -261,6 +281,24 @@ def plots_qs(widj,plots):
         print("plot_add")
 
     return plotter
+
+
+def plots_ps(widj,plots):
+    plotter = Plotter(widj)
+    plotter.show()
+    koords = ["x","y","z","a","b","c"]
+    i=0
+    for plot in plots:            
+        i+=1
+        plotter.addPlot(plot,koords[i-1],i,4)
+        plot_dif = diff_plot(plot)
+        plotter.addPlot(plot_dif,koords[i-1]+ " v",i,5)
+        plot_dif = diff_plot(plot_dif)
+        plotter.addPlot(plot_dif,koords[i-1]+ " a",i,6)   
+        print("plot_add")
+
+    return plotter
+
 #-----------------------------------------------------------------
 def vel_to_st(vel:float):
     nT = 10000    #timer freq
@@ -538,7 +576,16 @@ class PulseApp(QtWidgets.QWidget):
 
 
     def start_anim_robot(self):
-        p1 = Point3D(-0.3748,0.358,0.25,_roll=-1.515,_pitch=1.515,_yaw=-0.757)
+        p =  self.settins_pulse.start_points["sp_1303_1"]
+        base =  self.settins_pulse.bases["bs0603"]
+        base_p =  pos_dict_to_point3d(base)
+        p1 =  pos_dict_to_point3d(p)
+        base_m = pulse_matrix_p(base_p)
+        p1_m = pulse_matrix_p(p1)
+        base_m_inv = np.linalg.inv(base_m)
+        p_base_m = np.dot(base_m_inv,p1_m)
+        p1 = position_from_matrix_pulse(p_base_m)
+        #p1 = Point3D(-0.3748,0.358,0.25,_roll=-1.515,_pitch=1.515,_yaw=-0.757)
         
         traj = filtr_dist(parse_g_code_pulse(self.text_prog_code.toPlainText()),0.3)
         #self.viewer3d.addLines_ret(traj,1,1,0,0.4)
@@ -562,7 +609,6 @@ class PulseApp(QtWidgets.QWidget):
         ps = []
         for q in qs:
             ps.append(position_from_matrix_pulse( calc_forward_kinem_pulse(q,True)))
-
         
         ps = Point3D.mulList(Point3D.addList(ps,-p1),1e3)  
         print(len(ps),ps[0].ToString())
@@ -573,9 +619,43 @@ class PulseApp(QtWidgets.QWidget):
     def test1(self):
         qs,ts = load_feedback("feedback.json")
         print("LEN PLOT: ",len(ts))
-        qs = filtr_gauss_list(qs,100)
+        #qs = filtr_gauss_list(qs,100)
+        
         plots = traj_to_plots(qs,ts)
         self.plotter = plots_qs(self,plots)
+
+        p =  self.settins_pulse.start_points["sp_1303_1"]
+        base =  self.settins_pulse.bases["bs0603"]
+        base_p =  pos_dict_to_point3d(base)
+        p1 =  pos_dict_to_point3d(p)
+        base_m = pulse_matrix_p(base_p)
+        p1_m = pulse_matrix_p(p1)
+        base_m_inv = np.linalg.inv(base_m)
+        p_base_m = np.dot(base_m_inv,p1_m)
+        p_b = position_from_matrix_pulse(p_base_m)
+
+        ps = []
+        for q in qs:
+            ps.append(position_from_matrix_pulse( calc_forward_kinem_pulse(q)))
+
+        plots = traj_to_plots_ps(ps,ts)
+        self.plotter = plots_ps(self,plots)
+        
+        ps = Point3D.mulList(Point3D.addList(ps,-p_b),1e3)  
+        print(len(ps),ps[0].ToString())
+
+        traj = filtr_dist(parse_g_code_pulse(self.text_prog_code.toPlainText()),0.3)
+        #self.viewer3d.addLines_ret(traj,1,1,0,0.4)
+        traj_d = 0.01
+        traj = blend_lines(traj,1.4,traj_d)
+        #self.viewer3d.addLines_ret(traj,1,1,0,0.4)
+
+        traj_1 = comp_traj_to_anim_2( traj,traj_d)
+        self.viewer3d.addLines_ret(traj_1,1,1,0,0.2)
+
+
+
+        self.viewer3d.addLines_ret(ps,0,1,1,0.2) 
 
 
         #self.viewer3d.addLines_ret(traj_1,1,1,0,0.4)

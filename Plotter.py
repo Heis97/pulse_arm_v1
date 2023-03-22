@@ -134,7 +134,7 @@ class Plotter(QtWidgets.QWidget):
         self.setWindowTitle("Интерфейс Pulse")
         self.size_gr = size
         self.resize(size.width()+2*self.board,1)
-        self.setStyleSheet("background-color: black;")
+        self.setStyleSheet("background-color:  black;")
 
 
     def paintEvent(self, e):
