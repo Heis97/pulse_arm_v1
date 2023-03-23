@@ -98,6 +98,13 @@ class Point3D(object):
     def __pow__(self, other):
         return self.x*other.x +self.y*other.y+self.z*other.z
 
+    def dot(self,other:"Point3D"):
+        self_m = pulse_matrix_p(self)
+        other_m = pulse_matrix_p(other)
+        m = np.dot(self_m,other_m) 
+        return position_from_matrix_pulse(m)
+
+
     def dists_between_ps(ps:"list[Point3D]")->"list[float]":
         dists= []
         for i in range(len(ps)-1):
@@ -145,6 +152,18 @@ class Point3D(object):
     def addList(l:"list[Point3D]",p_off:"Point3D"):
         ps = []
         for e in l: ps.append(p_off+e)
+        return ps
+    
+    def mulPoint(l:"list[Point3D]",p_off:"Point3D"):
+        ps = []
+        for e in l: ps.append(p_off.dot(e))
+        return ps
+    
+    
+    
+    def mulPoint_2(l:"list[Point3D]",p_off:"Point3D"):
+        ps = []
+        for e in l: ps.append(e.dot(p_off))
         return ps
     
     

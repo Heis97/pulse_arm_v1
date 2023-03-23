@@ -185,7 +185,8 @@ def diff_plot(plot:"list[QPointF]"):
 
         dt = plot[i+1].x()-plot[i].x()
         dy = plot[i+1].y()-plot[i].y()
-        ps.append(QPointF(plot[i].x(),dy/dt))
+        if dt>0:
+            ps.append(QPointF(plot[i].x(),dy/dt))
     return ps
 
 #----------------------------------------------------------
@@ -205,11 +206,25 @@ def fullsum(l:"list[QPointF]"):
 
 def filtr_gaussQF(ps:"list[QPointF]",wind:int):
     ps_f = ps[:wind-1]
-    #ps_f = []
     for i in range(wind,len(ps)-wind):
         p_f = fullsum(ps[i-wind:i+wind])
         ps_f.append(p_f)
-        #ps_f.append(ps[i])
+    ps_f+=ps[len(ps)-wind-1:]
+    return ps_f
+
+def qf_len(q:QPointF):
+    return (q.x()**2 + q.y()**2)**0.5
+
+def filtr_medianQF(ps:"list[QPointF]",wind:int,delt:float):
+    ps_f = ps[:wind-1]
+    for i in range(wind,len(ps)-wind):
+        p_f = fullsum(ps[i-wind:i+wind])
+        if qf_len(p_f - ps[i]) < delt:           
+            ps_f.append(p_f)
+        else:
+            p = QPointF(ps[i].x(),ps[-1])
+            ps_f.append(p)
+        
     ps_f+=ps[len(ps)-wind-1:]
     return ps_f
 
@@ -251,18 +266,25 @@ def traj_to_plots_ps(ps:list[Point3D],ts:list[float]):
     plot_x = [] 
     plot_y = []
     plot_z = []
+    plot_xyz = [] 
     plot_a = []
     plot_b = []
-    plot_c = []       
+    plot_c = []  
+    d = 0     
     for i in range(len(ps)):            
         plot_x.append(QPointF(ts[i],ps[i].x))  
         plot_y.append(QPointF(ts[i],ps[i].y)) 
         plot_z.append(QPointF(ts[i],ps[i].z)) 
+        
         plot_a.append(QPointF(ts[i],ps[i].roll)) 
         plot_b.append(QPointF(ts[i],ps[i].pitch)) 
         plot_c.append(QPointF(ts[i],ps[i].yaw)) 
 
-    plots = [plot_x,plot_y,plot_z,plot_a,plot_b,plot_c]
+        if i!=0:
+            d += (ps[i]-ps[i-1]).magnitude()
+        plot_xyz.append(QPointF(ts[i],d)) 
+
+    plots = [plot_x,plot_y,plot_z,plot_xyz,plot_a,plot_b,plot_c]
 
     return plots
 
@@ -273,6 +295,8 @@ def plots_qs(widj,plots):
     i=0
     for plot in plots:            
         i+=1
+        plot = filtr_medianQF(plot,10,0.2)
+        
         plotter.addPlot(plot,"q"+str(i),i,1)
         plot_dif = diff_plot(plot)
         plotter.addPlot(plot_dif,"v q"+str(i),i,2)
@@ -286,10 +310,12 @@ def plots_qs(widj,plots):
 def plots_ps(widj,plots):
     plotter = Plotter(widj)
     plotter.show()
-    koords = ["x","y","z","a","b","c"]
+    koords = ["x","y","z","xyz","a","b","c"]
     i=0
     for plot in plots:            
         i+=1
+        plot = filtr_medianQF(plot,10,0.2)
+        #plot = filtr_gaussQF(plot,50)
         plotter.addPlot(plot,koords[i-1],i,4)
         plot_dif = diff_plot(plot)
         plotter.addPlot(plot_dif,koords[i-1]+ " v",i,5)
@@ -636,12 +662,14 @@ class PulseApp(QtWidgets.QWidget):
 
         ps = []
         for q in qs:
-            ps.append(position_from_matrix_pulse( calc_forward_kinem_pulse(q)))
+            ps.append(position_from_matrix_pulse(calc_forward_kinem_pulse(q)))
 
         plots = traj_to_plots_ps(ps,ts)
         self.plotter = plots_ps(self,plots)
+
+
         
-        ps = Point3D.mulList(Point3D.addList(ps,-p_b),1e3)  
+        ps = Point3D.mulList(Point3D.addList( Point3D.mulPoint(ps,base_p),-p1),1e3)  
         print(len(ps),ps[0].ToString())
 
         traj = filtr_dist(parse_g_code_pulse(self.text_prog_code.toPlainText()),0.3)
