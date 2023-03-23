@@ -1272,7 +1272,7 @@ class PulseApp(QtWidgets.QWidget):
         #r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
         p = []
         r = []
-        dz = 5
+        dz = 0#5
         positions = []
         for i in range(len(ps)):               
             p = [start_point["x"]+0.001*ps[i].x,start_point["y"]+0.001*ps[i].y,start_point["z"]+0.001*(ps[i].z+dz)]
