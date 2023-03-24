@@ -5,6 +5,13 @@ from random import triangular
 import struct
 import io
 
+class Pose3D(object):
+    angles:list[float] = []
+    t:float = 0
+    def __init__(self,angles:list):
+        self.angles = angles.copy()
+
+
 class Point3D(object):
     x:float = 0
     y:float = 0
@@ -17,6 +24,8 @@ class Point3D(object):
     roll:float = 0
     pitch:float = 0    
     yaw:float = 0
+
+    t:float = 0
     
     def __init__(self,_x:float= 0,_y:float= 0,_z:float = 0,_extrude:bool = True,_r:float = 0.0,_g:float = 1.,_b:float =0.,_pitch:float = 0.0,_roll:float = 0.,_yaw:float =0.):
         self.x = _x

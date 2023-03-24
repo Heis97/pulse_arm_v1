@@ -137,14 +137,15 @@ def comp_axes_ps(qs:list,rad:bool = True)->list[Point3D]:
         ps.append(p)
     return ps
 
-def comp_matrs_ps(qs:list,rad:bool = True)->list[Point3D]:
+def comp_matrs_ps(q:Pose3D,rad:bool = True)->list[Point3D]:
     pms = []
-    for i in range(len(qs)):
-        pm = calc_forward_kinem_pulse(qs,rad,i+1)
+    for i in range(len(q.angles)):
+        pm = calc_forward_kinem_pulse(q,rad,i+1)
         pms.append(pm)
     return pms
 
-def calc_forward_kinem_pulse(q:list,rad:bool = False,n = 6):
+
+def calc_forward_kinem_pulse(q:Pose3D,rad:bool = False,n = 6):
     L1 = 0.2311
     L2 = 0.45
     L3 = 0.37
@@ -153,19 +154,22 @@ def calc_forward_kinem_pulse(q:list,rad:bool = False,n = 6):
     L6 = 0.1325
     #print(q)
     if not rad:
-        q = toRad(q)
+        q.angles = toRad(q.angles)
     
     dh_params = [
-        [q[0], np.pi / 2, 0, L1],
-        [ q[1],  0, -L2, 0],
-        [ q[2],  0, -L3, 0],
-        [ q[3], np.pi / 2, 0, L4],
-        [ q[4], -np.pi / 2, 0, L5],
-        [ q[5],  0, 0, L6]
+        [ q.angles[0], np.pi / 2, 0, L1],
+        [ q.angles[1],  0, -L2, 0],
+        [ q.angles[2],  0, -L3, 0],
+        [ q.angles[3], np.pi / 2, 0, L4],
+        [ q.angles[4], -np.pi / 2, 0, L5],
+        [ q.angles[5],  0, 0, L6]
     ]
-    return calc_pos(dh_params[:n])
 
-def pulse_FK(pose:list):
+    p = position_from_matrix_pulse(calc_pos(dh_params[:n]))
+    p.t = q.t
+    return p
+
+def pulse_FK(pose:Pose3D):
     return calc_forward_kinem_pulse(pose)
 
 def toRad(q:list):
@@ -219,13 +223,14 @@ def debug_inv_kin(pose,posit):
 
 
 
-def calc_inverse_kinem_pulse(position:Point3D)->list:
+def calc_inverse_kinem_pulse(position:Point3D)->list[Pose3D]:
     vars3 = [[-1,-1,-1],[-1,-1,1],[-1,1,-1],[-1,1,1],[1,-1,-1],[1,-1,1],[1,1,-1],[1,1,1]]
     solvs = []
     solvs_fil = []
     for var in vars3:
         solvs.append(calc_inverse_kinem_pulse_priv(position,var[0],var[1],var[2]))
         solvs_fil.append(solvs[-1])
+
 
     return solvs
 
@@ -244,7 +249,7 @@ def arccos(cos):
     elif cos <=-1: cos = -1
     return np.arccos(cos)
 
-def calc_inverse_kinem_pulse_priv(position:Point3D,t1=1,t2=1,t3=1)->list:
+def calc_inverse_kinem_pulse_priv(position:Point3D,t1=1,t2=1,t3=1) -> Point3D:
     pm = pulse_matrix_p(position)
     p = Point3D(pm[0][3],pm[1][3],pm[2][3])
     L1 = 0.2311
@@ -372,7 +377,10 @@ def calc_inverse_kinem_pulse_priv(position:Point3D,t1=1,t2=1,t3=1)->list:
         if qi<-np.pi: qi+=2*np.pi
         q[i]= qi
     k = 100
-    return [q[0],q[1],q[2],q[3],q[4],q[5]]#,[p*k,p0p*k,p1*k,p2*k,Point3D(0,0,L1)*k],t1,t2,t3]
+
+    q_p = Pose3D(q)
+    q_p.t = position.t
+    return q_p#,[p*k,p0p*k,p1*k,p2*k,Point3D(0,0,L1)*k],t1,t2,t3]
 
 
 def calc_inverse_kinem_pulse_old(position:Point3D)->list:

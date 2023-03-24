@@ -39,7 +39,7 @@ class Plot(object):
         for i in range(len(koords)):   
             x1=koords[i].x()
             y1=koords[i].y()
-            koords_n[i] = QPointF(loc.x()+x1*kx,loc.y()+y1*ky+loc.height()/2)
+            koords_n[i] = QPointF(loc.x()+x1*kx,loc.y()-y1*ky+loc.height()/2)
 
         return koords_n
 
@@ -77,7 +77,7 @@ class Plot(object):
         for i in range(len(koords)):   
             x1=koords[i].x()
             y1=koords[i].y()
-            koords_n[i] = QPointF(x1*k-offX,y1*k-offY)
+            koords_n[i] = QPointF(x1*k-offX,-y1*k-offY)
 
         return koords_n
     

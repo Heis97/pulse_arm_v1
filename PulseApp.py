@@ -252,17 +252,19 @@ def filtr_gauss_list(ps:"list[list[float]]",wind:int):
 
     return ps_f
 
-def traj_to_plots(qs:list[list[float]],ts:list[float]):
+#---------------------------------------------------------------------------
+
+def traj_to_plots(qs:list[Pose3D]):
     plots = []
     for i in range(6):        
         plot = []        
         for j in range(len(qs)):    
-            plot.append(QPointF(ts[j],qs[j][i]))           
+            plot.append(QPointF(qs[j].t,qs[j].angles[i]))           
         plots.append(plot)
 
     return plots
 
-def traj_to_plots_ps(ps:list[Point3D],ts:list[float]):    
+def traj_to_plots_ps(ps:list[Point3D]):    
     plot_x = [] 
     plot_y = []
     plot_z = []
@@ -272,17 +274,17 @@ def traj_to_plots_ps(ps:list[Point3D],ts:list[float]):
     plot_c = []  
     d = 0     
     for i in range(len(ps)):            
-        plot_x.append(QPointF(ts[i],ps[i].x))  
-        plot_y.append(QPointF(ts[i],ps[i].y)) 
-        plot_z.append(QPointF(ts[i],ps[i].z)) 
+        plot_x.append(QPointF(ps[i].t,ps[i].x))  
+        plot_y.append(QPointF(ps[i].t,ps[i].y)) 
+        plot_z.append(QPointF(ps[i].t,ps[i].z)) 
         
-        plot_a.append(QPointF(ts[i],ps[i].roll)) 
-        plot_b.append(QPointF(ts[i],ps[i].pitch)) 
-        plot_c.append(QPointF(ts[i],ps[i].yaw)) 
+        plot_a.append(QPointF(ps[i].t,ps[i].roll)) 
+        plot_b.append(QPointF(ps[i].t,ps[i].pitch)) 
+        plot_c.append(QPointF(ps[i].t,ps[i].yaw)) 
 
         if i!=0:
             d += (ps[i]-ps[i-1]).magnitude()
-        plot_xyz.append(QPointF(ts[i],d)) 
+        plot_xyz.append(QPointF(ps[i].t,d)) 
 
     plots = [plot_x,plot_y,plot_z,plot_xyz,plot_a,plot_b,plot_c]
 
@@ -368,18 +370,33 @@ def str_to_dict(s:str):
     json_acceptable_string = s.replace("\n", "").replace(" ", "").replace("'", "\"")
     return json.loads(json_acceptable_string)
 
-def load_feedback(file)->tuple[list[float],list[float]]:
+def load_feedback(file)->list[Pose3D]:
     ps = []
-    dts = []
     traj_l = load_file(file)
     for frame in traj_l:
         traj_d = str_to_dict(frame)
-        ps.append(traj_d['angles'])
-        dts.append(timestamp_decod(traj_d['timestamp']))
-
-    return ps,dts
+        p = Pose3D(traj_d['angles'])
+        p.t = timestamp_decod(traj_d['timestamp'])
+        ps.append(p)
+    return ps
 
 #-----------------------------------------------------------------------
+
+def posit_time(ts,ps,t)->Point3D:
+
+    pass
+
+def sync_traj(ts1,ps1,ts2,ps2)->float:
+    
+    pass
+
+
+
+
+
+#----------------------------------------------------------------------
+
+
 
 class SettingsPulse():
     tools:dict = None
@@ -420,9 +437,9 @@ class RobAnimThread(QtCore.QThread):
         t = 0.0
         i = 0
         for p in ps:
+            p.t = t
             q = self.pulse_arm.draw_3d_rob_pos(p,self.pulse_arm.q_draw) 
             qs.append(q)
-            ts.append(t)
             t += dt
             i+=1
             if i%100==0:
@@ -431,7 +448,7 @@ class RobAnimThread(QtCore.QThread):
         
         qs = filtr_gauss_list(qs,100)
             
-        self.plots = traj_to_plots(qs,ts)
+        self.plots = traj_to_plots(qs)
         self.qs = qs
         self.plotter_signal.emit(0)
 
@@ -528,6 +545,7 @@ class PulseApp(QtWidgets.QWidget):
         
     def draw_3d_rob_pos(self,p3d:Point3D,rob_draw:list):
         q = calc_inverse_kinem_pulse(p3d)[1]  
+        q.t = p3d.t
         #print(q)     
         return self.draw_3d_rob(rob_draw,q)
 
@@ -590,14 +608,14 @@ class PulseApp(QtWidgets.QWidget):
         for i in range(6):
             self.viewer3d.setMatr(solv_pms[i],q_draw[i])
 
-    def draw_3d_rob(self,q_draw:list,q:list):
+    def draw_3d_rob(self,q_draw:list,q:Pose3D):
         solv_pms = comp_matrs_ps(q)
         for i in range(len(q_draw)):
-            if i < len(q):
+            if i < len(q.angles):
                 self.viewer3d.setMatr(solv_pms[i],q_draw[i])
             else:
                 pass
-                self.viewer3d.setMatr(solv_pms[len(q)-1],q_draw[i])
+                self.viewer3d.setMatr(solv_pms[len(q.angles)-1],q_draw[i])
         return q
 
 
@@ -634,7 +652,7 @@ class PulseApp(QtWidgets.QWidget):
 
         ps = []
         for q in qs:
-            ps.append(position_from_matrix_pulse( calc_forward_kinem_pulse(q,True)))
+            ps.append( calc_forward_kinem_pulse(q,True))
         
         ps = Point3D.mulList(Point3D.addList(ps,-p1),1e3)  
         print(len(ps),ps[0].ToString())
@@ -643,11 +661,11 @@ class PulseApp(QtWidgets.QWidget):
         self.plotter = plots_qs(self,self.thr.plots)
 
     def test1(self):
-        qs,ts = load_feedback("feedback.json")
-        print("LEN PLOT: ",len(ts))
+        qs = load_feedback("feedback.json")
+        print("LEN PLOT: ",len(qs))
         #qs = filtr_gauss_list(qs,100)
         
-        plots = traj_to_plots(qs,ts)
+        plots = traj_to_plots(qs)
         self.plotter = plots_qs(self,plots)
 
         p =  self.settins_pulse.start_points["sp_1303_1"]
@@ -662,9 +680,9 @@ class PulseApp(QtWidgets.QWidget):
 
         ps = []
         for q in qs:
-            ps.append(position_from_matrix_pulse(calc_forward_kinem_pulse(q)))
+            ps.append(calc_forward_kinem_pulse(q))
 
-        plots = traj_to_plots_ps(ps,ts)
+        plots = traj_to_plots_ps(ps)
         self.plotter = plots_ps(self,plots)
 
 
