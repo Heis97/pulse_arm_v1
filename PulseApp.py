@@ -87,117 +87,7 @@ def motor_state_to_str(ms:list[MotorStatus]):
     return txt
 
 #----------------------------------------------------------
-def div_traj(p1:"Point3D",p2:"Point3D",dist:float)->list[Point3D]:
-    d = (p2-p1).magnitude()
-    div_count = int(d/dist)
-    if div_count==0:
-        return []
-    dp = (p2-p1)*float(1/div_count)
-    ps =[]
-    for i in range(0,div_count):
-        ps.append(p1+dp*i)
-    return ps
 
-def comp_traj_to_anim(trajectory:"list[Point3D]",dist:float):
-    ps = []
-
-    for i in range(len(trajectory)-1):
-        ps_d = div_traj(trajectory[i],trajectory[i+1],dist)
-        ps+=ps_d
-    return ps
-
-
-def div_traj_2(p1:"Point3D",p2:"Point3D",dist:float,cd:float)->tuple["list[Point3D]",float]:
-    d = (p2-p1).magnitude()
-    div_count = int((d-cd)/dist)
-    if div_count==0:
-        return [],cd-d
-    dp = (p2-p1).normalyse()*dist
-    ps =[]
-    p1s = p1+(p2-p1).normalyse()*cd
-    for i in range(div_count):
-        ps.append(p1s+dp*i)
-
-    return ps,cd
-
-def comp_traj_to_anim_2(trajectory:"list[Point3D]",dist:float):
-    ps = []
-    cd = 0
-    for i in range(len(trajectory)-1):
-        ps_d,cd = div_traj_2(trajectory[i],trajectory[i+1],dist,cd)
-        #print(cd)
-        ps+=ps_d
-    return ps
-
-#------------------------------------------------    
-def comp_blend_lines(p1:"Point3D",p2:"Point3D",p3:"Point3D",r:float,d:float):
-    v1 = p1-p2
-    v2 = p3-p2
-    alph = Point3D.ang(v1,v2)
-    d_alph = d/2*np.pi*r
-    #print(alph,d_alph)
-    if alph<d_alph or np.pi-alph<d_alph:
-        return [p2]
-    else:
-        r_1:float = r/np.sin(alph/2)
-        vr = v1.normalyse()+v2.normalyse()
-        vr = vr.normalyse()*r_1
-        rc = p2+vr
-        dr:float = (r_1**2-r**2)**0.5
-        vr1 = v1*dr - vr
-        vr2 = v2*dr - vr
-        alph_r = Point3D.ang(vr1,vr2)
-        dvr = vr1-vr2
-        n = int(dvr.magnitude()/d)
-        vp2s = []
-        vp2s.append(p2+vr+vr1.normalyse()*r)
-        for i in range(1,n):
-            ang = 0.5*np.pi*i/n
-            p =  p2+vr+( vr1.normalyse()*np.cos(ang)+vr2.normalyse()*np.sin(ang)).normalyse()*r
-            vp2s.append(p)
-        vp2s.append(p2+vr+vr2.normalyse()*r)
-        #vp2s = [p2+vr]
-
-        return vp2s
-    
-def blend_lines(ps:"list[Point3D]",r:float,d:float):
-    ps_b = [ps[0]]
-    for i in range(1,len(ps)-1):
-        ps_b+=comp_blend_lines(ps[i-1],ps[i],ps[i+1],r,d)
-
-        if i%100==0:
-            print(i,"/",len(ps))
-    ps_b.append(ps[-1])
-    return ps_b
-
-def filtr_dist(ps:"list[Point3D]",d):
-    ps_f = [ps[0]]
-    for i in range(1,len(ps)):
-        if (ps[i]-ps_f[-1]).magnitude()>d:
-            ps_f.append(ps[i])
-
-    return ps_f
-
-def diff_plot(plot:"list[QPointF]"):
-    ps = []
-
-    for i in range(len(plot)-1):
-
-        dt = plot[i+1].x()-plot[i].x()
-        dy = plot[i+1].y()-plot[i].y()
-        if dt>0:
-            ps.append(QPointF(plot[i].x(),dy/dt))
-    return ps
-
-#----------------------------------------------------------
-def filtr_gauss(ps:"list[Point3D]",wind:int):
-    ps_f = ps[:wind]
-    ps_f = []
-    for i in range(wind,len(ps)-wind):
-        p_f = Point3D.fullsum(ps[i-wind:i+wind])
-        #ps_f.append(p_f)
-        ps_f.append(ps[i])
-    return ps_f
 
 def fullsum(l:"list[QPointF]"):
     p = QPointF(0,0)
@@ -228,31 +118,16 @@ def filtr_medianQF(ps:"list[QPointF]",wind:int,delt:float):
     ps_f+=ps[len(ps)-wind-1:]
     return ps_f
 
-def fullsum_list(l:"list[list[float]]"):
-    #print(type([[]]))
-    p = [0]*len(l[0])
-    for e in l:
-        for i in range(len(l[0])):
-            #print(p,e)
-            p[i]+=e[i]
+def diff_plot(plot:"list[QPointF]"):
+    ps = []
 
-    for i in range(len(l[0])):
-        p[i]/=float(len(l))
-    return p
+    for i in range(len(plot)-1):
 
-def filtr_gauss_list(ps:"list[list[float]]",wind:int):
-    ps_f = []
-    for i in range(wind,len(ps)-wind):
-        i_b = i-wind
-        i_end = i+wind
-        if i_b<0: i_b = 0
-        if i_end>len(ps): i_end=len(ps)
-        p_f = fullsum_list(ps[i_b:i_end])
-        ps_f.append(p_f)
-
-    return ps_f
-
-#---------------------------------------------------------------------------
+        dt = plot[i+1].x()-plot[i].x()
+        dy = plot[i+1].y()-plot[i].y()
+        if dt>0:
+            ps.append(QPointF(plot[i].x(),dy/dt))
+    return ps
 
 def traj_to_plots(qs:list[Pose3D]):
     plots = []
@@ -290,40 +165,36 @@ def traj_to_plots_ps(ps:list[Point3D]):
 
     return plots
 
-def plots_qs(widj,plots):
-
-    plotter = Plotter(widj)
-    plotter.show()
+def plots_qs(plotter:Plotter,plots):
     i=0
     for plot in plots:            
         i+=1
-        plot = filtr_medianQF(plot,10,0.2)
+        #plot = filtr_medianQF(plot,10,0.2)
         
         plotter.addPlot(plot,"q"+str(i),i,1)
+        #print(plot)
         plot_dif = diff_plot(plot)
         plotter.addPlot(plot_dif,"v q"+str(i),i,2)
         plot_dif = diff_plot(plot_dif)
         plotter.addPlot(plot_dif,"a q"+str(i),i,3)   
-        print("plot_add")
+        #print("plot_add")
 
     return plotter
 
 
-def plots_ps(widj,plots):
-    plotter = Plotter(widj)
-    plotter.show()
+def plots_ps(plotter:Plotter,plots):
     koords = ["x","y","z","xyz","a","b","c"]
     i=0
     for plot in plots:            
         i+=1
-        plot = filtr_medianQF(plot,10,0.2)
+        #plot = filtr_medianQF(plot,10,0.2)
         #plot = filtr_gaussQF(plot,50)
         plotter.addPlot(plot,koords[i-1],i,4)
         plot_dif = diff_plot(plot)
         plotter.addPlot(plot_dif,koords[i-1]+ " v",i,5)
         plot_dif = diff_plot(plot_dif)
         plotter.addPlot(plot_dif,koords[i-1]+ " a",i,6)   
-        print("plot_add")
+        #print("plot_add")
 
     return plotter
 
@@ -375,7 +246,7 @@ def load_feedback(file)->list[Pose3D]:
     traj_l = load_file(file)
     for frame in traj_l:
         traj_d = str_to_dict(frame)
-        p = Pose3D(traj_d['angles'])
+        p = Pose3D(toRad( traj_d['angles']))
         p.t = timestamp_decod(traj_d['timestamp'])
         ps.append(p)
     return ps
@@ -390,7 +261,23 @@ def sync_traj(ts1,ps1,ts2,ps2)->float:
     
     pass
 
+def draw_plots_compare(plotter,qs1,ps1,qs2,ps2):
 
+    plots_qs1 = traj_to_plots(qs1)
+    plots_qs2 = traj_to_plots(qs2)
+
+
+    print("1 qs")
+    plots_ps1 = traj_to_plots_ps(ps1)
+    plots_ps2 = traj_to_plots_ps(ps2)
+    print("2 qs")
+    #plotter = plots_qs(plotter,plots_qs1)
+    plotter = plots_qs(plotter,plots_qs2)
+    print("polot qs")
+    #plotter = plots_ps(plotter,plots_ps1)
+    plotter = plots_ps(plotter,plots_ps2)
+
+    return plotter
 
 
 
@@ -539,6 +426,7 @@ class PulseApp(QtWidgets.QWidget):
         self.resize(1750, 1000)
         self.build()  
 
+        self.plotter = Plotter(self)
         print(vel_to_st2(20,1,10.1))
         
 
@@ -603,7 +491,7 @@ class PulseApp(QtWidgets.QWidget):
 
         self.draw_3d_rob(self.q_draw,[0,0,0,0,0,0])
 
-    def draw_line_rob(self,q_draw:list,q:list):
+    def draw_line_rob(self,q_draw:list,q:Pose3D):
         solv_pms = comp_matrs_ps(q)
         for i in range(6):
             self.viewer3d.setMatr(solv_pms[i],q_draw[i])
@@ -617,6 +505,9 @@ class PulseApp(QtWidgets.QWidget):
                 pass
                 self.viewer3d.setMatr(solv_pms[len(q.angles)-1],q_draw[i])
         return q
+
+
+    
 
 
     def start_anim_robot(self):
@@ -633,7 +524,7 @@ class PulseApp(QtWidgets.QWidget):
         
         traj = filtr_dist(parse_g_code_pulse(self.text_prog_code.toPlainText()),0.3)
         #self.viewer3d.addLines_ret(traj,1,1,0,0.4)
-        traj_d = 0.01
+        traj_d = 0.1
         traj = blend_lines(traj,1.4,traj_d)
         #self.viewer3d.addLines_ret(traj,1,1,0,0.4)
 
@@ -657,16 +548,15 @@ class PulseApp(QtWidgets.QWidget):
         ps = Point3D.mulList(Point3D.addList(ps,-p1),1e3)  
         print(len(ps),ps[0].ToString())
         self.viewer3d.addLines_ret(ps,0,1,1,0.2) 
-        
-        self.plotter = plots_qs(self,self.thr.plots)
+
+        self.plotter = plots_qs(self.plotter,self.thr.plots)
 
     def test1(self):
         qs = load_feedback("feedback.json")
         print("LEN PLOT: ",len(qs))
         #qs = filtr_gauss_list(qs,100)
-        
         plots = traj_to_plots(qs)
-        self.plotter = plots_qs(self,plots)
+        self.plotter = plots_qs(self.plotter,plots)
 
         p =  self.settins_pulse.start_points["sp_1303_1"]
         base =  self.settins_pulse.bases["bs0603"]
@@ -683,28 +573,38 @@ class PulseApp(QtWidgets.QWidget):
             ps.append(calc_forward_kinem_pulse(q))
 
         plots = traj_to_plots_ps(ps)
-        self.plotter = plots_ps(self,plots)
+        self.plotter = plots_ps(self.plotter,plots)
 
 
         
         ps = Point3D.mulList(Point3D.addList( Point3D.mulPoint(ps,base_p),-p1),1e3)  
         print(len(ps),ps[0].ToString())
-
         traj = filtr_dist(parse_g_code_pulse(self.text_prog_code.toPlainText()),0.3)
-        #self.viewer3d.addLines_ret(traj,1,1,0,0.4)
         traj_d = 0.01
         traj = blend_lines(traj,1.4,traj_d)
-        #self.viewer3d.addLines_ret(traj,1,1,0,0.4)
-
         traj_1 = comp_traj_to_anim_2( traj,traj_d)
+
         self.viewer3d.addLines_ret(traj_1,1,1,0,0.2)
-
-
-
         self.viewer3d.addLines_ret(ps,0,1,1,0.2) 
 
 
-        #self.viewer3d.addLines_ret(traj_1,1,1,0,0.4)
+    def test2(self):
+        """qs_real,ps_real,qs_model,ps_model"""
+        qs_real = load_feedback("feedback.json")
+        prog = parse_g_code_pulse( self.text_prog_code.toPlainText())
+        p_st =  pos_dict_to_point3d(self.settins_pulse.start_points["sp_1303_1"])
+        base =  pos_dict_to_point3d(self.settins_pulse.bases["bs0603"])
+        tesr = compare_traj_pulse(qs_real,prog,base,p_st)
+        self.viewer3d.addLines_ret(tesr,1,1,0,0.2)
+        self.viewer3d.addLines_ret(prog,0,1,0,1)
+        return
+        qs_real,ps_real,qs_model,ps_model = compare_traj_pulse(qs_real,prog,base,p_st)
+        print("comp")
+        draw_plots_compare(self.plotter,qs_real,ps_real,qs_model,ps_model)
+        print("draw")
+        self.plotter.show()
+
+
 
  
     def build(self):
@@ -738,7 +638,7 @@ class PulseApp(QtWidgets.QWidget):
 
         self.but_test_plot = QPushButton('Тест', self)
         self.but_test_plot.setGeometry(QtCore.QRect(100, 20, 140, 30))
-        self.but_test_plot.clicked.connect(self.test1)
+        self.but_test_plot.clicked.connect(self.test2)
 
         self.but_start_writing = QPushButton('Начать запись', self)
         self.but_start_writing.setGeometry(QtCore.QRect(250, 20, 140, 30))

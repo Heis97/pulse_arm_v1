@@ -102,7 +102,9 @@ class Plot(object):
             if koords[i].y()<Ymin:
                 Ymin=koords[i].y()
         
-        kx=abs(Xq1-Xq2)/abs(Xmax-Xmin) 
+        kx = 1
+        if Xmax!=Xmin: 
+            kx=abs(Xq1-Xq2)/abs(Xmax-Xmin) 
         ky = 1
         if Ymax!=Ymin: 
             ky=abs(Yq1-Yq2)/abs(Ymax-Ymin)
@@ -142,9 +144,9 @@ class Plotter(QtWidgets.QWidget):
         qp.begin(self)
         qp.setRenderHint(QPainter.Antialiasing)
         for plot in self.plots:
-            if plot.visible:
+            if plot.visible and len(plot.koords)>0:
                 self.drawPlot(qp,plot)
-        self.update()
+        #self.update()
 
     def drawPlot(self, qp:QPainter,plot:Plot):
         qp.setPen(plot.pen)

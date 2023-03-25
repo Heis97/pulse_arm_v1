@@ -27,7 +27,7 @@ class Point3D(object):
 
     t:float = 0
     
-    def __init__(self,_x:float= 0,_y:float= 0,_z:float = 0,_extrude:bool = True,_r:float = 0.0,_g:float = 1.,_b:float =0.,_pitch:float = 0.0,_roll:float = 0.,_yaw:float =0.):
+    def __init__(self,_x:float= 0,_y:float= 0,_z:float = 0,_extrude:bool = True,_r:float = 0.0,_g:float = 1.,_b:float =0.,_pitch:float = 0.0,_roll:float = 0.,_yaw:float =0.,t=0):
         self.x = _x
         self.y = _y
         self.z = _z
@@ -38,6 +38,7 @@ class Point3D(object):
         self.roll = _roll
         self.yaw = _yaw
         self.extrude = _extrude
+        self.t = t
 
     def normalyse(self):
         norm = math.sqrt(self.x**2+self.y**2+self.z**2)
@@ -66,21 +67,23 @@ class Point3D(object):
         return (self.x**2 + self.y**2)**0.5
 
     def __add__(self, other):
-
-        xa = self.x + other.x
-        ya = self.y + other.y
-        za = self.z + other.z
-        return Point3D(xa,ya,za,self.extrude,self.r,self.g,self.b,self.pitch,self.roll,self.yaw)
+        if(type(other)==Point3D):
+            self.x += other.x
+            self.y += other.y
+            self.z += other.z
+            return self.Clone()
+        else:
+            return self
 
     def __sub__(self, other):
 
-        xa =  self.x- other.x
-        ya = self.y - other.y
-        za = self.z - other.z
-        #self.x-=other.x
-        #self.y-=other.y
-        #self.z-=other.z
-        return Point3D(xa,ya,za,self.extrude)
+        if(type(other)==Point3D):
+            self.x -= other.x
+            self.y -= other.y
+            self.z -= other.z
+            return self.Clone()
+        else:
+            return self
 
     def __neg__(self):
         self.x = -self.x
@@ -89,7 +92,7 @@ class Point3D(object):
         return self
 
     def Clone(self):
-        return Point3D(self.x,self.y,self.z,self.extrude,self.r,self.g,self.b,self.pitch,self.roll,self.yaw)
+        return Point3D(self.x,self.y,self.z,self.extrude,self.r,self.g,self.b,self.pitch,self.roll,self.yaw,self.t)
 
     def __mul__(self, other):
         if(type(other)==Point3D):
@@ -98,7 +101,10 @@ class Point3D(object):
             x,y,z,Rx,Ry,Rz = position_from_matrix(np.dot(pulse_matrix_p(self),other))
             return Point3D(x,y,z,_pitch= Rx,_roll=Ry,_yaw=Rz)
         elif(type(other)==float):
-            return Point3D(other*self.x,other*self.y,other*self.z)
+            self.x*=other
+            self.y*=other
+            self.z*=other
+            return self.Clone()
         elif(type(other)==int):
             return Point3D(other*self.x,other*self.y,other*self.z)
         else:
@@ -111,7 +117,9 @@ class Point3D(object):
         self_m = pulse_matrix_p(self)
         other_m = pulse_matrix_p(other)
         m = np.dot(self_m,other_m) 
-        return position_from_matrix_pulse(m)
+        p = position_from_matrix_pulse(m)
+        p.t = self.t
+        return p
 
 
     def dists_between_ps(ps:"list[Point3D]")->"list[float]":
