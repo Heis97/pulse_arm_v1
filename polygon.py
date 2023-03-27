@@ -8,8 +8,94 @@ import io
 class Pose3D(object):
     angles:list[float] = []
     t:float = 0
-    def __init__(self,angles:list):
+    def __init__(self,angles:list, t:float = 0):
         self.angles = angles.copy()
+        self.t = t
+
+    def __add__(self, other):
+        if(type(other)==Pose3D):
+            ang = []
+            for i in range(len(self.angles)):
+                ang.append(self.angles[i]+other.angles[i])
+
+            return Pose3D(ang,self.t)
+        else:
+            return self
+        
+    def __sub__(self, other):
+        if(type(other)==Pose3D):
+            ang = []
+            for i in range(len(self.angles)):
+                ang.append(self.angles[i]-other.angles[i])
+
+            return Pose3D(ang,self.t)
+        else:
+            return self
+        
+    def __neg__(self):
+        ang = []
+        for i in range(len(self.angles)):
+            ang.append(-self.angles[i])
+        return Pose3D(ang,self.t)
+    
+
+    def __mul__(self, other):
+        if(type(other)==float or type(other)==int):
+            
+            ang = []
+            for i in range(len(self.angles)):
+                ang.append(self.angles[i]*other)
+            return Pose3D(ang,self.t)
+        else:
+            return self
+        
+    def __truediv__(self, other):
+        if (type(other)==float or type(other)==int) and other!=0:
+            ang = []
+            for i in range(len(self.angles)):
+                ang.append(self.angles[i]/other)
+            return Pose3D(ang,self.t)
+        else:
+            return self
+        
+    def aver_sum(ps:"list[Pose3D]",t:float):
+        p0 = Pose3D([0]*6)
+        for p in ps:
+            p0+=p
+        p_a = p0/len(ps)
+        return Pose3D(p_a.angles,t)
+    
+    def gauss(ps:"list[Pose3D]",wind:int):
+        ps_g = []
+        for i in range(wind,len(ps)-wind):
+            p = Pose3D.aver_sum(ps[i-wind:i+wind],ps[i].t)
+            ps_g.append(p)
+
+        return ps_g
+    
+    def filtr_med(ps:"list[Pose3D]",t:float):       
+        qm = []
+        for i in range(len(ps[0].angles)):
+            q = []
+            for j in range(len(ps)):
+                q.append(ps[j].angles[i])
+
+            q.sort()
+            qm.append(q[int(len(ps)/2)])
+        return Pose3D(qm, t)
+    
+    
+    def median(ps:"list[Pose3D]",wind:int):
+        ps_g = []
+        for i in range(len(ps)):
+            st = i-wind 
+            end = i+wind
+            if st<0: st=0
+            if end>len(ps)-1: end=len(ps)-1
+            p = Pose3D.filtr_med(ps[st:end],ps[i].t)
+            ps_g.append(p)
+
+        return ps_g
 
 
 class Point3D(object):
@@ -68,20 +154,20 @@ class Point3D(object):
 
     def __add__(self, other):
         if(type(other)==Point3D):
-            self.x += other.x
-            self.y += other.y
-            self.z += other.z
-            return self.Clone()
+            x = self.x + other.x
+            y = self.y + other.y
+            z = self.z + other.z
+            return Point3D(x,y,z,self.extrude,self.r,self.g,self.b,self.pitch,self.roll,self.yaw,self.t)
         else:
             return self
 
     def __sub__(self, other):
 
         if(type(other)==Point3D):
-            self.x -= other.x
-            self.y -= other.y
-            self.z -= other.z
-            return self.Clone()
+            x = self.x - other.x
+            y = self.y - other.y
+            z = self.z - other.z
+            return Point3D(x,y,z,self.extrude,self.r,self.g,self.b,self.pitch,self.roll,self.yaw,self.t)
         else:
             return self
 
@@ -99,14 +185,13 @@ class Point3D(object):
             return Point3D(self.y*other.z-self.z*other.y, self.z*other.x-self.x*other.z,self.x*other.y-self.y*other.x,self.extrude)
         elif(type(other)==np.ndarray):
             x,y,z,Rx,Ry,Rz = position_from_matrix(np.dot(pulse_matrix_p(self),other))
-            return Point3D(x,y,z,_pitch= Rx,_roll=Ry,_yaw=Rz)
-        elif(type(other)==float):
-            self.x*=other
-            self.y*=other
-            self.z*=other
-            return self.Clone()
-        elif(type(other)==int):
-            return Point3D(other*self.x,other*self.y,other*self.z)
+            return Point3D(x,y,z,_pitch= Rx,_roll=Ry,_yaw=Rz,t=self.t)
+        elif(type(other)==float or type(other)==int):
+            x = self.x * other
+            y = self.y * other
+            z = self.z * other
+            return Point3D(x,y,z,self.extrude,self.r,self.g,self.b,self.pitch,self.roll,self.yaw,self.t)
+
         else:
             return Point3D(self.x*other,self.y*other,self.z*other,self.extrude)
 
@@ -118,7 +203,8 @@ class Point3D(object):
         other_m = pulse_matrix_p(other)
         m = np.dot(self_m,other_m) 
         p = position_from_matrix_pulse(m)
-        p.t = self.t
+        if self.t!=0: p.t = self.t
+        else: p.t = other.t
         return p
 
 
@@ -168,7 +254,7 @@ class Point3D(object):
     
     def addList(l:"list[Point3D]",p_off:"Point3D"):
         ps = []
-        for e in l: ps.append(p_off+e)
+        for e in l: ps.append(e+p_off)
         return ps
     
     def mulPoint(l:"list[Point3D]",p_off:"Point3D"):
@@ -565,6 +651,11 @@ def comb_angle(angle:float,case:int):
     elif case ==8: return angle-np.pi/2
     elif case ==9: return -angle-np.pi/2
 
+def arccos(cos):
+    if cos>=1: cos = 1
+    elif cos <=-1: cos = -1
+    return np.arccos(cos)
+
 
 def position_from_matrix_pulse(m:np.ndarray,p_ref:Point3D = Point3D(0,0,0)):
     x = m[0][3]
@@ -580,9 +671,9 @@ def position_from_matrix_pulse(m:np.ndarray,p_ref:Point3D = Point3D(0,0,0)):
     sRx = -m[1][2]/cRy
     cRx = m[2][2]/cRy
     
-    Rx = np.sign(sRx)* np.arccos(cRx)
+    Rx = np.sign(sRx)* arccos(cRx)
     Ry =  np.arcsin(m[0][2])
-    Rz = np.sign(sRz)*np.arccos(cRz)
+    Rz = np.sign(sRz)*arccos(cRz)
 
     return Point3D(x,y,z,_roll = Rx,_pitch = Ry, _yaw = Rz)#-np.pi -
 

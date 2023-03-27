@@ -528,7 +528,7 @@ def comp_traj_to_anim_2(trajectory:"list[Point3D]",dist:float)->"list[Point3D]":
     cd = 0
     for i in range(len(trajectory)-1):
         ps_d,cd = div_traj_2(trajectory[i],trajectory[i+1],dist,cd)
-        print("cd",cd)
+        #print("cd",cd)
         ps+=ps_d
     return ps
 
@@ -560,7 +560,6 @@ def comp_blend_lines(p1:"Point3D",p2:"Point3D",p3:"Point3D",r:float,d:float):
             vp2s.append(p)
         vp2s.append(p2+vr+vr2.normalyse()*r)
         #vp2s = [p2+vr]
-
         return vp2s
     
 def blend_lines(ps:"list[Point3D]",r:float,d:float):
@@ -618,9 +617,9 @@ def filtr_gauss(ps:"list[Point3D]",wind:int):
 #---------------------------------------------------------------------------
 
 def g_code_to_ps_rel_xyz(prog:list[Point3D],base:Point3D,st_p:Point3D,
-                                filtr_dist_g_code:float = 0.3,
-                                traj_divide:float = 0.05,
-                                blend:float = 1,vel = 20,acs = 20):
+                                filtr_dist_g_code:float,
+                                traj_divide:float,
+                                blend:float,vel:float):
     base_m = pulse_matrix_p(base)
     p1_m = pulse_matrix_p(st_p)
     base_m_inv = np.linalg.inv(base_m)
@@ -629,12 +628,11 @@ def g_code_to_ps_rel_xyz(prog:list[Point3D],base:Point3D,st_p:Point3D,
     p1 = position_from_matrix_pulse(p_base_m)
     base_p_inv = position_from_matrix_pulse(base_m_inv)
     traj = filtr_dist(prog,filtr_dist_g_code)
-    #traj = blend_lines(traj,blend,traj_divide)
-    print("blend")
+    traj = blend_lines(traj,blend,traj_divide)
+
     
-    return traj
     ps = comp_traj_to_anim_2(traj,traj_divide)
-    print("traj")
+    #return ps
     dt = traj_divide/vel
     t = 0
     for i in range(len(ps)):
@@ -642,12 +640,12 @@ def g_code_to_ps_rel_xyz(prog:list[Point3D],base:Point3D,st_p:Point3D,
         t+=dt
 
     ps = Point3D.mulList(ps,1e-3)
-    ps = Point3D.addList( ps,p1)
+    ps = Point3D.addList( ps,st_p)
     ps = Point3D.mulPoint(ps,base_p_inv)
     #ps = Point3D.mulList(Point3D.addList( Point3D.mulPoint(ps,base_p),-p1),1e3) 
     return ps
 
-def qs_to_ps(traj:list[Point3D]):
+def qs_to_ps(traj:list[Pose3D]):
     ps = []
     for q in traj: ps.append(q_to_p(q))
     return ps
@@ -657,11 +655,17 @@ def ps_to_qs(traj:list[Point3D]):
     for p in traj: qs.append(p_to_q(p))
     return qs
 
-def compare_traj_pulse(qs_real:list[Pose3D],prog:list[Point3D],base:Point3D,st_p:Point3D,filtr_dist_g_code:float = 0.3,traj_divide:float = 0.05,blend:float = 1,vel = 20,):
+def compare_traj_pulse(qs_real:list[Pose3D],prog:list[Point3D],base:Point3D,st_p:Point3D,filtr_dist_g_code:float = 0.3,traj_divide:float = 0.01,blend:float = 1,vel = 20):
     ps_model = g_code_to_ps_rel_xyz(prog,base,st_p,filtr_dist_g_code,traj_divide,blend,vel)
-    return ps_model
     qs_model = ps_to_qs(ps_model)
 
+    #qs_model = Pose3D.gauss(qs_model,200)
+
+    #ps_model = qs_to_ps(qs_model)
+
+    #q_vel = 2*np.pi*40/60
+    #qs_real = Pose3D.median(qs_real,10)
+    #qs_real = Pose3D.gauss(qs_real,10)
     ps_real = qs_to_ps(qs_real)
 
     return qs_real,ps_real,qs_model,ps_model

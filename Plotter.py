@@ -111,6 +111,7 @@ class Plot(object):
 
         offX=Xmin*kx-Xq1
         offY=Ymin*ky-Yq1
+
         self.ymm = QPointF(Ymin,Ymax)
         koords_n = [0]*len(koords)
 

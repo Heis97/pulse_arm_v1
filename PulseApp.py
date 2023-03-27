@@ -95,27 +95,27 @@ def fullsum(l:"list[QPointF]"):
     return p*(1/float(len(l)))
 
 def filtr_gaussQF(ps:"list[QPointF]",wind:int):
-    ps_f = ps[:wind-1]
+    ps_f = []#ps[:wind-1]
     for i in range(wind,len(ps)-wind):
         p_f = fullsum(ps[i-wind:i+wind])
         ps_f.append(p_f)
-    ps_f+=ps[len(ps)-wind-1:]
+    #ps_f+=ps[len(ps)-wind-1:]
     return ps_f
 
 def qf_len(q:QPointF):
     return (q.x()**2 + q.y()**2)**0.5
 
 def filtr_medianQF(ps:"list[QPointF]",wind:int,delt:float):
-    ps_f = ps[:wind-1]
+    ps_f = []#ps[:wind-1]
     for i in range(wind,len(ps)-wind):
         p_f = fullsum(ps[i-wind:i+wind])
         if qf_len(p_f - ps[i]) < delt:           
             ps_f.append(p_f)
         else:
-            p = QPointF(ps[i].x(),ps[-1])
+            p = QPointF(ps[i].x(),ps[-1].y())
             ps_f.append(p)
         
-    ps_f+=ps[len(ps)-wind-1:]
+    #ps_f+=ps[len(ps)-wind-1:]
     return ps_f
 
 def diff_plot(plot:"list[QPointF]"):
@@ -169,15 +169,14 @@ def plots_qs(plotter:Plotter,plots):
     i=0
     for plot in plots:            
         i+=1
-        #plot = filtr_medianQF(plot,10,0.2)
-        
         plotter.addPlot(plot,"q"+str(i),i,1)
-        #print(plot)
         plot_dif = diff_plot(plot)
         plotter.addPlot(plot_dif,"v q"+str(i),i,2)
         plot_dif = diff_plot(plot_dif)
+        #plot_dif = filtr_medianQF(plot_dif,10,0.2)
+        #plot_dif = filtr_gaussQF(plot_dif,100)
+        
         plotter.addPlot(plot_dif,"a q"+str(i),i,3)   
-        #print("plot_add")
 
     return plotter
 
@@ -187,14 +186,15 @@ def plots_ps(plotter:Plotter,plots):
     i=0
     for plot in plots:            
         i+=1
-        #plot = filtr_medianQF(plot,10,0.2)
-        #plot = filtr_gaussQF(plot,50)
         plotter.addPlot(plot,koords[i-1],i,4)
         plot_dif = diff_plot(plot)
+
+        #plot_dif = filtr_medianQF(plot_dif,10,0.2)
+        #plot_dif = filtr_gaussQF(plot_dif,100)
         plotter.addPlot(plot_dif,koords[i-1]+ " v",i,5)
+        
         plot_dif = diff_plot(plot_dif)
         plotter.addPlot(plot_dif,koords[i-1]+ " a",i,6)   
-        #print("plot_add")
 
     return plotter
 
@@ -246,7 +246,7 @@ def load_feedback(file)->list[Pose3D]:
     traj_l = load_file(file)
     for frame in traj_l:
         traj_d = str_to_dict(frame)
-        p = Pose3D(toRad( traj_d['angles']))
+        p = Pose3D(toRad(traj_d['angles']))
         p.t = timestamp_decod(traj_d['timestamp'])
         ps.append(p)
     return ps
@@ -266,16 +266,22 @@ def draw_plots_compare(plotter,qs1,ps1,qs2,ps2):
     plots_qs1 = traj_to_plots(qs1)
     plots_qs2 = traj_to_plots(qs2)
 
+    one = False
+    #one = True
+    two = False
+    two = True
 
-    print("1 qs")
+
     plots_ps1 = traj_to_plots_ps(ps1)
     plots_ps2 = traj_to_plots_ps(ps2)
-    print("2 qs")
-    #plotter = plots_qs(plotter,plots_qs1)
-    plotter = plots_qs(plotter,plots_qs2)
-    print("polot qs")
-    #plotter = plots_ps(plotter,plots_ps1)
-    plotter = plots_ps(plotter,plots_ps2)
+
+    if one:
+        plotter = plots_qs(plotter,plots_qs1)
+        plotter = plots_ps(plotter,plots_ps1)
+    if two:
+        plotter = plots_qs(plotter,plots_qs2)
+        plotter = plots_ps(plotter,plots_ps2)
+    
 
     return plotter
 
@@ -333,7 +339,7 @@ class RobAnimThread(QtCore.QThread):
                 print(i,"/",len(ps))
             #sleep(self.timeDelt)
         
-        qs = filtr_gauss_list(qs,100)
+        #qs = filtr_gauss_list(qs,100)
             
         self.plots = traj_to_plots(qs)
         self.qs = qs
@@ -409,6 +415,8 @@ class ax(Enum):
     V = "V"
     W = "W"
 
+
+
 class PulseApp(QtWidgets.QWidget):
     
 
@@ -429,6 +437,8 @@ class PulseApp(QtWidgets.QWidget):
         self.plotter = Plotter(self)
         print(vel_to_st2(20,1,10.1))
         
+        
+    
 
         
     def draw_3d_rob_pos(self,p3d:Point3D,rob_draw:list):
@@ -524,7 +534,7 @@ class PulseApp(QtWidgets.QWidget):
         
         traj = filtr_dist(parse_g_code_pulse(self.text_prog_code.toPlainText()),0.3)
         #self.viewer3d.addLines_ret(traj,1,1,0,0.4)
-        traj_d = 0.1
+        traj_d = 0.01
         traj = blend_lines(traj,1.4,traj_d)
         #self.viewer3d.addLines_ret(traj,1,1,0,0.4)
 
@@ -546,10 +556,12 @@ class PulseApp(QtWidgets.QWidget):
             ps.append( calc_forward_kinem_pulse(q,True))
         
         ps = Point3D.mulList(Point3D.addList(ps,-p1),1e3)  
-        print(len(ps),ps[0].ToString())
+
+        #print(len(ps),ps[0].ToString())
         self.viewer3d.addLines_ret(ps,0,1,1,0.2) 
 
         self.plotter = plots_qs(self.plotter,self.thr.plots)
+        self.plotter.show()
 
     def test1(self):
         qs = load_feedback("feedback.json")
@@ -586,22 +598,36 @@ class PulseApp(QtWidgets.QWidget):
 
         self.viewer3d.addLines_ret(traj_1,1,1,0,0.2)
         self.viewer3d.addLines_ret(ps,0,1,1,0.2) 
+        self.plotter.show()
 
 
     def test2(self):
-        """qs_real,ps_real,qs_model,ps_model"""
         qs_real = load_feedback("feedback.json")
         prog = parse_g_code_pulse( self.text_prog_code.toPlainText())
         p_st =  pos_dict_to_point3d(self.settins_pulse.start_points["sp_1303_1"])
         base =  pos_dict_to_point3d(self.settins_pulse.bases["bs0603"])
-        tesr = compare_traj_pulse(qs_real,prog,base,p_st)
-        self.viewer3d.addLines_ret(tesr,1,1,0,0.2)
-        self.viewer3d.addLines_ret(prog,0,1,0,1)
-        return
-        qs_real,ps_real,qs_model,ps_model = compare_traj_pulse(qs_real,prog,base,p_st)
-        print("comp")
+        #tesr = compare_traj_pulse(qs_real,prog,base,p_st)
+        #self.viewer3d.addLines_ret(tesr,1,1,0,0.2)
+        #self.viewer3d.addLines_ret(prog,0,1,0,1)
+
+        #p =  self.settins_pulse.start_points["sp_1303_1"]
+        #base =  self.settins_pulse.bases["bs0603"]
+        #base_p =  pos_dict_to_point3d(base)
+        #p1 =  pos_dict_to_point3d(p)
+        #base_m = pulse_matrix_p(base)
+        #p1_m = pulse_matrix_p(p_st)
+        #base_m_inv = np.linalg.inv(base_m)
+        #p_base_m = np.dot(base_m_inv,p1_m)
+        #p_b = position_from_matrix_pulse(p_base_m)
+
+
+        
+
+        qs_real,ps_real,qs_model,ps_model = compare_traj_pulse(qs_real,prog,base,p_st,blend=1.4,traj_divide=0.3)
+        ps_model = Point3D.mulList(Point3D.addList( Point3D.mulPoint(ps_model,base),-p_st),1e3)
+
+        self.viewer3d.addLines_ret(ps_model,1,1,0,0.2)
         draw_plots_compare(self.plotter,qs_real,ps_real,qs_model,ps_model)
-        print("draw")
         self.plotter.show()
 
 
@@ -1123,7 +1149,7 @@ class PulseApp(QtWidgets.QWidget):
         self.text_prog_code = QTextEdit(self)
         self.text_prog_code.setGeometry(QtCore.QRect(1150, 560, 500, 400))
 
-        self.text_prog_code.setText("G1 X1 Y1\nG1 X1 Y30\nG1 X30 Y30")
+        self.text_prog_code.setText("G1 X1 Y1\nG1 X1 Y10\nG1 X10 Y10")
 
 
     def set_cur_work_pose(self):
