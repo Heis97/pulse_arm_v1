@@ -517,8 +517,6 @@ class PulseApp(QtWidgets.QWidget):
         return q
 
 
-    
-
 
     def start_anim_robot(self):
         p =  self.settins_pulse.start_points["sp_1303_1"]
@@ -545,7 +543,6 @@ class PulseApp(QtWidgets.QWidget):
 
         self.thr = RobAnimThread(self,traj_p,traj_d)
         self.thr.plotter_signal.connect(self.test_plot)
-
 
     def test_plot(self):
         p1 = Point3D(-0.3748,0.358,0.25,_roll=-1.515,_pitch=1.515,_yaw=-0.757)
@@ -600,38 +597,20 @@ class PulseApp(QtWidgets.QWidget):
         self.viewer3d.addLines_ret(ps,0,1,1,0.2) 
         self.plotter.show()
 
-
     def test2(self):
         qs_real = load_feedback("feedback.json")
         prog = parse_g_code_pulse( self.text_prog_code.toPlainText())
         p_st =  pos_dict_to_point3d(self.settins_pulse.start_points["sp_1303_1"])
         base =  pos_dict_to_point3d(self.settins_pulse.bases["bs0603"])
-        #tesr = compare_traj_pulse(qs_real,prog,base,p_st)
-        #self.viewer3d.addLines_ret(tesr,1,1,0,0.2)
-        #self.viewer3d.addLines_ret(prog,0,1,0,1)
 
-        #p =  self.settins_pulse.start_points["sp_1303_1"]
-        #base =  self.settins_pulse.bases["bs0603"]
-        #base_p =  pos_dict_to_point3d(base)
-        #p1 =  pos_dict_to_point3d(p)
-        #base_m = pulse_matrix_p(base)
-        #p1_m = pulse_matrix_p(p_st)
-        #base_m_inv = np.linalg.inv(base_m)
-        #p_base_m = np.dot(base_m_inv,p1_m)
-        #p_b = position_from_matrix_pulse(p_base_m)
-
-
-        
-
-        qs_real,ps_real,qs_model,ps_model = compare_traj_pulse(qs_real,prog,base,p_st,blend=1.4,traj_divide=0.3)
-        ps_model = Point3D.mulList(Point3D.addList( Point3D.mulPoint(ps_model,base),-p_st),1e3)
+        qs_real,ps_real,qs_model,ps_model = compare_traj_pulse(qs_real,prog,base,p_st,blend=1.2,traj_divide=0.003)
+        ps_model = Point3D.addList(Point3D.mulList(Point3D.addList(Point3D.mulPoint(ps_model,base),-p_st),1e3),Point3D(x=0,y=-30))
+        ps_real =  Point3D.addList(Point3D.mulList(Point3D.addList(Point3D.mulPoint(ps_real,base),-p_st),1e3),Point3D(x=0,y=-30))
 
         self.viewer3d.addLines_ret(ps_model,1,1,0,0.2)
+        self.viewer3d.addLines_ret(ps_real,0,1,0,1.2)
         draw_plots_compare(self.plotter,qs_real,ps_real,qs_model,ps_model)
         self.plotter.show()
-
-
-
  
     def build(self):
         self.build_connection()
@@ -1149,7 +1128,7 @@ class PulseApp(QtWidgets.QWidget):
         self.text_prog_code = QTextEdit(self)
         self.text_prog_code.setGeometry(QtCore.QRect(1150, 560, 500, 400))
 
-        self.text_prog_code.setText("G1 X1 Y1\nG1 X1 Y10\nG1 X10 Y10")
+        self.text_prog_code.setText("G1 X1 Y1\nG1 X1 Y30\nG1 X30 Y30")
 
 
     def set_cur_work_pose(self):

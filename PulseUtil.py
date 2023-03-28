@@ -513,15 +513,16 @@ def comp_traj_to_anim(trajectory:"list[Point3D]",dist:float):
 
 def div_traj_2(p1:"Point3D",p2:"Point3D",dist:float,cd:float)->tuple["list[Point3D]",float]:
     d = (p2-p1).magnitude()
-    div_count = int((d-cd)/dist)
+    div_count = int(d/dist)
     if div_count==0:
         return [],cd-d
-    dp = (p2-p1).normalyse()*dist
+    ort_v = (p2-p1).normalyse()
+    dp = ort_v*dist
     ps =[]
-    p1s = p1+(p2-p1).normalyse()*cd
+    p1s = p1+ort_v*(dist-cd)
     for i in range(div_count):
         ps.append(p1s+dp*i)
-    return ps,d-div_count*dist
+    return ps,d-div_count*dist+cd
 
 def comp_traj_to_anim_2(trajectory:"list[Point3D]",dist:float)->"list[Point3D]":
     ps = []
@@ -530,6 +531,19 @@ def comp_traj_to_anim_2(trajectory:"list[Point3D]",dist:float)->"list[Point3D]":
         ps_d,cd = div_traj_2(trajectory[i],trajectory[i+1],dist,cd)
         #print("cd",cd)
         ps+=ps_d
+    return ps
+
+def comp_traj_to_anim_3(trajectory:"list[Point3D]",dist:float)->"list[Point3D]":
+    ps = []
+    cd = 0
+    for i in range(len(trajectory)-1):
+        if (trajectory[i]-trajectory[i+1]).magnitude()>2*dist:
+            ps_d,cd = div_traj_2(trajectory[i],trajectory[i+1],dist,cd)
+            ps+=ps_d
+        else:
+            ps.append(trajectory[i+1])
+        #print("cd",cd)
+        
     return ps
 
 #------------------------------------------------    
@@ -551,12 +565,14 @@ def comp_blend_lines(p1:"Point3D",p2:"Point3D",p3:"Point3D",r:float,d:float):
         vr2 = v2*dr - vr
         alph_r = Point3D.ang(vr1,vr2)
         dvr = vr1-vr2
-        n = int(dvr.magnitude()/d)
+        #n = int(dvr.magnitude()/d)
+        #print(r,alph,d)
+        n = int((alph/(2*np.pi))*2*np.pi*r/d)
         vp2s = []
         vp2s.append(p2+vr+vr1.normalyse()*r)
         for i in range(1,n):
             ang = 0.5*np.pi*i/n
-            p =  p2+vr+( vr1.normalyse()*np.cos(ang)+vr2.normalyse()*np.sin(ang)).normalyse()*r
+            p =  p2+vr+(vr1.normalyse()*np.cos(ang)+vr2.normalyse()*np.sin(ang)).normalyse()*r
             vp2s.append(p)
         vp2s.append(p2+vr+vr2.normalyse()*r)
         #vp2s = [p2+vr]
@@ -630,8 +646,13 @@ def g_code_to_ps_rel_xyz(prog:list[Point3D],base:Point3D,st_p:Point3D,
     traj = filtr_dist(prog,filtr_dist_g_code)
     traj = blend_lines(traj,blend,traj_divide)
 
-    
+    #d_t = Point3D.dists_between_ps(traj)
+    #for d in d_t: print(d)
     ps = comp_traj_to_anim_2(traj,traj_divide)
+    print("______________")
+    #d_t = Point3D.dists_between_ps(ps)
+    #for d in d_t: print(d)
+    #ps = traj
     #return ps
     dt = traj_divide/vel
     t = 0
@@ -658,10 +679,8 @@ def ps_to_qs(traj:list[Point3D]):
 def compare_traj_pulse(qs_real:list[Pose3D],prog:list[Point3D],base:Point3D,st_p:Point3D,filtr_dist_g_code:float = 0.3,traj_divide:float = 0.01,blend:float = 1,vel = 20):
     ps_model = g_code_to_ps_rel_xyz(prog,base,st_p,filtr_dist_g_code,traj_divide,blend,vel)
     qs_model = ps_to_qs(ps_model)
-
-    #qs_model = Pose3D.gauss(qs_model,200)
-
-    #ps_model = qs_to_ps(qs_model)
+    #qs_model = Pose3D.run_aver(qs_model,0.01)
+    ps_model = qs_to_ps(qs_model)
 
     #q_vel = 2*np.pi*40/60
     #qs_real = Pose3D.median(qs_real,10)

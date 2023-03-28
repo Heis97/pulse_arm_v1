@@ -96,6 +96,15 @@ class Pose3D(object):
             ps_g.append(p)
 
         return ps_g
+    
+    def run_aver(ps:"list[Pose3D]",k:float):
+        ps_g = []
+        p_fil = ps[0]
+        for i in range(1,len(ps)):
+            p_fil +=(ps[i]-p_fil)*k
+            p_fil.t = ps[i].t
+            ps_g.append(p_fil)
+        return ps_g
 
 
 class Point3D(object):
@@ -113,10 +122,10 @@ class Point3D(object):
 
     t:float = 0
     
-    def __init__(self,_x:float= 0,_y:float= 0,_z:float = 0,_extrude:bool = True,_r:float = 0.0,_g:float = 1.,_b:float =0.,_pitch:float = 0.0,_roll:float = 0.,_yaw:float =0.,t=0):
-        self.x = _x
-        self.y = _y
-        self.z = _z
+    def __init__(self,x:float= 0,y:float= 0,z:float = 0,_extrude:bool = True,_r:float = 0.0,_g:float = 1.,_b:float =0.,_pitch:float = 0.0,_roll:float = 0.,_yaw:float =0.,t=0):
+        self.x = x
+        self.y = y
+        self.z = z
         self.r = _r
         self.g = _g
         self.b = _b
