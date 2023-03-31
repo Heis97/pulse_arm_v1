@@ -267,9 +267,9 @@ def draw_plots_compare(plotter,qs1,ps1,qs2,ps2):
     plots_qs2 = traj_to_plots(qs2)
 
     one = False
-    #one = True
+    one = True
     two = False
-    two = True
+    #two = True
 
 
     plots_ps1 = traj_to_plots_ps(ps1)
