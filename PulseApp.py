@@ -435,7 +435,7 @@ class PulseApp(QtWidgets.QWidget):
         self.build()  
 
         self.plotter = Plotter(self)
-        print(vel_to_st2(20,1,10.1))
+        print(vel_to_st2(20,1,20.1))
         
         
     
