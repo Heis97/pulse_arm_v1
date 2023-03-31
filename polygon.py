@@ -79,7 +79,6 @@ class Pose3D(object):
             q = []
             for j in range(len(ps)):
                 q.append(ps[j].angles[i])
-
             q.sort()
             qm.append(q[int(len(ps)/2)])
         return Pose3D(qm, t)

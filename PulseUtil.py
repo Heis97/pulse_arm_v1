@@ -683,8 +683,8 @@ def compare_traj_pulse(qs_real:list[Pose3D],prog:list[Point3D],base:Point3D,st_p
     ps_model = qs_to_ps(qs_model)
 
     #q_vel = 2*np.pi*40/60
-    #qs_real = Pose3D.median(qs_real,10)
-    #qs_real = Pose3D.gauss(qs_real,10)
+    qs_real = Pose3D.median(qs_real,50)
+    qs_real = Pose3D.gauss(qs_real,50)
     ps_real = qs_to_ps(qs_real)
 
     return qs_real,ps_real,qs_model,ps_model
