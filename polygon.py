@@ -143,7 +143,7 @@ class Point3D(object):
         return self
 
     def ToString(self)->str:
-        return str(self.x)+" "+str(self.y)+" "+str(self.z)+";"
+        return str(self.x)+" "+str(self.y)+" "+str(self.z)+str(self.pitch)+" "+str(self.roll)+" "+str(self.yaw)+";"
 
     def ToStringPulse(self,pres = 3,delim = "\n")->str:
         return str(round(self.x,pres))+delim+str(round(self.y,pres))+delim+str(round(self.z,pres))+delim+str(round(self.roll,pres))+delim+str(round(self.pitch,pres))+delim+str(round(self.yaw,pres))+";"
@@ -184,6 +184,7 @@ class Point3D(object):
         self.y = -self.y
         self.z = -self.z
         return self
+    
 
     def Clone(self):
         return Point3D(self.x,self.y,self.z,self.extrude,self.r,self.g,self.b,self.pitch,self.roll,self.yaw,self.t)
@@ -665,7 +666,7 @@ def arccos(cos):
     return np.arccos(cos)
 
 
-def position_from_matrix_pulse(m:np.ndarray,p_ref:Point3D = Point3D(0,0,0)):
+def position_from_matrix_pulse(m:np.ndarray):
     x = m[0][3]
     y = m[1][3]
     z = m[2][3]

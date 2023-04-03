@@ -72,6 +72,10 @@ def parse_g_code_pulse(code:str)->"list[Point3D]":
     y=0
     z=0
 
+    pitch=0 
+    roll=0
+    yaw=0
+
     r =0.9
     g= 0.9
     b= 0.1
@@ -116,17 +120,17 @@ def parse_g_code_pulse(code:str)->"list[Point3D]":
                     if coord[0]=="Z":
                         z = float(coord[1:])
                     if coord[0]=="A":
-                        r = float(coord[1:])
+                        pitch = float(coord[1:])
                     if coord[0]=="B":
-                        g = float(coord[1:])
+                        roll = float(coord[1:])
                     if coord[0]=="C":
-                        b = float(coord[1:])
+                        yaw = float(coord[1:])
             
             if coords[0][0]=="G":    
                 if com_num==0:
-                    p3ds.append(Point3D(x,y,z,False,r,g,b))
+                    p3ds.append(Point3D(x,y,z,False,_pitch=pitch,_roll=roll,_yaw=yaw))
                 if com_num==1:
-                    p3ds.append(Point3D(x,y,z,True,r,g,b))
+                    p3ds.append(Point3D(x,y,z,True,_pitch=pitch,_roll=roll,_yaw=yaw))
     return p3ds
 
 

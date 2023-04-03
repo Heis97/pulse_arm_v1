@@ -29,7 +29,7 @@ class PulseRobotExt(object):
                      velocity = None,
                      acceleration = None,
                      tcp_max_velocity = None, 
-                     motion_type: str = MT_JOINT):
+                     motion_type: str = MT_LINEAR):
         return self.robot.set_position(target_position,velocity,acceleration,tcp_max_velocity, motion_type)
     
     def set_pose(self,target_pose,

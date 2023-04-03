@@ -97,10 +97,13 @@ def calibrate_tcp_4p(points:list[Point3D]):
         tcp_aver = np.array([[0.],[0.],[0.],[0.]])
         #print(type(tcp_aver))
         for p in ps:
-            m = pulse_matrix(p.x,p.y,p.z,p.pitch,p.roll,p.yaw)
+            m = pulse_matrix_p(p)
             m_inv = np.linalg.inv(m)
             tcp = np.dot( m_inv ,np.array([[pc.x],[pc.y],[pc.z],[1.]]))
             tcp_aver+=tcp
+            print(tcp)
+
+        
         return tcp_aver/len(ps)
 
 

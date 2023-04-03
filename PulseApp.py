@@ -1198,11 +1198,12 @@ class PulseApp(QtWidgets.QWidget):
         #self.apply_settings_to_robot()
         
         positions = self.generate_traj_abc()
-        vel = 0.005
+        vel = 0.020
         acs = 0.1
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
-        self.pulse_robot.set_position(positions[0])
-        self.pulse_robot.run_linear_positions(positions,linear_motion_parameters)
+        self.pulse_robot.robot.set_position(positions[0],velocity=20,acceleration=1,motion_type = MT_LINEAR)
+        #print(positions)
+        self.pulse_robot.robot.run_linear_positions(positions,linear_motion_parameters)
 
     
 
@@ -1211,26 +1212,16 @@ class PulseApp(QtWidgets.QWidget):
         self.pulse_robot.stop()
         self.pulse_robot.recover()
 
-#-----------------------------------------------------------------------------------
-    def generate_traj(self):
-        self.cur_start_point = self.get_cur_item_from_combo(self.combo_start_points,self.settins_pulse.start_points)
-        ps = parse_g_code(self.text_prog_code.toPlainText())
-        start_point = self.cur_start_point["point"]
-        start_rot =  self.cur_start_point["rotation"]
 
+    def traj_prep(self,ps:list[Point3D],p_off=Point3D()):
+        """ps: mm, p_off: m"""
         points = []
-        #p = [start_point["x"],start_point["y"],start_point["z"]]
-        #r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
-        p = []
-        r = []
-        dz = 0#5
         positions = []
-        for i in range(len(ps)):               
-            p = [start_point["x"]+0.001*ps[i].x,start_point["y"]+0.001*ps[i].y,start_point["z"]+0.001*(ps[i].z+dz)]
-            r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
-            
-            pos:Position = position(p,r,blend=0.0001) 
-            
+        for i in range(len(ps)): 
+            #print(ps[i].ToString())              
+            p = [p_off.x+0.001*ps[i].x,p_off.y+0.001*ps[i].y,p_off.z+0.001*ps[i].z]
+            r = [p_off.roll+ps[i].roll,p_off.pitch+ps[i].pitch,p_off.yaw+ps[i].yaw]            
+            pos:Position = position(p,r,blend=0.0001)  
             if i>2:
                 
                 if self.dist(p,points[-1])>0.003:
@@ -1240,20 +1231,23 @@ class PulseApp(QtWidgets.QWidget):
                     v1 = p2-p1
                     v2 = p3-p2
                     alph = Point3D.ang(v1,v2)
-                    if abs(abs(alph)%np.pi)>0.03:                    
+                    if abs(abs(alph)%np.pi)>0.03:                                           
                         positions.append(pos)
                         points.append(p)
             else:
                 positions.append(pos)
                 points.append(p)
-                #print(self.dist(points[-1],points[-2]))
+        #print(ps)
+        print("#######################################")
+        return positions
 
+#-----------------------------------------------------------------------------------
+    def generate_traj(self):
+        self.cur_start_point = self.get_cur_item_from_combo(self.combo_start_points,self.settins_pulse.start_points)
+        ps = parse_g_code(self.text_prog_code.toPlainText())
+        p_off = pos_dict_to_point3d(self.cur_start_point)
+        positions = self.traj_prep(ps,p_off)
 
-        for i in range(2,len(positions)):
-            #print(self.dist(positions[i],positions[i-1]))
-            if(self.dist(positions[i],positions[i-1])<0.003):
-                print("len")
-            #print(i," ",positions[i])
         
         return positions
 
@@ -1284,27 +1278,9 @@ class PulseApp(QtWidgets.QWidget):
         
         return positions
 #-----------------------------------------------------------------------------------
-    def generate_traj_abc(self):
-        
-        ps = parse_g_code(self.text_prog_code.toPlainText())
-
-
-        points = []
-
-        pos = position(p,r)
-        points.append(p)
-        positions = [pos]
-        for i in range(len(ps)):               
-            p = [ps[i].x,ps[i].y,ps[i].z]
-            r = [ps[i].r,ps[i].g,ps[i].b]
-            
-            pos = position(p,r,blend=0.0001)
-            if self.dist(p,points[-1])>0.00001:
-                positions.append(pos)
-                points.append(p)
-
-        #for i in range(len(positions)):
-            #print(i," ",positions[i])
+    def generate_traj_abc(self):        
+        ps = parse_g_code_pulse(self.text_prog_code.toPlainText())
+        positions = self.traj_prep(ps,Point3D())
         
         return positions
 
