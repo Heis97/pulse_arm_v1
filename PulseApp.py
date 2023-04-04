@@ -1144,13 +1144,9 @@ class PulseApp(QtWidgets.QWidget):
             #self.pulse_robot.await_stop()
 
     def exec_prog_arm_rel(self):
-        
-        #self.apply_settings_to_robot()
-        
-        #self.pulse_robot.set_position(Position(self.cur_start_point["point"],self.cur_start_point["rotation"]),velocity=vel,acceleration=acs,motion_type=MT_LINEAR)
 
         positions = self.generate_traj()
-        vel1 = 20
+        vel1 = 2
         vel2 = 0.02
 
         acs1 = 50
@@ -1198,7 +1194,7 @@ class PulseApp(QtWidgets.QWidget):
         #self.apply_settings_to_robot()
         
         positions = self.generate_traj_abc()
-        vel = 0.020
+        vel = 0.005
         acs = 0.1
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
         self.pulse_robot.robot.set_position(positions[0],velocity=20,acceleration=1,motion_type = MT_LINEAR)
@@ -1244,8 +1240,10 @@ class PulseApp(QtWidgets.QWidget):
 #-----------------------------------------------------------------------------------
     def generate_traj(self):
         self.cur_start_point = self.get_cur_item_from_combo(self.combo_start_points,self.settins_pulse.start_points)
+
         ps = parse_g_code(self.text_prog_code.toPlainText())
         p_off = pos_dict_to_point3d(self.cur_start_point)
+        p_off.z+=5*1e-3
         positions = self.traj_prep(ps,p_off)
 
         
