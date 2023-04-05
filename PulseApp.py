@@ -435,7 +435,7 @@ class PulseApp(QtWidgets.QWidget):
         self.build()  
 
         self.plotter = Plotter(self)
-        print(vel_to_st2(20,1,20.1))
+        print(vel_to_st2(10,1,20.1))
         
         
     
@@ -1194,7 +1194,7 @@ class PulseApp(QtWidgets.QWidget):
         #self.apply_settings_to_robot()
         
         positions = self.generate_traj_abc()
-        vel = 0.005
+        vel = 0.01
         acs = 0.1
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
         self.pulse_robot.robot.set_position(positions[0],velocity=20,acceleration=1,motion_type = MT_LINEAR)
@@ -1278,7 +1278,9 @@ class PulseApp(QtWidgets.QWidget):
 #-----------------------------------------------------------------------------------
     def generate_traj_abc(self):        
         ps = parse_g_code_pulse(self.text_prog_code.toPlainText())
-        positions = self.traj_prep(ps,Point3D())
+        p_off = Point3D(z=0.5*1e-3)
+        #p_off.z+=5*1e-3
+        positions = self.traj_prep(ps,p_off)
         
         return positions
 
