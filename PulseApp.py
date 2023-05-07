@@ -345,6 +345,24 @@ class RobAnimThread(QtCore.QThread):
         self.qs = qs
         self.plotter_signal.emit(0)
 
+class RemoteControlThread(QtCore.QThread):
+    def __init__(self,pulse_arm:PulseRobotExt):
+        QtCore.QThread.__init__(self)   
+        self.pulse_arm = pulse_arm
+        self.timeDelt = 0.001
+        
+        sock = socket.socket()
+        sock.bind(('', 30005))
+        sock.listen(1)
+        self.conn, self.addr = sock.accept()
+        print ('connected:', self.addr)
+        self.start()   
+
+    def run(self):
+        while True:
+            data = self.conn.recv(1024)
+            print(data)
+            sleep(self.timeDelt)
 
 class RobPosThread(QtCore.QThread):
     def __init__(self,pulse_arm:PulseRobotExt, label:QLabel, slot):
@@ -637,6 +655,10 @@ class PulseApp(QtWidgets.QWidget):
         self.but_disconnect_robot.setGeometry(QtCore.QRect(100, 140, 140, 30))
         self.but_disconnect_robot.clicked.connect(self.disconnect_robot)
 
+        self.but_remote_connect_robot = QPushButton('Удалённое управление', self)
+        self.but_remote_connect_robot.setGeometry(QtCore.QRect(250, 140, 140, 30))
+        self.but_remote_connect_robot.clicked.connect(self.start_remote_control)
+
         self.but_start_anim_robot = QPushButton('Анимац', self)
         self.but_start_anim_robot.setGeometry(QtCore.QRect(100, 60, 140, 30))
         self.but_start_anim_robot.clicked.connect(self.start_anim_robot)
@@ -652,6 +674,9 @@ class PulseApp(QtWidgets.QWidget):
         self.but_stop_writing = QPushButton('Остановить запись', self)
         self.but_stop_writing.setGeometry(QtCore.QRect(250, 60, 140, 30))
         self.but_stop_writing.clicked.connect(self.stop_writing)
+
+    def start_remote_control(self):
+        self.rem_thr = RemoteControlThread(self)
 
 
     def start_writing(self):
