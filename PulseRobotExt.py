@@ -6,6 +6,7 @@ class PulseRobotExt(object):
     robot: RobotPulse
     base: Point3D = Point3D(0,0,0)
     tool: Point3D= Point3D(0,0,0)
+    cur_posit :str = ""
 
 
 

@@ -57,14 +57,29 @@ def pose_to_list(p)->list:
         p = p.to_dict()
     return p["angles"]
 
-def position_to_str(p,separator:str ="\n")->str:
+def position_to_str(p,separator:str ="\n",simple:bool = False)->str:
     if type(p) == Position or type(p) == PositionTimestamp:
         p = p.to_dict()
     pos = p["point"]
     rot = p["rotation"]
-
     pres = 3
-    return "X: "+str(round(1000*pos["x"],pres))+separator+"Y: "+str(round(1000*pos["y"],pres))+separator+"Z: "+str(round(1000*pos["z"],pres))+separator+"Rx: "+str(round(rot["roll"],pres))+separator+"Ry: "+str(round(rot["pitch"],pres))+separator+"Rz: "+str(round(rot["yaw"],pres))
+    x = str(round(1000*pos["x"],pres))
+    y = str(round(1000*pos["y"],pres))
+    z = str(round(1000*pos["z"],pres))
+    roll = str(round(rot["roll"],pres))
+    pitch = str(round(rot["pitch"],pres))
+    yaw = str(round(rot["yaw"],pres))
+    cs = [x,y,z,roll,pitch,yaw]
+    ns = ["X: ","Y: ","Z: ","Rx: ","Ry: ","Rz: "]
+    
+    ret = ""
+    for i in range(6):
+        pre = ns[i]
+        if simple: pre=""
+        sep = separator
+        ret+= pre+cs[i]+sep
+    
+    return ret
 
 def position_to_p3d(p)->Point3D:
     if type(p) == Position or type(p) == PositionTimestamp:
@@ -346,23 +361,66 @@ class RobAnimThread(QtCore.QThread):
         self.plotter_signal.emit(0)
 
 class RemoteControlThread(QtCore.QThread):
-    def __init__(self,pulse_arm:PulseRobotExt):
-        QtCore.QThread.__init__(self)   
-        self.pulse_arm = pulse_arm
-        self.timeDelt = 0.001
+    prog_signal = QtCore.pyqtSignal(str) 
+    def __init__(self,pulse_app:"PulseApp"):
+        QtCore.QThread.__init__(self)  
         
+        self.pulse_arm = pulse_app.pulse_robot
+        self.pulse_app = pulse_app
+        self.timeDelt = 0.001
+        self.workmode = 0
+        self.inp_mass = ""
+        self.base = 0
         sock = socket.socket()
-        sock.bind(('', 30005))
+        sock.bind(('', 30006))
         sock.listen(1)
         self.conn, self.addr = sock.accept()
         print ('connected:', self.addr)
         self.start()   
 
+
     def run(self):
         while True:
             data = self.conn.recv(1024)
-            print(data)
-            sleep(self.timeDelt)
+            #print(len(data))
+            if len(data)>1:
+                data = str(data.decode())
+                data_in =data.split(" ")
+                #print(data[0])
+                #print(len(data_in))
+                if len(data_in)==1:
+                    if "a" in data:
+                        print("Auto")
+                        self.workmode = 1
+                    elif "m" in data:
+                        print("Manual")
+                        self.workmode = 0
+                    elif "s" in data:
+                        print("Start")
+                        #print(self.inp_mass)
+                        print(len(self.inp_mass))
+                        self.prog_signal.emit(self.inp_mass)
+                        #self.pulse_app.text_prog_code.setText(self.inp_mass)
+                        self.workmode = 3
+
+                    elif "c" in data:
+                        print("Clear")
+                        self.inp_mass = ""
+                    
+                    elif "b" in data:
+                        print("Base")
+                        self.base = 1
+                    elif "f" in data:
+                        print("pos")
+                        self.conn.send(self.pulse_arm.cur_posit.encode())
+                        self.workmode = 0
+                if len(data_in)>5:
+                    #print("data add")
+                    self.inp_mass+=data
+
+                        
+
+            
 
 class RobPosThread(QtCore.QThread):
     def __init__(self,pulse_arm:PulseRobotExt, label:QLabel, slot):
@@ -403,7 +461,8 @@ class RobPosThread(QtCore.QThread):
                 try:
                     motors = self.pulse_arm.status_motors()
                     position = self.pulse_arm.get_position()
-                    self.label.setText("Joint position:\n"+pose_to_str(pose)+"\n\n\n"+"Cartesian position:\n"+position_to_str(position)+"\n\n\n"+motor_state_to_str(motors))  
+                    self.pulse_arm.cur_posit = position_to_str(position," ",True)
+                    self.label.setText("Joint position:\n"+pose_to_str(pose)+"\n\n"+"Cartesian position:\n"+position_to_str(position)+"\n\n"+motor_state_to_str(motors))  
                     pass               
                 except BaseException:
                     pass
@@ -443,6 +502,8 @@ class PulseApp(QtWidgets.QWidget):
     q_draw = [0,0,0,0,0,0,0]
     plotter:Plotter = None
     writing_signal = QtCore.pyqtSignal(bool)
+
+    
     
 
     def __init__(self, parent=None):
@@ -677,7 +738,11 @@ class PulseApp(QtWidgets.QWidget):
 
     def start_remote_control(self):
         self.rem_thr = RemoteControlThread(self)
+        self.rem_thr.prog_signal.connect(self.set_prog_text, QtCore.Qt.QueuedConnection)
 
+
+    def set_prog_text(self,val):
+        self.text_prog_code.setText(val)
 
     def start_writing(self):
         self.writing_signal.emit(True)
