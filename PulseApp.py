@@ -435,6 +435,8 @@ class RobPosThread(QtCore.QThread):
 
     def set_writing(self,val):
         self.writing = val
+        if self.writing:
+            self.feedback = []
 
     def run(self):
         while True:
@@ -677,14 +679,14 @@ class PulseApp(QtWidgets.QWidget):
         self.plotter.show()
 
     def test2(self):
-        qs_real = load_feedback("feedback_line_full.json")
+        qs_real = load_feedback("feedback_l_e.json")
         prog = parse_g_code_pulse( self.text_prog_code.toPlainText())
-        p_st =  pos_dict_to_point3d(self.settins_pulse.start_points["b0404_st"])
-        base =  pos_dict_to_point3d(self.settins_pulse.bases["b0404_1"])
+        p_st =  pos_dict_to_point3d(self.settins_pulse.start_points["def_st_1"])
+        base =  pos_dict_to_point3d(self.settins_pulse.bases["base_def"])
 
         qs_real,ps_real,qs_model,ps_model = compare_traj_pulse(qs_real,prog,base,p_st,blend=0.2,traj_divide=0.03)
-        ps_model = Point3D.addList(Point3D.mulList(Point3D.addList(Point3D.mulPoint(ps_model,base),-p_st),1e3),Point3D(x=0,y=-30))
-        ps_real =  Point3D.addList(Point3D.mulList(Point3D.addList(Point3D.mulPoint(ps_real,base),-p_st),1e3),Point3D(x=0,y=-30))
+        ps_model = Point3D.addList(Point3D.mulList(Point3D.addList(Point3D.mulPoint(ps_model,base),-p_st),1e3),Point3D(x=0,y=0))
+        ps_real =  Point3D.addList(Point3D.mulList(Point3D.addList(Point3D.mulPoint(ps_real,base),p_st),1e3),Point3D(x=0,y=0))
 
         self.viewer3d.addLines_ret(ps_model,1,1,0,0.2)
         self.viewer3d.addLines_ret(ps_real,0,1,0,1.2)
@@ -746,7 +748,6 @@ class PulseApp(QtWidgets.QWidget):
 
     def start_writing(self):
         self.writing_signal.emit(True)
-
         
     def stop_writing(self):
         self.writing_signal.emit(False)
@@ -1303,6 +1304,7 @@ class PulseApp(QtWidgets.QWidget):
         """ps: mm, p_off: m"""
         points = []
         positions = []
+        dist_min = 0.9
         for i in range(len(ps)): 
             #print(ps[i].ToString())              
             p = [p_off.x+0.001*ps[i].x,p_off.y+0.001*ps[i].y,p_off.z+0.001*ps[i].z]
@@ -1310,14 +1312,14 @@ class PulseApp(QtWidgets.QWidget):
             pos:Position = position(p,r,blend=0.0001)  
             if i>2:
                 
-                if self.dist(p,points[-1])>0.003:
+                if self.dist(p,points[-1])>dist_min*1e-3:
                     p1 = Point3D(p[0],p[1],p[2])
                     p2 = Point3D(points[-1][0],points[-1][1],points[-1][2])
                     p3 = Point3D(points[-2][0],points[-2][1],points[-2][2])
                     v1 = p2-p1
                     v2 = p3-p2
                     alph = Point3D.ang(v1,v2)
-                    if abs(abs(alph)%np.pi)>0.03:                                           
+                    if abs(abs(alph)%np.pi)>0.003:                                           
                         positions.append(pos)
                         points.append(p)
             else:
