@@ -1218,7 +1218,7 @@ class PulseApp(QtWidgets.QWidget):
         self.text_prog_code = QTextEdit(self)
         self.text_prog_code.setGeometry(QtCore.QRect(1150, 560, 500, 400))
 
-        self.text_prog_code.setText("G1 X1 Y1\nG1 X1 Y30\nG1 X30 Y30")
+        self.text_prog_code.setText("G1 X0 Y0 Z10\nG1 X0 Y0 Z0\nG1 X0 Y30 Z0\nG1 X1 Y30\nG1 X1 Y0")
 
 
     def set_cur_work_pose(self):
@@ -1241,7 +1241,7 @@ class PulseApp(QtWidgets.QWidget):
 
         acs1 = 50
         acs2 = 0.05
-        #print(positions)
+        print(positions)
         vel = vel1
         acs = acs1
         #self.pulse_robot.robot.set_position(positions[0],velocity=vel,acceleration=acs,motion_type=MT_LINEAR)
@@ -1333,7 +1333,7 @@ class PulseApp(QtWidgets.QWidget):
 
         ps = parse_g_code(self.text_prog_code.toPlainText())
         p_off = pos_dict_to_point3d(self.cur_start_point)
-        p_off.z+=5*1e-3
+        #p_off.z+=5*1e-3
         positions = self.traj_prep(ps,p_off)
 
         
