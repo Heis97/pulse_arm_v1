@@ -677,12 +677,12 @@ class PulseApp(QtWidgets.QWidget):
         self.plotter.show()
 
     def test2(self):
-        qs_real = load_feedback("feedback.json")
+        qs_real = load_feedback("feedback_line_full.json")
         prog = parse_g_code_pulse( self.text_prog_code.toPlainText())
-        p_st =  pos_dict_to_point3d(self.settins_pulse.start_points["sp_1303_1"])
-        base =  pos_dict_to_point3d(self.settins_pulse.bases["bs0603"])
+        p_st =  pos_dict_to_point3d(self.settins_pulse.start_points["b0404_st"])
+        base =  pos_dict_to_point3d(self.settins_pulse.bases["b0404_1"])
 
-        qs_real,ps_real,qs_model,ps_model = compare_traj_pulse(qs_real,prog,base,p_st,blend=1.2,traj_divide=0.3)
+        qs_real,ps_real,qs_model,ps_model = compare_traj_pulse(qs_real,prog,base,p_st,blend=0.2,traj_divide=0.03)
         ps_model = Point3D.addList(Point3D.mulList(Point3D.addList(Point3D.mulPoint(ps_model,base),-p_st),1e3),Point3D(x=0,y=-30))
         ps_real =  Point3D.addList(Point3D.mulList(Point3D.addList(Point3D.mulPoint(ps_real,base),-p_st),1e3),Point3D(x=0,y=-30))
 
