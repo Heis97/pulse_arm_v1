@@ -284,7 +284,7 @@ def draw_plots_compare(plotter,qs1,ps1,qs2,ps2):
     one = False
     one = True
     two = False
-    #two = True
+    two = True
 
 
     plots_ps1 = traj_to_plots_ps(ps1)
@@ -680,17 +680,23 @@ class PulseApp(QtWidgets.QWidget):
 
     def test2(self):
         qs_real = load_feedback("feedback_l_e.json")
+        qs_real_2 = load_feedback("feedback_l_f.json")
         prog = parse_g_code_pulse( self.text_prog_code.toPlainText())
         p_st =  pos_dict_to_point3d(self.settins_pulse.start_points["def_st_1"])
         base =  pos_dict_to_point3d(self.settins_pulse.bases["base_def"])
 
         qs_real,ps_real,qs_model,ps_model = compare_traj_pulse(qs_real,prog,base,p_st,blend=0.2,traj_divide=0.03)
+        qs_real_2,ps_real_2,qs_model,ps_model = compare_traj_pulse(qs_real_2,prog,base,p_st,blend=0.2,traj_divide=0.03)
+        
         ps_model = Point3D.addList(Point3D.mulList(Point3D.addList(Point3D.mulPoint(ps_model,base),-p_st),1e3),Point3D(x=0,y=0))
         ps_real =  Point3D.addList(Point3D.mulList(Point3D.addList(Point3D.mulPoint(ps_real,base),p_st),1e3),Point3D(x=0,y=0))
+        ps_real_2 =  Point3D.addList(Point3D.mulList(Point3D.addList(Point3D.mulPoint(ps_real_2,base),p_st),1e3),Point3D(x=0,y=0))
 
         self.viewer3d.addLines_ret(ps_model,1,1,0,0.2)
-        self.viewer3d.addLines_ret(ps_real,0,1,0,1.2)
-        draw_plots_compare(self.plotter,qs_real,ps_real,qs_model,ps_model)
+        self.viewer3d.addLines_ret(ps_real,0,1,0,0.3)
+        self.viewer3d.addLines_ret(ps_real_2,1,0,0,0.3)
+        #draw_plots_compare(self.plotter,qs_real,ps_real,qs_model,ps_model)
+        draw_plots_compare(self.plotter,qs_real,ps_real,qs_real_2,ps_real_2)
         self.plotter.show()
  
     def build(self):
