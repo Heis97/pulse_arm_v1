@@ -680,7 +680,7 @@ class PulseApp(QtWidgets.QWidget):
 
     def test2(self):
         qs_real = load_feedback("feedback_l_e.json")
-        qs_real_2 = load_feedback("feedback_l_f.json")
+        qs_real_2 = load_feedback("feedback_l_e_5mms.json")
         prog = parse_g_code_pulse( self.text_prog_code.toPlainText())
         p_st =  pos_dict_to_point3d(self.settins_pulse.start_points["def_st_1"])
         base =  pos_dict_to_point3d(self.settins_pulse.bases["base_def"])
