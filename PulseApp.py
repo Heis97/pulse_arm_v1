@@ -643,8 +643,8 @@ class PulseApp(QtWidgets.QWidget):
         self.plotter.show()
 
     def test3(self):
-        p = Point3D( -262.743, 257.745, 89.142, True,_roll = -1.956,_pitch= -0.038 ,_yaw = -1.148 )
-        p_st =  pos_dict_to_point3d(self.settins_pulse.bases["work_0706"])
+        p = Point3D( -366.18, 240.1, 80.8, True,_roll = -0.3,_pitch= 0.05 ,_yaw = 0.02 )
+        p_st =  pos_dict_to_point3d(self.settins_pulse.bases["0906_1"])
         m = pulse_matrix_p(p)
         print(m)
 
