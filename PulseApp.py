@@ -516,7 +516,8 @@ class PulseApp(QtWidgets.QWidget):
         self.build()  
 
         self.plotter = Plotter(self)
-        print(vel_to_st2(10,1,20.1))
+        self.test3()
+        #print(vel_to_st2(10,1,20.1))
         
         
     
@@ -640,6 +641,12 @@ class PulseApp(QtWidgets.QWidget):
 
         self.plotter = plots_qs(self.plotter,self.thr.plots)
         self.plotter.show()
+
+    def test3(self):
+        p = Point3D( -262.743, 257.745, 89.142, True,_roll = -1.956,_pitch= -0.038 ,_yaw = -1.148 )
+        p_st =  pos_dict_to_point3d(self.settins_pulse.bases["work_0706"])
+        m = pulse_matrix_p(p)
+        print(m)
 
     def test1(self):
         qs = load_feedback("feedback.json")
