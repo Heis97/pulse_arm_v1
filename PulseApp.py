@@ -516,7 +516,7 @@ class PulseApp(QtWidgets.QWidget):
         self.build()  
 
         self.plotter = Plotter(self)
-        self.test3()
+        #self.test3()
         #print(vel_to_st2(10,1,20.1))
         
         
@@ -1018,7 +1018,7 @@ class PulseApp(QtWidgets.QWidget):
         ps = self.buffer_positions
         tcp = calibrate_tcp_4p(ps)
         rot = self.settins_pulse.tools[self.combo_tools.currentText()]['tcp']['rotation']
-        self.current_tool = tool_info(position([tcp[0][0],tcp[1][0],tcp[2][0]],[rot['pitch'],rot['roll'],rot['yaw']]))
+        self.current_tool = tool_info(position([tcp[0][0],tcp[1][0],tcp[2][0]],[rot['roll'],rot['pitch'],rot['yaw']]))
 
 
     def comp_tcp_rotate(self):
@@ -1301,8 +1301,8 @@ class PulseApp(QtWidgets.QWidget):
         vel = 0.01
         acs = 0.1
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
-        self.pulse_robot.robot.set_position(positions[0],velocity=20,acceleration=1,motion_type = MT_LINEAR)
-        #print(positions)
+        self.pulse_robot.robot.set_position(positions[0],velocity=5,acceleration=0.5,motion_type = MT_LINEAR)
+        print(positions[0])
         self.pulse_robot.robot.run_linear_positions(positions,linear_motion_parameters)
 
     
@@ -1319,10 +1319,11 @@ class PulseApp(QtWidgets.QWidget):
         positions = []
         dist_min = 0.9
         for i in range(len(ps)): 
-            #print(ps[i].ToString())              
+            print(ps[i].ToString())              
             p = [p_off.x+0.001*ps[i].x,p_off.y+0.001*ps[i].y,p_off.z+0.001*ps[i].z]
-            r = [p_off.roll+ps[i].roll,p_off.pitch+ps[i].pitch,p_off.yaw+ps[i].yaw]            
-            pos:Position = position(p,r,blend=0.0001)  
+            r = [p_off.pitch+ps[i].pitch,p_off.roll+ps[i].roll,p_off.yaw+ps[i].yaw]    
+            r = [0,0,0]        
+            pos:Position = position(p,r,blend=0.0005)  
             if i>2:
                 
                 if self.dist(p,points[-1])>dist_min*1e-3:
@@ -1332,7 +1333,8 @@ class PulseApp(QtWidgets.QWidget):
                     v1 = p2-p1
                     v2 = p3-p2
                     alph = Point3D.ang(v1,v2)
-                    if abs(abs(alph)%np.pi)>0.003:                                           
+                    if abs(abs(alph)%np.pi)>0.003: 
+                        print(pos)                                             
                         positions.append(pos)
                         points.append(p)
             else:
@@ -1372,7 +1374,7 @@ class PulseApp(QtWidgets.QWidget):
             
             pos = position(p,r,blend=0.0001) 
             if self.dist(p,points[-1])>0.003:
-                #print(pos)
+                print(pos)
                 positions.append(pos)
                 points.append(p)
 
