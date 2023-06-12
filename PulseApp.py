@@ -1298,12 +1298,39 @@ class PulseApp(QtWidgets.QWidget):
         #self.apply_settings_to_robot()
         
         positions = self.generate_traj_abc()
-        vel = 0.01
+        """vel = 0.01
         acs = 0.1
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
         self.pulse_robot.robot.set_position(positions[0],velocity=5,acceleration=0.5,motion_type = MT_LINEAR)
         print(positions[0])
-        self.pulse_robot.robot.run_linear_positions(positions,linear_motion_parameters)
+        #try:
+        self.pulse_robot.robot.run_linear_positions(positions,linear_motion_parameters)"""
+
+        vel1 = 2
+        vel2 = 0.01
+
+        acs1 = 50
+        acs2 = 0.01
+        #print(positions)
+        vel = vel1
+        acs = acs1
+        #self.pulse_robot.robot.set_position(positions[0],velocity=vel,acceleration=acs,motion_type=MT_LINEAR)
+        
+        vel = vel2
+        acs = acs2
+        print("len all",len(positions))
+        dn = 950
+        linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
+        for i in range(int(len(positions)/dn)+1):
+            self.pulse_robot.robot.set_position(positions[dn*i],velocity=vel1,acceleration=acs1,motion_type=MT_LINEAR)        
+            linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel2,acceleration=acs2)
+            print("load",dn)
+            if len(positions)>dn*(i+1)+1:
+                self.pulse_robot.robot.run_linear_positions(positions[dn*i:dn*(i+1)],linear_motion_parameters)
+            else:
+                self.pulse_robot.robot.run_linear_positions(positions[dn*i:],linear_motion_parameters)
+
+
 
     
 
@@ -1318,12 +1345,13 @@ class PulseApp(QtWidgets.QWidget):
         points = []
         positions = []
         dist_min = 0.9
+        k = 0.5
         for i in range(len(ps)): 
-            print(ps[i].ToString())              
+            #print(ps[i].ToString())              
             p = [p_off.x+0.001*ps[i].x,p_off.y+0.001*ps[i].y,p_off.z+0.001*ps[i].z]
-            r = [p_off.pitch+ps[i].pitch,p_off.roll+ps[i].roll,p_off.yaw+ps[i].yaw]    
-            r = [0,0,0]        
-            pos:Position = position(p,r,blend=0.0005)  
+            r = [p_off.roll+ps[i].roll*k,p_off.pitch+ps[i].pitch*k,p_off.yaw+ps[i].yaw*k]    
+            #r = [0,0,0]        
+            pos:Position = position(p,r,blend=0.0001)  
             if i>2:
                 
                 if self.dist(p,points[-1])>dist_min*1e-3:
@@ -1334,7 +1362,7 @@ class PulseApp(QtWidgets.QWidget):
                     v2 = p3-p2
                     alph = Point3D.ang(v1,v2)
                     if abs(abs(alph)%np.pi)>0.003: 
-                        print(pos)                                             
+                        #print(pos)                                             
                         positions.append(pos)
                         points.append(p)
             else:
