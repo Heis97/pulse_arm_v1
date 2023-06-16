@@ -1345,7 +1345,7 @@ class PulseApp(QtWidgets.QWidget):
         points = []
         positions = []
         dist_min = 0.9
-        k = 0.5
+        k = 1
         for i in range(len(ps)): 
             #print(ps[i].ToString())              
             p = [p_off.x+0.001*ps[i].x,p_off.y+0.001*ps[i].y,p_off.z+0.001*ps[i].z]
@@ -1413,7 +1413,7 @@ class PulseApp(QtWidgets.QWidget):
 #-----------------------------------------------------------------------------------
     def generate_traj_abc(self):        
         ps = parse_g_code_pulse(self.text_prog_code.toPlainText())
-        p_off = Point3D(z=0.5*1e-3)
+        p_off = Point3D()
         #p_off.z+=5*1e-3
         positions = self.traj_prep(ps,p_off)
         
