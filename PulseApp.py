@@ -1345,7 +1345,7 @@ class PulseApp(QtWidgets.QWidget):
         points = []
         positions = []
         dist_min = 0.9
-        k = 1
+        k = 0.5
         for i in range(len(ps)): 
             #print(ps[i].ToString())              
             p = [p_off.x+0.001*ps[i].x,p_off.y+0.001*ps[i].y,p_off.z+0.001*ps[i].z]
