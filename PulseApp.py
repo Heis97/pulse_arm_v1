@@ -851,7 +851,7 @@ class PulseApp(QtWidgets.QWidget):
         pos,rot = position_sum2(self.pulse_robot.get_position(),position_delt)
         pos_rel = position(pos,rot)
 
-        self.pulse_robot.robot.set_position(pos_rel , velocity=vel, acceleration=acs)
+        self.pulse_robot.robot.set_position(pos_rel , velocity=vel, acceleration=acs,motion_type=MT_LINEAR)
         #self.pulse_robot.await_stop()
 
     def mask_from_button(self,name):
@@ -1350,7 +1350,7 @@ class PulseApp(QtWidgets.QWidget):
             #print(ps[i].ToString())              
             p = [p_off.x+0.001*ps[i].x,p_off.y+0.001*ps[i].y,p_off.z+0.001*ps[i].z]
             r = [p_off.roll+ps[i].roll*k,p_off.pitch+ps[i].pitch*k,p_off.yaw+ps[i].yaw*k]    
-            #r = [0,0,0]        
+            r = [0,0,0]        
             pos:Position = position(p,r,blend=0.0001)  
             if i>2:
                 
