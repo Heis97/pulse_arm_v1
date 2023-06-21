@@ -90,10 +90,10 @@ def calibrate_tcp_4p(points:list[Point3D]):
 
         ps = poses_dict_to_point3d(points)
         pc1 = find_center_sphere_4p([ps[0],ps[1],ps[2],ps[3]])
-        #pc2 = find_center_sphere_4p([ps[0],ps[1],ps[2],ps[4]])
+        pc2 = find_center_sphere_4p([ps[0],ps[1],ps[2],ps[4]])
 
         pc = pc1[0]
-
+        print(pc1[0]-pc2[0])
         tcp_aver = np.array([[0.],[0.],[0.],[0.]])
         #print(type(tcp_aver))
         for p in ps:
@@ -101,7 +101,8 @@ def calibrate_tcp_4p(points:list[Point3D]):
             m_inv = np.linalg.inv(m)
             tcp = np.dot( m_inv ,np.array([[pc.x],[pc.y],[pc.z],[1.]]))
             tcp_aver+=tcp
-            print(tcp)
+            print(tcp*1000)
+
 
         
         return tcp_aver/len(ps)

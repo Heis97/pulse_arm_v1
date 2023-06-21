@@ -1350,7 +1350,7 @@ class PulseApp(QtWidgets.QWidget):
             #print(ps[i].ToString())              
             p = [p_off.x+0.001*ps[i].x,p_off.y+0.001*ps[i].y,p_off.z+0.001*ps[i].z]
             r = [p_off.roll+ps[i].roll*k,p_off.pitch+ps[i].pitch*k,p_off.yaw+ps[i].yaw*k]    
-            r = [0,0,0]        
+            #r = [0,0,0]        
             pos:Position = position(p,r,blend=0.0001)  
             if i>2:
                 
