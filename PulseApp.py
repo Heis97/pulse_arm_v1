@@ -88,6 +88,12 @@ def position_to_p3d(p)->Point3D:
     rot = p["rotation"]
     return Point3D (pos["x"],pos["y"],pos["z"],_roll= rot["roll"],_pitch= rot["pitch"],_yaw= rot["yaw"])
 
+def positions_to_p3ds(ps)->list[Point3D]:
+    p3ds:list[Point3D] = []
+    for i in range(len(ps)):
+        p3ds.append(position_to_p3d(ps[i]))
+    return p3ds
+
 def position_to_list(p:Position)->list:
     pos = p.point
     rot = p.rotation
@@ -455,19 +461,27 @@ class RobPosThread(QtCore.QThread):
             
 
             pose = self.pulse_arm.get_pose()
-            
+            position:Point3D = q_to_p(Pose3D(pose_to_list (pose)))
+            self.label.setText("Joint position:\n"+pose_to_str(pose)+"\n\n"+"Cartesian position:\n"+position.ToStringPulse())  
+            self.pulse_arm.cur_posit_3d = position
+            self.pulse_arm.update_buf()
+            self.pulse_arm.current_progress_prog()
             if self.writing:
                 self.feedback.append(str(pose))
 
-            else:
+
+            """else:
                 try:
                     motors = self.pulse_arm.status_motors()
                     position = self.pulse_arm.get_position()
+
+                    
+
                     self.pulse_arm.cur_posit = position_to_str(position," ",True)
                     self.label.setText("Joint position:\n"+pose_to_str(pose)+"\n\n"+"Cartesian position:\n"+position_to_str(position)+"\n\n"+motor_state_to_str(motors))  
                     pass               
                 except BaseException:
-                    pass
+                    pass"""
                 #print(str(pose))
             
 
@@ -516,12 +530,22 @@ class PulseApp(QtWidgets.QWidget):
         self.build()  
 
         self.plotter = Plotter(self)
+
+        #self.test_cur_prog()
         #self.test3()
         #print(vel_to_st2(10,1,20.1))
+        #self.test_geom()
+
+        pose = p_to_q(Point3D(0.0,0.1,0.1,_pitch = 0.0,_roll = 0.,_yaw=0.))
+        print(str(pose))
         
         
     
-
+    def test_geom(self):
+        p0 = Point3D(-1,0.1,0)
+        p1 = Point3D(10,0,0)
+        p2 = Point3D(0,0,0)
+        print(p0.dist_to_sect(p1,p2))
         
     def draw_3d_rob_pos(self,p3d:Point3D,rob_draw:list):
         q = calc_inverse_kinem_pulse(p3d)[1]  
@@ -705,6 +729,33 @@ class PulseApp(QtWidgets.QWidget):
         #draw_plots_compare(self.plotter,qs_real,ps_real,qs_model,ps_model)
         draw_plots_compare(self.plotter,qs_real,ps_real,qs_real_2,ps_real_2)
         self.plotter.show()
+    
+    def test_cur_prog(self):
+        qs_real = load_feedback("feedback_l_e.json")
+        prog = parse_g_code_pulse( self.text_prog_code.toPlainText())
+        p_st =  pos_dict_to_point3d(self.settins_pulse.start_points["def_st_1"])
+        base =  pos_dict_to_point3d(self.settins_pulse.bases["base_def"])
+
+        qs_real,ps_real,qs_model,ps_model = compare_traj_pulse(qs_real,prog,base,p_st,blend=0.2,traj_divide=0.03)
+
+        ps_model = Point3D.addList(Point3D.mulList(Point3D.addList(Point3D.mulPoint(ps_model,base),-p_st),1e3),Point3D(x=0,y=0))
+        ps_real =  Point3D.addList(Point3D.mulList(Point3D.addList(Point3D.mulPoint(ps_real,base),p_st),1e3),Point3D(x=0,y=0))
+
+        self.pulse_robot = PulseRobotExt(None)
+        self.pulse_robot.cur_prog_3d = prog
+        i_s = []
+        p_s = []
+        for i in range(len(ps_real)):
+            self.pulse_robot.cur_posit_3d = ps_real[i]
+            self.pulse_robot.update_buf()
+            self.pulse_robot.current_progress_prog()
+            i_s.append(self.pulse_robot.cur_i_prog)
+            p_s.append(self.pulse_robot.cur_progr_line)
+            print(i_s[-1],p_s[-1])
+
+
+        self.viewer3d.addLines_ret(ps_real,0,1,0,0.3)
+        pass
  
     def build(self):
         self.build_connection()

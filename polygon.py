@@ -8,9 +8,11 @@ import io
 class Pose3D(object):
     angles:list[float] = []
     t:float = 0
-    def __init__(self,angles:list, t:float = 0):
+    exist:bool = True
+    def __init__(self,angles:list, t:float = 0,exist:bool =True):
         self.angles = angles.copy()
         self.t = t
+        self.exist = exist
 
     def __add__(self, other):
         if(type(other)==Pose3D):
@@ -105,6 +107,11 @@ class Pose3D(object):
             ps_g.append(p_fil)
         return ps_g
 
+
+    def __str__(self):
+        s = ""
+        for a in self.angles: s+=str(a)+"; "
+        return s
 
 class Point3D(object):
     x:float = 0
@@ -242,8 +249,28 @@ class Point3D(object):
         if cos>=1: cos = 1
         elif cos <=-1: cos = -1
         return np.arccos(cos)
-        
+
+
+    def dist_to_line(self,p1:"Point3D",p2:"Point3D")->float:
+        #p1,p2 line points
+        v1 = p2 - p1
+        v2 = p1 - self
+        d = ((v1*v2).magnitude())/(v1.magnitude())
+        return d  
     
+    def dist_to_sect(self,p1:"Point3D",p2:"Point3D")->float:
+        d = (p1-p2).magnitude()
+        d1 = (p1-self).magnitude()
+        d2 = (p2-self).magnitude()
+        if d1>d or d2 > d:
+            return min(d1,d2)
+        else: return self.dist_to_line(p1, p2)
+
+    def part_of_sect(self,p1:"Point3D",p2:"Point3D")->float:
+        d = (p1-p2).magnitude()
+        d1 = (p1-self).magnitude()
+        return d1/d
+
     def one_dir(v1:"Point3D",v2:"Point3D"):
         if Point3D.ang(v1,v2)<np.pi/2: return True
         else: return False

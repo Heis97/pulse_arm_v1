@@ -7,11 +7,22 @@ class PulseRobotExt(object):
     base: Point3D = Point3D(0,0,0)
     tool: Point3D= Point3D(0,0,0)
     cur_posit :str = ""
+    buf_pos_3d : list[Point3D] = []
+    buf_len:int = 20
+    cur_posit_3d : Point3D = None
+    cur_prog_3d : list[Point3D] = None
+    cur_i_prog:int = 0
+    cur_progr_line:float = 0
 
 
+    def update_buf(self):
+        self.buf_pos_3d.append(self.cur_posit_3d)
+        if len(self.buf_pos_3d)> self.buf_len:
+            del self.buf_pos_3d[0]
 
     def __init__(self,host) -> None:
-        self.robot = RobotPulse(host)
+        if host is not None:        
+            self.robot = RobotPulse(host)
 
 
     def get_pose(self):
@@ -43,6 +54,7 @@ class PulseRobotExt(object):
     
     def run_linear_positions(self,positions: list[Position],
                                 motion_parameters: LinearMotionParameters):
+        self.cur_prog_3d = positions_to_p3ds(positions)
         return self.robot.run_linear_positions(positions,motion_parameters)
     
     def change_base(self,base_position):
@@ -74,7 +86,45 @@ class PulseRobotExt(object):
     
     def status_motors(self):
         return self.robot.status_motors()
+
+    def current_progress_prog(self):
+
+        dist_err = 0.3
+        ang_err = 0.1
+        if self.cur_prog_3d is None or self.cur_posit_3d is None or len(self.buf_pos_3d)<2:
+            return None
+        ds = []
+        for i in range(1,len(self.cur_prog_3d)):
+            d = self.cur_posit_3d.dist_to_sect(self.cur_prog_3d[i-1], self.cur_prog_3d[i])
+            ds.append((d,i))
+
+        ds.sort(reverse=False)
+        
+        #self.cur_i_prog = self.correct_cur_progress(ds,dist_err,ang_err)
+        if ds[0][1]-self.cur_i_prog == 1:
+            self.cur_i_prog+=1
+        prog_line = self.cur_posit_3d.part_of_sect(self.cur_prog_3d[self.cur_i_prog-1], self.cur_prog_3d[self.cur_i_prog])
+        
+        self.cur_progr_line = prog_line
+
     
+    def correct_cur_progress(self,sort_ds,dist_err,ang_err):
+        ds_win =[]
+        angs = []
+        for i in range(len(sort_ds)):
+            j = sort_ds[i][1]
+
+            v1 = self.cur_prog_3d[j]-self.cur_prog_3d[j-1]
+            v2 = self.buf_pos_3d[-1]-self.buf_pos_3d[0]
+            alph = Point3D.ang(v1,v2)
+            angs.append(alph)
+            if alph<ang_err:
+                ds_win.append(sort_ds[i])
+        if len(ds_win)==0: return 0
+        return ds_win[0][1]
+    
+    
+
     #def stop(self):
         #return self.robot.stop()
     

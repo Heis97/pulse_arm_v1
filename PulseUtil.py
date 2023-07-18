@@ -234,6 +234,20 @@ def calc_inverse_kinem_pulse(position:Point3D)->list[Pose3D]:
         solvs.append(calc_inverse_kinem_pulse_priv(position,var[0],var[1],var[2]))
     return solvs
 
+def comp_t_pulse(position:Point3D,ref_pose:Pose3D)->int:
+    min_t = 0
+    min_dist = 10000000
+    for i in range(8):
+        pos = p_to_q(position,i)
+        delt_p =(pos-ref_pose).angles
+        delt = abs(delt_p[0]) + abs(delt_p[1]) + abs(delt_p[2])+ abs(delt_p[3])
+        if delt<min_dist:
+            min_dist = delt
+            min_t = i
+
+    return min_t
+
+
 def p_to_q(position:Point3D,t:int = 1)->Pose3D:
     var = [[-1,-1,-1],[-1,-1,1],[-1,1,-1],[-1,1,1],[1,-1,-1],[1,-1,1],[1,1,-1],[1,1,1]]
     return calc_inverse_kinem_pulse_priv(position,var[t][0],var[t][1],var[t][2])
@@ -283,6 +297,8 @@ def calc_inverse_kinem_pulse_priv(position:Point3D,t1=1,t2=1,t3=1) -> Point3D:
     vz = Point3D(pm[0][2],pm[1][2],pm[2][2])
     #---------------v f---------------
     xy_d = (p0p.x**2+p0p.y**2)**0.5
+    if L4**2>xy_d**2:
+        return Pose3D([None,None,None,None,None,None],0,False)
     aa_d = (xy_d**2-L4**2)**0.5
 
     """p0_xy = p0p.magnitude_xy()
@@ -294,8 +310,8 @@ def calc_inverse_kinem_pulse_priv(position:Point3D,t1=1,t2=1,t3=1) -> Point3D:
     #t1 = 1
     #t2 = 1
     #t3 = 1
-    x2,y2 = calc_inters_2circ(0,0,p0p.x,p0p.y,aa_d,L4,t1)
-
+    x2,y2 = calc_inters_2circ(0,0,p0p.x,p0p.y,aa_d,L4,t1)#checkpoint
+    #checkpoint
     vf = Point3D(x2 - p0p.x, y2 - p0p.y,0)
 
     vf = vf.normalyse()
@@ -322,6 +338,7 @@ def calc_inverse_kinem_pulse_priv(position:Point3D,t1=1,t2=1,t3=1) -> Point3D:
 
     #q1 = np.arctan(scara.y/scara.x) - np.pi
 
+    #if scara.magnitude_xy()==0 not solv
     sq1 = -scara.y/scara.magnitude_xy()
     cq1 = -scara.x/scara.magnitude_xy()
 
@@ -331,6 +348,8 @@ def calc_inverse_kinem_pulse_priv(position:Point3D,t1=1,t2=1,t3=1) -> Point3D:
     Lt = scara.magnitude()
     #omega = np.arcsin(scara.z/Lt)
 
+
+    #0< (L2**2+L3**2-Lt**2)/(2*L2*L3)<1  0< (L2**2+Lt**2-L3**2)/(2*L2*Lt)<1
     omega = np.arctan(scara.z/Ls)
     theta = arccos((L2**2+L3**2-Lt**2)/(2*L2*L3))
     omega_ext = arccos((L2**2+Lt**2-L3**2)/(2*L2*Lt))
@@ -675,9 +694,9 @@ def qs_to_ps(traj:list[Pose3D]):
     for q in traj: ps.append(q_to_p(q))
     return ps
 
-def ps_to_qs(traj:list[Point3D]):
+def ps_to_qs(traj:list[Point3D],t = 1):
     qs = []
-    for p in traj: qs.append(p_to_q(p))
+    for p in traj: qs.append(p_to_q(p,t))
     return qs
 
 def compare_traj_pulse(qs_real:list[Pose3D],prog:list[Point3D],base:Point3D,st_p:Point3D,filtr_dist_g_code:float = 0.3,traj_divide:float = 0.01,blend:float = 1,vel = 20):
@@ -693,3 +712,10 @@ def compare_traj_pulse(qs_real:list[Pose3D],prog:list[Point3D],base:Point3D,st_p
 
     return qs_real,ps_real,qs_model,ps_model
 
+def check_reachability(prog:list[Point3D],st_point:Pose3D):
+    t = comp_t_pulse(prog[0], st_point)
+    poses= ps_to_qs(prog,t)
+    for p in poses: 
+        if not p.exist:
+            return False
+    return True
