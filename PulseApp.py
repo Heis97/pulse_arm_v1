@@ -423,9 +423,6 @@ class RemoteControlThread(QtCore.QThread):
                 if len(data_in)>5:
                     #print("data add")
                     self.inp_mass+=data
-
-                        
-
             
 
 class RobPosThread(QtCore.QThread):
@@ -466,6 +463,12 @@ class RobPosThread(QtCore.QThread):
             self.pulse_arm.cur_posit_3d = position
             self.pulse_arm.update_buf()
             self.pulse_arm.current_progress_prog()
+            if self.rem_thr is not None and self.pulse_arm.cur_prog_3d is not None and self.cur_i_prog>0:
+                cur_prog_p = self.pulse_arm.cur_prog_3d[self.cur_i_prog]
+                mes = str(cur_prog_p.g)+" "+str(cur_prog_p.b)
+                self.rem_thr.conn.send(mes.encode())
+
+
             if self.writing:
                 self.feedback.append(str(pose))
 
@@ -536,7 +539,7 @@ class PulseApp(QtWidgets.QWidget):
         #print(vel_to_st2(10,1,20.1))
         #self.test_geom()
 
-        pose = p_to_q(Point3D(0.0,0.1,0.1,_pitch = 0.0,_roll = 0.,_yaw=0.))
+        pose = p_to_q(Point3D(0.1,0.1,0.1,_pitch = 0.0,_roll = 0.,_yaw=0.))
         print(str(pose))
         
         
@@ -767,6 +770,10 @@ class PulseApp(QtWidgets.QWidget):
 
         self.build_connection_kuka()
 
+    def test4(self):
+        mes = "123"
+        self.rem_thr.conn.send(mes.encode())
+
     def build_connection(self):
 
         self.viewer3d = GLWidget(self)
@@ -792,7 +799,7 @@ class PulseApp(QtWidgets.QWidget):
 
         self.but_test_plot = QPushButton('Тест', self)
         self.but_test_plot.setGeometry(QtCore.QRect(100, 20, 140, 30))
-        self.but_test_plot.clicked.connect(self.test2)
+        self.but_test_plot.clicked.connect(self.test4)
 
         self.but_start_writing = QPushButton('Начать запись', self)
         self.but_start_writing.setGeometry(QtCore.QRect(250, 20, 140, 30))
@@ -1396,7 +1403,7 @@ class PulseApp(QtWidgets.QWidget):
         points = []
         positions = []
         dist_min = 0.9
-        k = 0.5
+        k = 1
         for i in range(len(ps)): 
             #print(ps[i].ToString())              
             p = [p_off.x+0.001*ps[i].x,p_off.y+0.001*ps[i].y,p_off.z+0.001*ps[i].z]

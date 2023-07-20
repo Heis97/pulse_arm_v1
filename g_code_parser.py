@@ -14,6 +14,8 @@ def parse_g_code(code:str)->"list[Point3D]":
     com_num = 28
     cur_extr= 0
     f = 0
+    e_f = 0
+    e_d = 0
 
     for line in lines:        
         coords = line.split()
@@ -55,10 +57,16 @@ def parse_g_code(code:str)->"list[Point3D]":
 
                     if coord[0]=="F":
                         f = float(coord[1:])
-                        
+
+                    if coord[0]=="V":
+                        e_f = float(coord[1:])
+                    if coord[0]=="D":
+                        e_d = float(coord[1:])    
             
             if coords[0][0]=="G":
                 r = f    
+                g = e_f
+                b = e_d
                 if com_num==0:
                     p3ds.append(Point3D(x,y,z,False,r,g,b))
                 if com_num==1:
@@ -126,12 +134,20 @@ def parse_g_code_pulse(code:str)->"list[Point3D]":
                         pitch = -float(coord[1:])
                     if coord[0]=="C":
                         yaw = float(coord[1:])
+
+                    if coord[0]=="V":
+                        e_f = float(coord[1:])
+                    if coord[0]=="D":
+                        e_d = float(coord[1:])    
             
-            if coords[0][0]=="G":    
+            if coords[0][0]=="G": 
+                g = e_f
+                b = e_d   
                 if com_num==0:
-                    p3ds.append(Point3D(x,y,z,False,_pitch=pitch,_roll=roll,_yaw=yaw))
+                    p3ds.append(Point3D(x,y,z,False,0,g,b,_pitch=pitch,_roll=roll,_yaw=yaw))
                 if com_num==1:
-                    p3ds.append(Point3D(x,y,z,True,_pitch=pitch,_roll=roll,_yaw=yaw))
+                    p3ds.append(Point3D(x,y,z,True,0,g,b,_pitch=pitch,_roll=roll,_yaw=yaw))
+
     return p3ds
 
 
