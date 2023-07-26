@@ -21,8 +21,10 @@ class PulseRobotExt(object):
             del self.buf_pos_3d[0]
 
     def __init__(self,host) -> None:
-        if host is not None:        
+        if host is not None:    
+            print("host")    
             self.robot = RobotPulse(host)
+            print(self.robot.get_position())
 
 
     def get_pose(self):
