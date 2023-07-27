@@ -13,6 +13,7 @@ class PulseRobotExt(object):
     cur_prog_3d : list[Point3D] = None
     cur_i_prog:int = 0
     cur_progr_line:float = 0
+    rem_thr = None
 
 
     def update_buf(self):
@@ -21,10 +22,8 @@ class PulseRobotExt(object):
             del self.buf_pos_3d[0]
 
     def __init__(self,host) -> None:
-        if host is not None:    
-            print("host")    
+        if host is not None:       
             self.robot = RobotPulse(host)
-            print(self.robot.get_position())
 
 
     def get_pose(self):

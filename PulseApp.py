@@ -455,18 +455,17 @@ class RobPosThread(QtCore.QThread):
             #print(cur_posit_m_comp)
 
             #print(cur_posit_m)
-            print("1")
             pose = self.pulse_arm.get_pose()
-            #position:Point3D = q_to_p(Pose3D(pose_to_list (pose)))
-            print(pose)
-            """self.label.setText("Joint position:\n"+pose_to_str(pose)+"\n\n"+"Cartesian position:\n"+position.ToStringPulse())  
+            position:Point3D = q_to_p(Pose3D(pose_to_list (pose)))
+            #print(pose)
+            self.label.setText("Joint position:\n"+pose_to_str(pose)+"\n\n"+"Cartesian position:\n"+position.ToStringPulse())  
             self.pulse_arm.cur_posit_3d = position
             self.pulse_arm.update_buf()
             self.pulse_arm.current_progress_prog()
-            if self.rem_thr is not None and self.pulse_arm.cur_prog_3d is not None and self.cur_i_prog>0:
-                cur_prog_p = self.pulse_arm.cur_prog_3d[self.cur_i_prog]
+            if self.pulse_arm.rem_thr is not None and self.pulse_arm.cur_prog_3d is not None and self.pulse_arm.cur_i_prog>0:
+                cur_prog_p = self.pulse_arm.cur_prog_3d[self.pulse_arm.cur_i_prog]
                 mes = str(cur_prog_p.g)+" "+str(cur_prog_p.b)
-                self.rem_thr.conn.send(mes.encode())"""
+                self.pulse_arm.rem_thr.conn.send(mes.encode())
 
 
             if self.writing:
@@ -810,8 +809,8 @@ class PulseApp(QtWidgets.QWidget):
         self.but_stop_writing.clicked.connect(self.stop_writing)
 
     def start_remote_control(self):
-        self.rem_thr = RemoteControlThread(self)
-        self.rem_thr.prog_signal.connect(self.set_prog_text, QtCore.Qt.QueuedConnection)
+        self.pulse_robot.rem_thr = RemoteControlThread(self)
+        self.pulse_robot.rem_thr.prog_signal.connect(self.set_prog_text, QtCore.Qt.QueuedConnection)
 
 
     def set_prog_text(self,val):
