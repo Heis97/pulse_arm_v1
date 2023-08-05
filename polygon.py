@@ -155,6 +155,9 @@ class Point3D(object):
     def ToStringPulse(self,pres = 3,delim = "\n")->str:
         return str(round(self.x,pres))+delim+str(round(self.y,pres))+delim+str(round(self.z,pres))+delim+str(round(self.roll,pres))+delim+str(round(self.pitch,pres))+delim+str(round(self.yaw,pres))+";"
 
+    def ToStringPulseMM(self,pres = 3,delim = "\n")->str:
+        return str(round(1000*self.x,pres))+delim+str(round(1000*self.y,pres))+delim+str(round(1000*self.z,pres))+delim+str(round(self.roll,pres))+delim+str(round(self.pitch,pres))+delim+str(round(self.yaw,pres))+";"
+
     def ToStringArr(arr:"list[Point3D]")->str:
         ret = ""
         for i in range(len(arr)):

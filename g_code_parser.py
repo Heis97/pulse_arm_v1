@@ -90,6 +90,9 @@ def parse_g_code_pulse(code:str)->"list[Point3D]":
     com_num = 28
     cur_extr= 0
 
+    e_f =0
+    e_d =0
+
     for line in lines:        
         coords = line.split()
         if len(coords)>0:

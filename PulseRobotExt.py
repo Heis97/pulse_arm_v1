@@ -38,12 +38,16 @@ class PulseRobotExt(object):
     def recover(self):
         return self.robot.recover()
     
-    def set_position(self,target_position,
-                     velocity = None,
-                     acceleration = None,
-                     tcp_max_velocity = None, 
-                     motion_type: str = MT_LINEAR):
-        return self.robot.set_position(target_position,velocity,acceleration,tcp_max_velocity, motion_type)
+    def set_position(self,_target_position,
+                     _velocity = None,
+                     _acceleration = None,
+                     _tcp_max_velocity = None, 
+                     _motion_type: str = MT_LINEAR):
+        return self.robot.set_position(target_position=_target_position,
+                                       velocity=_velocity,
+                                       acceleration=_acceleration,
+                                       #tcp_max_velocity=_tcp_max_velocity,
+                                         motion_type=_motion_type)
     
     def set_pose(self,target_pose,
                 speed= None,

@@ -15,100 +15,6 @@ from KukaRobot import *
 from PulseRobotExt import *
 from Plotter import Plotter
 
-def position_sum(p1:Position,p2:Position):
-    x = p1.point.x+p2.point.x
-    y = p1.point.y+p2.point.y
-    z = p1.point.z+p2.point.z
-
-    u = check_angle(p1.rotation.roll  + p2.rotation.roll)
-    v = check_angle(p1.rotation.pitch + p2.rotation.pitch)
-    w = check_angle(p1.rotation.yaw   + p2.rotation.yaw)
-
-    return [x,y,z] ,[u,v,w]
-def check_angle(angle:float):
-    if angle>math.pi:
-        angle-=2*math.pi
-    if angle<-math.pi:
-        angle+=2*math.pi
-    return angle
-
-def position_sum2(p1:Position,p2:Position)->Position:
-
-    x = p1.point.x+p2.point.x
-    y = p1.point.y+p2.point.y
-    z = p1.point.z+p2.point.z
-
-    
-    u = p1.rotation.roll  + p2.rotation.roll
-    v = p1.rotation.pitch + p2.rotation.pitch
-    w = p1.rotation.yaw   + p2.rotation.yaw
-
-    return [x,y,z] ,[u,v,w]
-
-def pose_to_str(p,separator:str ="\n")->str:
-    if type(p) == Pose or type(p) == PoseTimestamp:
-        p = p.to_dict()
-    angles = p["angles"]
-    pres = 2
-    return "A1: "+str(round(angles[0],pres))+separator+"A2: "+str(round(angles[1],pres))+separator+"A3: "+str(round(angles[2],pres))+separator+"A4: "+str(round(angles[3],pres))+separator+"A5: "+str(round(angles[4],pres))+separator+"A6: "+str(round(angles[5],pres))
-
-def pose_to_list(p)->list: 
-    if type(p) == Pose or type(p) == PoseTimestamp:
-        p = p.to_dict()
-    return p["angles"]
-
-def position_to_str(p,separator:str ="\n",simple:bool = False)->str:
-    if type(p) == Position or type(p) == PositionTimestamp:
-        p = p.to_dict()
-    pos = p["point"]
-    rot = p["rotation"]
-    pres = 3
-    x = str(round(1000*pos["x"],pres))
-    y = str(round(1000*pos["y"],pres))
-    z = str(round(1000*pos["z"],pres))
-    roll = str(round(rot["roll"],pres))
-    pitch = str(round(rot["pitch"],pres))
-    yaw = str(round(rot["yaw"],pres))
-    cs = [x,y,z,roll,pitch,yaw]
-    ns = ["X: ","Y: ","Z: ","Rx: ","Ry: ","Rz: "]
-    
-    ret = ""
-    for i in range(6):
-        pre = ns[i]
-        if simple: pre=""
-        sep = separator
-        ret+= pre+cs[i]+sep
-    
-    return ret
-
-def position_to_p3d(p)->Point3D:
-    if type(p) == Position or type(p) == PositionTimestamp:
-        p = p.to_dict()
-    pos = p["point"]
-    rot = p["rotation"]
-    return Point3D (pos["x"],pos["y"],pos["z"],_roll= rot["roll"],_pitch= rot["pitch"],_yaw= rot["yaw"])
-
-def positions_to_p3ds(ps)->list[Point3D]:
-    p3ds:list[Point3D] = []
-    for i in range(len(ps)):
-        p3ds.append(position_to_p3d(ps[i]))
-    return p3ds
-
-def position_to_list(p:Position)->list:
-    pos = p.point
-    rot = p.rotation
-    return [pos.x,pos.y,pos.z,rot.roll,rot.pitch,rot.yaw]
-
-def motor_state_to_str(ms:list[MotorStatus]):
-    txt = "Current:\n"
-    for m in ms:
-        m_d = m.to_dict()
-        txt += str(round(m_d['phase_current'],2) )+"\n"#+" "+str(round(m_d['rms_current'],2) )+" "+str(round(m_d['voltage'],2) )
-
-    return txt
-
-#----------------------------------------------------------
-
 
 def fullsum(l:"list[QPointF]"):
     p = QPointF(0,0)
@@ -455,21 +361,31 @@ class RobPosThread(QtCore.QThread):
             #print(cur_posit_m_comp)
 
             #print(cur_posit_m)
-            pose = self.pulse_arm.get_pose()
-            position:Point3D = q_to_p(Pose3D(pose_to_list (pose)))
-            #print(pose)
-            self.label.setText("Joint position:\n"+pose_to_str(pose)+"\n\n"+"Cartesian position:\n"+position.ToStringPulse())  
-            self.pulse_arm.cur_posit_3d = position
-            self.pulse_arm.update_buf()
-            self.pulse_arm.current_progress_prog()
-            if self.pulse_arm.rem_thr is not None and self.pulse_arm.cur_prog_3d is not None and self.pulse_arm.cur_i_prog>0:
-                cur_prog_p = self.pulse_arm.cur_prog_3d[self.pulse_arm.cur_i_prog]
-                mes = str(cur_prog_p.g)+" "+str(cur_prog_p.b)
-                self.pulse_arm.rem_thr.conn.send(mes.encode())
+            try:
+                pose = self.pulse_arm.get_pose()
+                position:Point3D = q_to_p(Pose3D(pose_to_list (pose)),False)
+                position = p3d_cur_pulse(position,self.pulse_arm.tool,self.pulse_arm.base)
+                #print(pose)
+                self.label.setText("Joint position:\n"+pose_to_str(pose)+"\n\n"+"Cartesian position:\n"+position.ToStringPulseMM())  
+                self.pulse_arm.cur_posit_3d = position
+                #print("cur_pos")
+                self.pulse_arm.update_buf()
+                #print("update")
+                self.pulse_arm.current_progress_prog()
+                #print("cur_prog")
+                self.label.setText(self.label.text()+"\n Line: "+str(self.pulse_arm.cur_i_prog)+", "+str(self.pulse_arm.cur_progr_line)+"%")
+
+                #print(self.pulse_arm.cur_i_prog )
+                if self.pulse_arm.rem_thr is not None and self.pulse_arm.cur_prog_3d is not None and self.pulse_arm.cur_i_prog>0:
+                    cur_prog_p = self.pulse_arm.cur_prog_3d[self.pulse_arm.cur_i_prog]
+                    mes = str(cur_prog_p.g)+" "+str(cur_prog_p.b)
+                    self.pulse_arm.rem_thr.conn.send(mes.encode())
 
 
-            if self.writing:
-                self.feedback.append(str(pose))
+                if self.writing:
+                    self.feedback.append(str(pose))
+            except BaseException:
+                pass
 
 
             """else:
@@ -515,7 +431,7 @@ class ax(Enum):
 class PulseApp(QtWidgets.QWidget):
     
 
-    pulse_robot = None
+    pulse_robot:PulseRobotExt = None
     count = 0
     q_draw = [0,0,0,0,0,0,0]
     plotter:Plotter = None
@@ -533,7 +449,7 @@ class PulseApp(QtWidgets.QWidget):
 
         self.plotter = Plotter(self)
 
-        #self.test_cur_prog()
+        self.test_cur_prog()
         #self.test3()
         #print(vel_to_st2(10,1,20.1))
         #self.test_geom()
@@ -1380,13 +1296,13 @@ class PulseApp(QtWidgets.QWidget):
         dn = 950
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
         for i in range(int(len(positions)/dn)+1):
-            self.pulse_robot.robot.set_position(positions[dn*i],velocity=vel1,acceleration=acs1,motion_type=MT_LINEAR)        
+            self.pulse_robot.set_position(positions[dn*i],_velocity=vel1,_acceleration=acs1,_motion_type=MT_LINEAR)        
             linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel2,acceleration=acs2)
             print("load",dn)
             if len(positions)>dn*(i+1)+1:
-                self.pulse_robot.robot.run_linear_positions(positions[dn*i:dn*(i+1)],linear_motion_parameters)
+                self.pulse_robot.run_linear_positions(positions[dn*i:dn*(i+1)],linear_motion_parameters)
             else:
-                self.pulse_robot.robot.run_linear_positions(positions[dn*i:],linear_motion_parameters)
+                self.pulse_robot.run_linear_positions(positions[dn*i:],linear_motion_parameters)
 
 
 

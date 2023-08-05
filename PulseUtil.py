@@ -1,6 +1,8 @@
 import math
 import numpy as np
 from polygon import *
+from pulseapi import  RobotPulse, pose, position, PulseApiException, MT_LINEAR,jog,create_box_obstacle,LinearMotionParameters,InterpolationType,tool_info
+from pdhttp import Position,Point,Rotation,Pose,MotorStatus,PoseTimestamp,PositionTimestamp
 
 def find_center_sphere_4p(ps:list[Point3D]):
     x1 = ps[0].x; y1 = ps[0].y; z1 = ps[0].z
@@ -252,8 +254,8 @@ def p_to_q(position:Point3D,t:int = 1)->Pose3D:
     var = [[-1,-1,-1],[-1,-1,1],[-1,1,-1],[-1,1,1],[1,-1,-1],[1,-1,1],[1,1,-1],[1,1,1]]
     return calc_inverse_kinem_pulse_priv(position,var[t][0],var[t][1],var[t][2])
 
-def q_to_p(pose:Pose3D)->Point3D:
-    return calc_forward_kinem_pulse(pose,True)
+def q_to_p(pose:Pose3D, isRad:bool = True)->Point3D:
+    return calc_forward_kinem_pulse(pose,isRad)
 
 
 def calc_inters_2circ(x1,y1,x2,y2,R1,R2,sign):
@@ -713,9 +715,106 @@ def compare_traj_pulse(qs_real:list[Pose3D],prog:list[Point3D],base:Point3D,st_p
     return qs_real,ps_real,qs_model,ps_model
 
 def check_reachability(prog:list[Point3D],st_point:Pose3D):
+
     t = comp_t_pulse(prog[0], st_point)
     poses= ps_to_qs(prog,t)
     for p in poses: 
         if not p.exist:
             return False
     return True
+
+
+
+def position_sum(p1:Position,p2:Position):
+    x = p1.point.x+p2.point.x
+    y = p1.point.y+p2.point.y
+    z = p1.point.z+p2.point.z
+
+    u = check_angle(p1.rotation.roll  + p2.rotation.roll)
+    v = check_angle(p1.rotation.pitch + p2.rotation.pitch)
+    w = check_angle(p1.rotation.yaw   + p2.rotation.yaw)
+
+    return [x,y,z] ,[u,v,w]
+def check_angle(angle:float):
+    if angle>math.pi:
+        angle-=2*math.pi
+    if angle<-math.pi:
+        angle+=2*math.pi
+    return angle
+
+def position_sum2(p1:Position,p2:Position)->Position:
+
+    x = p1.point.x+p2.point.x
+    y = p1.point.y+p2.point.y
+    z = p1.point.z+p2.point.z
+
+    
+    u = p1.rotation.roll  + p2.rotation.roll
+    v = p1.rotation.pitch + p2.rotation.pitch
+    w = p1.rotation.yaw   + p2.rotation.yaw
+
+    return [x,y,z] ,[u,v,w]
+
+def pose_to_str(p,separator:str ="\n")->str:
+    if type(p) == Pose or type(p) == PoseTimestamp:
+        p = p.to_dict()
+    angles = p["angles"]
+    pres = 2
+    return "A1: "+str(round(angles[0],pres))+separator+"A2: "+str(round(angles[1],pres))+separator+"A3: "+str(round(angles[2],pres))+separator+"A4: "+str(round(angles[3],pres))+separator+"A5: "+str(round(angles[4],pres))+separator+"A6: "+str(round(angles[5],pres))
+
+def pose_to_list(p)->list: 
+    if type(p) == Pose or type(p) == PoseTimestamp:
+        p = p.to_dict()
+    return p["angles"]
+
+def position_to_str(p,separator:str ="\n",simple:bool = False)->str:
+    if type(p) == Position or type(p) == PositionTimestamp:
+        p = p.to_dict()
+    pos = p["point"]
+    rot = p["rotation"]
+    pres = 3
+    x = str(round(1000*pos["x"],pres))
+    y = str(round(1000*pos["y"],pres))
+    z = str(round(1000*pos["z"],pres))
+    roll = str(round(rot["roll"],pres))
+    pitch = str(round(rot["pitch"],pres))
+    yaw = str(round(rot["yaw"],pres))
+    cs = [x,y,z,roll,pitch,yaw]
+    ns = ["X: ","Y: ","Z: ","Rx: ","Ry: ","Rz: "]
+    
+    ret = ""
+    for i in range(6):
+        pre = ns[i]
+        if simple: pre=""
+        sep = separator
+        ret+= pre+cs[i]+sep
+    
+    return ret
+
+def position_to_p3d(p)->Point3D:
+    if type(p) == Position or type(p) == PositionTimestamp:
+        p = p.to_dict()
+    pos = p["point"]
+    rot = p["rotation"]
+    return Point3D (pos["x"],pos["y"],pos["z"],_roll= rot["roll"],_pitch= rot["pitch"],_yaw= rot["yaw"])
+
+def positions_to_p3ds(ps)->list[Point3D]:
+    p3ds:list[Point3D] = []
+    for i in range(len(ps)):
+        p3ds.append(position_to_p3d(ps[i]))
+    return p3ds
+
+def position_to_list(p:Position)->list:
+    pos = p.point
+    rot = p.rotation
+    return [pos.x,pos.y,pos.z,rot.roll,rot.pitch,rot.yaw]
+
+def motor_state_to_str(ms:list[MotorStatus]):
+    txt = "Current:\n"
+    for m in ms:
+        m_d = m.to_dict()
+        txt += str(round(m_d['phase_current'],2) )+"\n"#+" "+str(round(m_d['rms_current'],2) )+" "+str(round(m_d['voltage'],2) )
+
+    return txt
+
+#----------------------------------------------------------
