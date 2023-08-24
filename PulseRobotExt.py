@@ -60,6 +60,7 @@ class PulseRobotExt(object):
     def run_linear_positions(self,positions: list[Position],
                                 motion_parameters: LinearMotionParameters):
         self.cur_prog_3d = positions_to_p3ds(positions)
+        self.cur_i_prog = 0
         return self.robot.run_linear_positions(positions,motion_parameters)
     
     def change_base(self,base_position):
