@@ -153,10 +153,10 @@ class Point3D(object):
         return str(self.x)+" "+str(self.y)+" "+str(self.z)+str(self.pitch)+" "+str(self.roll)+" "+str(self.yaw)+";"
 
     def ToStringPulse(self,pres = 3,delim = "\n")->str:
-        return str(round(self.x,pres))+delim+str(round(self.y,pres))+delim+str(round(self.z,pres))+delim+str(round(self.roll,pres))+delim+str(round(self.pitch,pres))+delim+str(round(self.yaw,pres))+";"
+        return str(round(self.x,pres))+delim+str(round(self.y,pres))+delim+str(round(self.z,pres))+delim+str(round(self.roll,pres))+delim+str(round(self.pitch,pres))+delim+str(round(self.yaw,pres))
 
     def ToStringPulseMM(self,pres = 3,delim = "\n")->str:
-        return str(round(1000*self.x,pres))+delim+str(round(1000*self.y,pres))+delim+str(round(1000*self.z,pres))+delim+str(round(self.roll,pres))+delim+str(round(self.pitch,pres))+delim+str(round(self.yaw,pres))+";"
+        return str(round(1000*self.x,pres))+delim+str(round(1000*self.y,pres))+delim+str(round(1000*self.z,pres))+delim+str(round(self.roll,pres))+delim+str(round(self.pitch,pres))+delim+str(round(self.yaw,pres))
 
     def ToStringArr(arr:"list[Point3D]")->str:
         ret = ""

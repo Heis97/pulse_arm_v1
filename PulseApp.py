@@ -323,8 +323,10 @@ class RemoteControlThread(QtCore.QThread):
                         print("Base")
                         self.base = 1
                     elif "f" in data:
-                        print("pos")
-                        self.conn.send(self.pulse_arm.cur_posit.encode())
+                        #print("pos",self.pulse_arm.cur_posit)
+                        pos = self.pulse_arm.cur_posit+"\n"
+                        print(pos.encode())
+                        self.conn.send(pos.encode())
                         self.workmode = 0
                 if len(data_in)>5:
                     #print("data add")
@@ -368,7 +370,9 @@ class RobPosThread(QtCore.QThread):
                 #print(pose)
                 self.label.setText("Joint position:\n"+pose_to_str(pose)+"\n\n"+"Cartesian position:\n"+position.ToStringPulseMM())  
                 self.pulse_arm.cur_posit_3d = position
-                #print("cur_pos")
+                self.pulse_arm.cur_posit = position.ToStringPulseMM(4," ")
+
+                #print(position)
                 self.pulse_arm.update_buf()
                 #print("update")
                 self.pulse_arm.current_progress_prog()
@@ -449,7 +453,7 @@ class PulseApp(QtWidgets.QWidget):
 
         self.plotter = Plotter(self)
 
-        self.test_cur_prog()
+        #self.test_cur_prog()
         #self.test3()
         #print(vel_to_st2(10,1,20.1))
         #self.test_geom()
@@ -1249,6 +1253,7 @@ class PulseApp(QtWidgets.QWidget):
                 self.pulse_robot.robot.run_linear_positions(positions[dn*i:],linear_motion_parameters)
 
 
+
     def exec_prog_arm_abs_xyz(self):
         
         #self.apply_settings_to_robot()
@@ -1323,8 +1328,8 @@ class PulseApp(QtWidgets.QWidget):
         for i in range(len(ps)): 
             #print(ps[i].ToString())              
             p = [p_off.x+0.001*ps[i].x,p_off.y+0.001*ps[i].y,p_off.z+0.001*ps[i].z]
-            r = [p_off.roll+ps[i].roll*k,p_off.pitch+ps[i].pitch*k,p_off.yaw+ps[i].yaw*k]    
-            #r = [0,0,0]        
+            #r = [p_off.roll+ps[i].roll*k,p_off.pitch+ps[i].pitch*k,p_off.yaw+ps[i].yaw*k]    
+            r = [0,0,0]        
             pos:Position = position(p,r,blend=0.0001)  
             if i>2:
                 
