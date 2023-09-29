@@ -759,7 +759,7 @@ def pose_to_str(p,separator:str ="\n")->str:
     if type(p) == Pose or type(p) == PoseTimestamp:
         p = p.to_dict()
     angles = p["angles"]
-    pres = 6
+    pres = 3
     return "A1: "+str(round(angles[0],pres))+separator+"A2: "+str(round(angles[1],pres))+separator+"A3: "+str(round(angles[2],pres))+separator+"A4: "+str(round(angles[3],pres))+separator+"A5: "+str(round(angles[4],pres))+separator+"A6: "+str(round(angles[5],pres))
 
 def pose_to_list(p)->list: 
