@@ -56,10 +56,10 @@ def parse_g_code(code:str)->"list[Point3D]":
                         z = float(coord[1:])
 
                     if coord[0]=="F":
-                        f = float(coord[1:])
+                        e_f = float(coord[1:])
 
                     if coord[0]=="V":
-                        e_f = float(coord[1:])
+                        f = float(coord[1:])
                     if coord[0]=="D":
                         e_d = float(coord[1:])    
             
@@ -73,7 +73,7 @@ def parse_g_code(code:str)->"list[Point3D]":
                     p3ds.append(Point3D(x,y,z,True,r,g,b))
     return p3ds
 
-def parse_g_code_pulse(code:str)->"list[Point3D]":
+def parse_g_code_pulse(code:str,units:float = 1)->"list[Point3D]":
     p3ds = []
     lines = code.split("\n")
     x=0 
@@ -92,7 +92,7 @@ def parse_g_code_pulse(code:str)->"list[Point3D]":
 
     e_f =0
     e_d =0
-
+    f =0
     for line in lines:        
         coords = line.split()
         if len(coords)>0:
@@ -125,11 +125,11 @@ def parse_g_code_pulse(code:str)->"list[Point3D]":
                     b= 0.1
                 for coord in coords:
                     if coord[0]=="X":
-                        x = float(coord[1:])
+                        x = units* float(coord[1:])
                     if coord[0]=="Y":
-                        y = float(coord[1:])
+                        y = units*float(coord[1:])
                     if coord[0]=="Z":
-                        z = float(coord[1:])
+                        z = units*float(coord[1:])
                     
                     if coord[0]=="A":
                         roll = float(coord[1:])
@@ -139,11 +139,15 @@ def parse_g_code_pulse(code:str)->"list[Point3D]":
                         yaw = float(coord[1:])
 
                     if coord[0]=="V":
-                        e_f = float(coord[1:])
+                        f = float(coord[1:])
                     if coord[0]=="D":
                         e_d = float(coord[1:])    
+
+                    if coord[0]=="F":
+                        e_f = float(coord[1:])   
             
-            if coords[0][0]=="G": 
+            if coords[0][0]=="G":
+                r = f 
                 g = e_f
                 b = e_d   
                 if com_num==0:

@@ -383,7 +383,14 @@ class RobPosThread(QtCore.QThread):
                 if self.pulse_arm.rem_thr is not None and self.pulse_arm.cur_prog_3d is not None and self.pulse_arm.cur_i_prog>0:
                     cur_prog_p = self.pulse_arm.cur_prog_3d[self.pulse_arm.cur_i_prog]
                     mes = str(cur_prog_p.g)+" "+str(cur_prog_p.b)
+                    print(mes)
                     self.pulse_arm.rem_thr.conn.send(mes.encode())
+
+                """if self.pulse_arm.cur_prog_3d is not None and self.pulse_arm.cur_i_prog>0:
+                    cur_prog_p = self.pulse_arm.cur_prog_3d[self.pulse_arm.cur_i_prog]
+                    mes = str(cur_prog_p.g)+" "+str(cur_prog_p.b)
+                    print(mes)"""
+                    #self.pulse_arm.rem_thr.conn.send(mes.encode())
 
 
                 if self.writing:
@@ -1276,7 +1283,7 @@ class PulseApp(QtWidgets.QWidget):
     def exec_prog_arm_abs(self):
         #self.apply_settings_to_robot()
         
-        positions = self.generate_traj_abc()
+        positions,ps_filt = self.generate_traj_abc()
         """vel = 0.01
         acs = 0.1
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
@@ -1305,9 +1312,9 @@ class PulseApp(QtWidgets.QWidget):
             linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel2,acceleration=acs2)
             print("load",dn)
             if len(positions)>dn*(i+1)+1:
-                self.pulse_robot.run_linear_positions(positions[dn*i:dn*(i+1)],linear_motion_parameters)
+                self.pulse_robot.run_linear_positions(positions[dn*i:dn*(i+1)],ps_filt[dn*i:dn*(i+1)],linear_motion_parameters)
             else:
-                self.pulse_robot.run_linear_positions(positions[dn*i:],linear_motion_parameters)
+                self.pulse_robot.run_linear_positions(positions[dn*i:],ps_filt[dn*i:],linear_motion_parameters)
 
 
 
@@ -1324,12 +1331,13 @@ class PulseApp(QtWidgets.QWidget):
         points = []
         positions = []
         dist_min = 0.9
+        ps_filt = []
         k = 1
         for i in range(len(ps)): 
             #print(ps[i].ToString())              
-            p = [p_off.x+0.001*ps[i].x,p_off.y+0.001*ps[i].y,p_off.z+0.001*ps[i].z]
-            #r = [p_off.roll+ps[i].roll*k,p_off.pitch+ps[i].pitch*k,p_off.yaw+ps[i].yaw*k]    
-            r = [0,0,0]        
+            p = [p_off.x+ps[i].x,p_off.y+ps[i].y,p_off.z+ps[i].z]
+            r = [p_off.roll+ps[i].roll*k,p_off.pitch+ps[i].pitch*k,p_off.yaw+ps[i].yaw*k]    
+            #r = [0,0,0]        
             pos:Position = position(p,r,blend=0.0001)  
             if i>2:
                 
@@ -1344,12 +1352,14 @@ class PulseApp(QtWidgets.QWidget):
                         #print(pos)                                             
                         positions.append(pos)
                         points.append(p)
+                        ps_filt.append(ps[i])
             else:
                 positions.append(pos)
                 points.append(p)
+                ps_filt.append(ps[i])
         #print(ps)
         print("#######################################")
-        return positions
+        return positions,ps_filt
 
 #-----------------------------------------------------------------------------------
     def generate_traj(self):
@@ -1391,12 +1401,12 @@ class PulseApp(QtWidgets.QWidget):
         return positions
 #-----------------------------------------------------------------------------------
     def generate_traj_abc(self):        
-        ps = parse_g_code_pulse(self.text_prog_code.toPlainText())
+        ps = parse_g_code_pulse(self.text_prog_code.toPlainText(),0.001)
         p_off = Point3D()
         #p_off.z+=5*1e-3
-        positions = self.traj_prep(ps,p_off)
+        positions,ps_filt = self.traj_prep(ps,p_off)
         
-        return positions
+        return positions,ps_filt
 
 
     def dist(self,p1,p2):
