@@ -1234,7 +1234,7 @@ class PulseApp(QtWidgets.QWidget):
 
     def exec_prog_arm_rel(self):
 
-        positions = self.generate_traj()
+        positions = self.generate_traj_xyz_rel()
         vel1 = 2
         vel2 = 0.02
 
@@ -1387,6 +1387,34 @@ class PulseApp(QtWidgets.QWidget):
         positions = []
         for i in range(len(ps)):               
             p = [0.001*ps[i].x,0.001*ps[i].y,0.001*ps[i].z]
+            r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
+            
+            pos = position(p,r,blend=0.0001) 
+            if self.dist(p,points[-1])>0.003:
+                print(pos)
+                positions.append(pos)
+                points.append(p)
+
+        #for i in range(len(positions)):
+            #print(i," ",positions[i])
+        
+        return positions
+    
+    def generate_traj_xyz_rel(self):
+        self.cur_start_point = self.get_cur_item_from_combo(self.combo_start_points,self.settins_pulse.start_points)
+        ps = parse_g_code(self.text_prog_code.toPlainText())
+        start_point = self.cur_start_point["point"]
+        start_rot =  self.cur_start_point["rotation"]
+
+        points = []
+        p = [start_point["x"],start_point["y"],start_point["z"]]
+        r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
+        pos = position(p,r)
+        points.append(p)
+        positions = []
+        for i in range(len(ps)): 
+
+            p = [0.001*ps[i].x+p[0],0.001*ps[i].y+p[1],0.001*ps[i].z+p[2]]
             r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
             
             pos = position(p,r,blend=0.0001) 
