@@ -150,6 +150,8 @@ def parse_g_code_pulse(code:str,units:float = 1)->"list[Point3D]":
                 r = f 
                 g = e_f
                 b = e_d   
+                pitch = 0
+                roll*=0.5
                 if com_num==0:
                     p3ds.append(Point3D(x,y,z,False,0,g,b,_pitch=pitch,_roll=roll,_yaw=yaw))
                 if com_num==1:

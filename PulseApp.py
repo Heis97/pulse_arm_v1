@@ -380,11 +380,11 @@ class RobPosThread(QtCore.QThread):
                 self.label.setText(self.label.text()+"\n Line: "+str(self.pulse_arm.cur_i_prog)+", "+str(self.pulse_arm.cur_progr_line)+"%")
 
                 #print(self.pulse_arm.cur_i_prog )
-                if self.pulse_arm.rem_thr is not None and self.pulse_arm.cur_prog_3d is not None and self.pulse_arm.cur_i_prog>0:
+                """if self.pulse_arm.rem_thr is not None and self.pulse_arm.cur_prog_3d is not None and self.pulse_arm.cur_i_prog>0:
                     cur_prog_p = self.pulse_arm.cur_prog_3d[self.pulse_arm.cur_i_prog]
                     mes = str(cur_prog_p.g)+" "+str(cur_prog_p.b)
                     print(mes)
-                    self.pulse_arm.rem_thr.conn.send(mes.encode())
+                    self.pulse_arm.rem_thr.conn.send(mes.encode())"""
 
                 """if self.pulse_arm.cur_prog_3d is not None and self.pulse_arm.cur_i_prog>0:
                     cur_prog_p = self.pulse_arm.cur_prog_3d[self.pulse_arm.cur_i_prog]
@@ -1382,13 +1382,14 @@ class PulseApp(QtWidgets.QWidget):
         points = []
         p = [start_point["x"],start_point["y"],start_point["z"]]
         r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
+        #r = [0,0,0]
         pos = position(p,r)
         points.append(p)
         positions = []
         for i in range(len(ps)):               
             p = [0.001*ps[i].x,0.001*ps[i].y,0.001*ps[i].z]
             r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
-            
+            #r = [0,0,0]
             pos = position(p,r,blend=0.0001) 
             if self.dist(p,points[-1])>0.003:
                 print(pos)
