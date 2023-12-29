@@ -69,6 +69,12 @@ class PulseRobotExt(object):
         self.cur_i_prog = 0
         return self.robot.run_linear_positions(positions,motion_parameters)
     
+    """def run_poses(self,positions: list[Pose],ps: list[Point3D],
+                                motion_parameters: LinearMotionParameters):
+        self.cur_prog_3d = ps
+        self.cur_i_prog = 0
+        return self.robot.run_poses(positions,motion_parameters)"""
+    
     def change_base(self,base_position):
         self.base = pos_dict_to_point3d(base_position.to_dict())
         return self.robot.change_base(base_position)

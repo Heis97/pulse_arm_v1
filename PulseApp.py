@@ -1198,6 +1198,10 @@ class PulseApp(QtWidgets.QWidget):
         self.but_set_cur_work_pose.setGeometry(QtCore.QRect(1000, 600, 140, 30))
         self.but_set_cur_work_pose.clicked.connect(self.set_cur_work_pose)
 
+        self.but_start_prog_abs = QPushButton('Исп. прог. птп', self)
+        self.but_start_prog_abs.setGeometry(QtCore.QRect(1000, 400, 140, 30))
+        self.but_start_prog_abs.clicked.connect(self.exec_prog_arm_poses)
+
         self.but_start_prog_abs = QPushButton('Исп. прог. абс', self)
         self.but_start_prog_abs.setGeometry(QtCore.QRect(1000, 800, 140, 30))
         self.but_start_prog_abs.clicked.connect(self.exec_prog_arm_abs)
@@ -1316,6 +1320,33 @@ class PulseApp(QtWidgets.QWidget):
             else:
                 self.pulse_robot.run_linear_positions(positions[dn*i:],ps_filt[dn*i:],linear_motion_parameters)
 
+    def exec_prog_arm_poses(self):
+        #self.apply_settings_to_robot()
+        
+        positions = self.generate_traj_pose()
+        """vel = 0.01
+        acs = 0.1
+        linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
+        self.pulse_robot.robot.set_position(positions[0],velocity=5,acceleration=0.5,motion_type = MT_LINEAR)
+        print(positions[0])
+        #try:
+        self.pulse_robot.robot.run_linear_positions(positions,linear_motion_parameters)"""
+
+        self.pulse_robot.set_pose(positions[0],speed= 10) 
+
+        """print("len all",len(positions))
+        dn = 950
+        linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
+        if len(positions)>1:
+            for i in range(int(len(positions)/dn)+1):
+                self.pulse_robot.set_position(positions[dn*i],_velocity=vel1,_acceleration=acs1,_motion_type=MT_LINEAR)        
+                linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel2,acceleration=acs2)
+                print("load",dn)
+                if len(positions)>dn*(i+1)+1:
+                    self.pulse_robot.run_linear_positions(positions[dn*i:dn*(i+1)],ps_filt[dn*i:dn*(i+1)],linear_motion_parameters)
+                else:
+                    self.pulse_robot.run_linear_positions(positions[dn*i:],ps_filt[dn*i:],linear_motion_parameters)"""
+
 
 
     
@@ -1360,6 +1391,17 @@ class PulseApp(QtWidgets.QWidget):
         #print(ps)
         print("#######################################")
         return positions,ps_filt
+    
+    def traj_prep_pose(self,ps:list[Point3D]):
+        """ps: degr"""
+        positions = []
+        for i in range(len(ps)):        
+            pos:Pose = pose([ps[i].x,ps[i].y,ps[i].z,ps[i].roll,ps[i].pitch,ps[i].yaw])                                                     
+            positions.append(pos)
+
+        #print(ps)
+        print("#######################################")
+        return positions
 
 #-----------------------------------------------------------------------------------
     def generate_traj(self):
@@ -1436,6 +1478,12 @@ class PulseApp(QtWidgets.QWidget):
         positions,ps_filt = self.traj_prep(ps,p_off)
         
         return positions,ps_filt
+    
+    def generate_traj_pose(self):        
+        ps = parse_g_code_pulse(self.text_prog_code.toPlainText())
+        positions = self.traj_prep_pose(ps)
+        
+        return positions
 
 
     def dist(self,p1,p2):
