@@ -638,6 +638,78 @@ class PulseApp(QtWidgets.QWidget):
         self.viewer3d.addLines_ret(ps,0,1,1,0.2) 
         self.plotter.show()
 
+    def analyse_ps_pulse_v1(ps:list[Point3D]):
+        ps = Point3D.addList(Point3D.clone_arr(ps),-ps[0].Clone())
+        vec_z = Point3D(z=1)
+        vec_z_sh = ps[-1].Clone().normalyse()
+        vec_x_sh = (vec_z_sh*vec_z).normalyse()
+        vec_y_sh = (vec_z_sh*vec_x_sh).normalyse()
+        m = np.array(
+			[[vec_x_sh.x,vec_y_sh.x,vec_z_sh.x,0],
+			[vec_x_sh.y,vec_y_sh.y,vec_z_sh.y,0],
+			[vec_x_sh.z,vec_y_sh.z,vec_z_sh.z  ,  0],
+			[0   , 0        , 0       ,  1]])
+        print(m)
+        m_inv = np.linalg.inv(m)
+        #m_inv = np.eye(4)*2
+        print(m_inv)
+        ps_m = []
+        for p in ps:
+            p_c = p.Clone()
+            p_np = np.array([[1,0,0,p_c.x],
+                             [0,1,0,p_c.y],
+                             [0,0,1,p_c.z],
+                             [0,0,0,1]])
+            p_m = np.dot( m_inv,p_np)
+            p_m_p = Point3D(p_m[0][3],p_m[1][3],p_m[2][3])
+            print(p_m_p.magnitude_xy())
+            ps_m.append(p_m_p)
+
+
+        
+        return ps_m
+
+    def test5_comp_acc(self):
+        qs = load_feedback("feedback_l_e.json")
+        print("LEN PLOT: ",len(qs))
+        #qs = filtr_gauss_list(qs,100)
+
+
+        #ss = [600,1100]
+        ss = [215,255]
+
+
+
+        qs = qs[ss[0]:ss[1]]
+        plots = traj_to_plots(qs)
+        tool =  pos_dict_to_point3d(self.settins_pulse.tools["syr_10ml_1"]["tcp"])
+        self.plotter = plots_qs(self.plotter,plots)
+        ps = []
+        for q in qs:
+            ps.append(calc_forward_kinem_pulse(q))
+
+        ps = Point3D.mulPoint(ps,tool)
+        ps = Point3D.mulList(Point3D.clone_arr( ps),1e3)  
+        #ps = Point3D.mulList(Point3D.clone_arr( ps),1e6)  
+        ps_m = PulseApp.analyse_ps_pulse_v1(Point3D.clone_arr(ps))
+
+        
+        ps = Point3D.addList(Point3D.clone_arr( ps),-ps[0].Clone()) 
+
+        #ps_m = Point3D.mulList(Point3D.clone_arr( ps_m),1e3)          
+        ps_m = Point3D.addList(Point3D.clone_arr( ps_m),-ps_m[0].Clone())
+
+        #ps = Point3D.mulList(ps,1e3)
+        
+
+
+        #self.viewer3d.addLines_ret(traj_1,1,1,0,0.2)
+        #self.viewer3d.addLines_ret(ps,1,1,0,0.2) 
+
+        self.viewer3d.addPoimts(ps,1,1,0,0.1)
+        self.viewer3d.addPoimts(ps_m,0,1,1,0.2)
+        self.plotter.show()
+
     def test2(self):
         qs_real = load_feedback("feedback_l_e.json")
         qs_real_2 = load_feedback("feedback_l_e_5mms.json")
@@ -725,7 +797,7 @@ class PulseApp(QtWidgets.QWidget):
 
         self.but_test_plot = QPushButton('Тест', self)
         self.but_test_plot.setGeometry(QtCore.QRect(100, 20, 140, 30))
-        self.but_test_plot.clicked.connect(self.test4)
+        self.but_test_plot.clicked.connect(self.test5_comp_acc)
 
         self.but_start_writing = QPushButton('Начать запись', self)
         self.but_start_writing.setGeometry(QtCore.QRect(250, 20, 140, 30))

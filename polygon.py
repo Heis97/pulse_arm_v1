@@ -198,6 +198,11 @@ class Point3D(object):
 
     def Clone(self):
         return Point3D(self.x,self.y,self.z,self.extrude,self.r,self.g,self.b,self.pitch,self.roll,self.yaw,self.t)
+    
+    def clone_arr(ps:"list[Point3D]"):
+        ps_cl = []
+        for e in ps: ps_cl.append(e.Clone())
+        return ps_cl
 
     def __mul__(self, other):
         if(type(other)==Point3D):
@@ -239,6 +244,7 @@ class Point3D(object):
         y = matr[1][0]*self.x + matr[1][1]*self.y + matr[1][2]*self.z+matr[1][3]
         z = matr[2][0]*self.x + matr[2][1]*self.y + matr[2][2]*self.z+matr[2][3]
         return Point3D(x,y,z,self.extrude)
+    
 
     def vec_perpend_2_vecs(v1:"Point3D",v2:"Point3D"):
         d = (v1.x**2)*(v2.y**2)+(v1.x**2)*(v2.z**2)-2*v1.x*v1.y*v2.x*v2.y-2*v1.x*v2.x*v1.z*v2.z+(v1.y**2)*(v2.x**2)+(v1.y**2)*(v2.z**2)-2*v1.y*v1.z*v2.y*v2.z+(v2.x**2)*(v1.z**2)+(v1.z**2)*(v2.y**2)
@@ -288,24 +294,24 @@ class Point3D(object):
     
     def mulList(l:"list[Point3D]",k:float):
         ps = []
-        for e in l: ps.append(e*k)
+        for e in l: ps.append(e.Clone()*k)
         return ps
     
     def addList(l:"list[Point3D]",p_off:"Point3D"):
         ps = []
-        for e in l: ps.append(e+p_off)
+        for e in l: ps.append(e.Clone()+p_off.Clone())
         return ps
     
     def mulPoint(l:"list[Point3D]",p_off:"Point3D"):
         ps = []
-        for e in l: ps.append(p_off.dot(e))
+        for e in l: ps.append(p_off.Clone().dot(e.Clone()))
         return ps
     
     
     
     def mulPoint_2(l:"list[Point3D]",p_off:"Point3D"):
         ps = []
-        for e in l: ps.append(e.dot(p_off))
+        for e in l: ps.append(e.Clone().dot(p_off.Clone()))
         return ps
     
     
