@@ -1518,7 +1518,7 @@ class PulseApp(QtWidgets.QWidget):
         p = [start_point["x"],start_point["y"],start_point["z"]]
         r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
         #r = [0,0,0]
-        dz = 2
+        dz = 0
         pos = position(p,r)
         points.append(p)
         positions = []
