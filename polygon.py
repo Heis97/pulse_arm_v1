@@ -203,6 +203,16 @@ class Point3D(object):
         ps_cl = []
         for e in ps: ps_cl.append(e.Clone())
         return ps_cl
+    
+    def set_angles_arr(ps:"list[Point3D]",p:"Point3D"):
+        ps_cl = []
+        for e in ps: 
+            pi = e.Clone()
+            pi.pitch = p.pitch
+            pi.roll = p.roll
+            pi.yaw = p.yaw
+            ps_cl.append(pi)
+        return ps_cl
 
     def __mul__(self, other):
         if(type(other)==Point3D):

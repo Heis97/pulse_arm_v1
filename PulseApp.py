@@ -530,11 +530,11 @@ class PulseApp(QtWidgets.QWidget):
 
         self.viewer3d.setMatr_off(np.dot(np.dot(pulse_matrix(0,0,0,np.pi,0,0),pulse_matrix(0,-L1-L2-L3-L5,L4+L6,0,0,0)),pulse_matrix(0,0,0,0,0,0)),self.q_draw[5])
 
-        self.q_draw.append(self.viewer3d.addModel_ret(r"C:\Users\1\Desktop\misis\in situ printer\rozum\lowres\t1.STL"))
+        #self.q_draw.append(self.viewer3d.addModel_ret(r"C:\Users\1\Desktop\misis\in situ printer\rozum\lowres\t1.STL"))
 
-        self.viewer3d.setMatr_off(pulse_matrix(0,0,0,np.pi/2,-np.pi/4,0),self.q_draw[6])
+        #self.viewer3d.setMatr_off(pulse_matrix(0,0,0,np.pi/2,-np.pi/4,0),self.q_draw[6])
 
-        self.draw_3d_rob(self.q_draw,[0,0,0,0,0,0])
+        self.draw_3d_rob(self.q_draw, Pose3D([0,0,0,0,0,0]))
 
     def draw_line_rob(self,q_draw:list,q:Pose3D):
         solv_pms = comp_matrs_ps(q)
@@ -554,16 +554,21 @@ class PulseApp(QtWidgets.QWidget):
 
 
     def start_anim_robot(self):
-        p =  self.settins_pulse.start_points["sp_1303_1"]
-        base =  self.settins_pulse.bases["bs0603"]
+        p =  self.settins_pulse.start_points["b_2204_st_2"]
+        base =  self.settins_pulse.bases["b_2204_1c"]
+        tool =   self.settins_pulse.tools["syr_10ml_1"]["tcp"]
+        tool_p =  pos_dict_to_point3d(tool)
         base_p =  pos_dict_to_point3d(base)
         p1 =  pos_dict_to_point3d(p)
         base_m = pulse_matrix_p(base_p)
         p1_m = pulse_matrix_p(p1)
+        tool_m = pulse_matrix_p(tool_p)
         base_m_inv = np.linalg.inv(base_m)
+        tool_m_inv = np.linalg.inv(tool_m)
         p_base_m = np.dot(base_m_inv,p1_m)
-        p1 = position_from_matrix_pulse(p_base_m)
-        #p1 = Point3D(-0.3748,0.358,0.25,_roll=-1.515,_pitch=1.515,_yaw=-0.757)
+        p_base_fl_m = np.dot(p_base_m,tool_m_inv)
+        p1 = position_from_matrix_pulse(p_base_fl_m)
+        p1 = Point3D(0.3748,0.358,0.25,_roll=-math.pi/2,_pitch=0,_yaw=0)
         
         traj = filtr_dist(parse_g_code_pulse(self.text_prog_code.toPlainText()),0.3)
         #self.viewer3d.addLines_ret(traj,1,1,0,0.4)
@@ -572,9 +577,9 @@ class PulseApp(QtWidgets.QWidget):
         #self.viewer3d.addLines_ret(traj,1,1,0,0.4)
 
         traj_1 = comp_traj_to_anim_2( traj,traj_d)
-        self.viewer3d.addLines_ret(traj_1,1,1,0,0.2)
+        #self.viewer3d.addLines_ret(traj_1,1,1,0,0.2)
         traj_p = Point3D.addList(Point3D.mulList(traj_1,1e-3),p1)
-        
+        traj_p = Point3D.set_angles_arr(traj_p,p1)
 
         self.thr = RobAnimThread(self,traj_p,traj_d)
         self.thr.plotter_signal.connect(self.test_plot)
@@ -775,9 +780,9 @@ class PulseApp(QtWidgets.QWidget):
     def build_connection(self):
 
         self.viewer3d = GLWidget(self)
-        self.viewer3d.setGeometry(QtCore.QRect(350, 10, 600, 600))
+        self.viewer3d.setGeometry(QtCore.QRect(900, 10, 600, 600))
         self.viewer3d.draw_start_frame(10.)
-        #self.draw_rob3d()
+        self.draw_rob3d()
 
         self.but_connect_robot = QPushButton('Подключиться', self)
         self.but_connect_robot.setGeometry(QtCore.QRect(100, 100, 140, 30))
@@ -1271,7 +1276,7 @@ class PulseApp(QtWidgets.QWidget):
         self.but_set_cur_work_pose.clicked.connect(self.set_cur_work_pose)
 
         self.but_start_prog_abs = QPushButton('Исп. прог. птп', self)
-        self.but_start_prog_abs.setGeometry(QtCore.QRect(1000, 400, 140, 30))
+        self.but_start_prog_abs.setGeometry(QtCore.QRect(850, 800, 140, 30))
         self.but_start_prog_abs.clicked.connect(self.exec_prog_arm_poses)
 
         self.but_start_prog_abs = QPushButton('Исп. прог. абс', self)
@@ -1586,23 +1591,23 @@ class PulseApp(QtWidgets.QWidget):
 
     def build_connection_kuka(self):
         self.but_connect_kuka = QPushButton('Подключиться', self)
-        self.but_connect_kuka.setGeometry(QtCore.QRect(1000, 100, 140, 30))
+        self.but_connect_kuka.setGeometry(QtCore.QRect(400, 100, 140, 30))
         self.but_connect_kuka.clicked.connect(self.connect_kuka)
 
         self.but_disconnect_kuka = QPushButton('Отключиться', self)
-        self.but_disconnect_kuka.setGeometry(QtCore.QRect(1000, 140, 140, 30))
+        self.but_disconnect_kuka.setGeometry(QtCore.QRect(400, 140, 140, 30))
         self.but_disconnect_kuka.clicked.connect(self.disconnect_kuka)    
 
         self.but_resiev_kuka = QPushButton('Принять', self)
-        self.but_resiev_kuka.setGeometry(QtCore.QRect(1000, 240, 140, 30))
+        self.but_resiev_kuka.setGeometry(QtCore.QRect(400, 240, 140, 30))
         self.but_resiev_kuka.clicked.connect(self.resiev_kuka)
 
         self.but_send_kuka = QPushButton('Отправить', self)
-        self.but_send_kuka.setGeometry(QtCore.QRect(1000, 280, 140, 30))
+        self.but_send_kuka.setGeometry(QtCore.QRect(400, 280, 140, 30))
         self.but_send_kuka.clicked.connect(self.send_kuka)
 
         self.text_mes_kuka = QTextEdit(self)
-        self.text_mes_kuka.setGeometry(QtCore.QRect(1150, 240, 500, 30))
+        self.text_mes_kuka.setGeometry(QtCore.QRect(550, 240, 200, 30))
 
     def connect_kuka(self):
         self.kuka_robot = KukaRobot()
