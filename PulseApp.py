@@ -782,7 +782,7 @@ class PulseApp(QtWidgets.QWidget):
         self.viewer3d = GLWidget(self)
         self.viewer3d.setGeometry(QtCore.QRect(900, 10, 600, 600))
         self.viewer3d.draw_start_frame(10.)
-        self.draw_rob3d()
+        #self.draw_rob3d()
 
         self.but_connect_robot = QPushButton('Подключиться', self)
         self.but_connect_robot.setGeometry(QtCore.QRect(100, 100, 140, 30))
@@ -1591,23 +1591,23 @@ class PulseApp(QtWidgets.QWidget):
 
     def build_connection_kuka(self):
         self.but_connect_kuka = QPushButton('Подключиться', self)
-        self.but_connect_kuka.setGeometry(QtCore.QRect(400, 100, 140, 30))
+        self.but_connect_kuka.setGeometry(QtCore.QRect(500, 100, 140, 30))
         self.but_connect_kuka.clicked.connect(self.connect_kuka)
 
         self.but_disconnect_kuka = QPushButton('Отключиться', self)
-        self.but_disconnect_kuka.setGeometry(QtCore.QRect(400, 140, 140, 30))
+        self.but_disconnect_kuka.setGeometry(QtCore.QRect(500, 140, 140, 30))
         self.but_disconnect_kuka.clicked.connect(self.disconnect_kuka)    
 
         self.but_resiev_kuka = QPushButton('Принять', self)
-        self.but_resiev_kuka.setGeometry(QtCore.QRect(400, 240, 140, 30))
+        self.but_resiev_kuka.setGeometry(QtCore.QRect(500, 240, 140, 30))
         self.but_resiev_kuka.clicked.connect(self.resiev_kuka)
 
         self.but_send_kuka = QPushButton('Отправить', self)
-        self.but_send_kuka.setGeometry(QtCore.QRect(400, 280, 140, 30))
+        self.but_send_kuka.setGeometry(QtCore.QRect(500, 280, 140, 30))
         self.but_send_kuka.clicked.connect(self.send_kuka)
 
         self.text_mes_kuka = QTextEdit(self)
-        self.text_mes_kuka.setGeometry(QtCore.QRect(550, 240, 200, 30))
+        self.text_mes_kuka.setGeometry(QtCore.QRect(650, 240, 200, 30))
 
     def connect_kuka(self):
         self.kuka_robot = KukaRobot()
