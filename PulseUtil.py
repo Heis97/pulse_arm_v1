@@ -37,8 +37,10 @@ def find_center_sphere_4p(ps:list[Point3D]):
 
 def base_calibration(points):
     ps = poses_dict_to_point3d(points)
-    vx = compute_vector(ps[1],ps[0])
+    vx = compute_vector(ps[0],ps[1])
     vz = Flat3D.compFlat(ps[0],ps[1],ps[2]).abc
+    if vz.z <0:
+        vz = vz*-1
     vy = (vz*vx).normalyse()
     m = matr_from_vecs(vx,vy,vz,ps[0])
     m_inv =  np.linalg.inv(m)

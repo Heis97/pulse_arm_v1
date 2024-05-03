@@ -1503,28 +1503,26 @@ class PulseApp(QtWidgets.QWidget):
         ps = parse_g_code(self.text_prog_code.toPlainText())
         p_off = pos_dict_to_point3d(self.cur_start_point)
         #p_off.z+=2*1e-3
-        positions = self.traj_prep(ps,p_off)
-
-        
+        positions = self.traj_prep(ps,p_off) 
         return positions
 
     def generate_traj_abs_xyz(self):
-        self.cur_start_point = self.get_cur_item_from_combo(self.combo_start_points,self.settins_pulse.start_points)
-        ps = parse_g_code(self.text_prog_code.toPlainText())
-        start_point = self.cur_start_point["point"]
-        start_rot =  self.cur_start_point["rotation"]
+        #self.cur_start_point = self.get_cur_item_from_combo(self.combo_start_points,self.settins_pulse.start_points)
+        ps = parse_g_code_pulse(self.text_prog_code.toPlainText())
+        #start_point = self.cur_start_point["point"]
+        #start_rot =  self.cur_start_point["rotation"]
 
         points = []
-        p = [start_point["x"],start_point["y"],start_point["z"]]
-        r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
+        p = [0.001*ps[0].x,0.001*ps[0].y,0.001*(ps[0].z)]
+        r = [ps[0].roll,ps[0].pitch,ps[0].yaw]
         #r = [0,0,0]
         dz = 0
         pos = position(p,r)
         points.append(p)
         positions = []
-        for i in range(len(ps)):               
+        for i in range(1,len(ps)):               
             p = [0.001*ps[i].x,0.001*ps[i].y,0.001*(ps[i].z+dz)]
-            r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
+            r = [ps[i].roll,ps[i].pitch,ps[i].yaw]
             #r = [0,0,0]
             pos = position(p,r,blend=0.0001) 
             if self.dist(p,points[-1])>0.001:
