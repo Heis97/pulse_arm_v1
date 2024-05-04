@@ -399,6 +399,8 @@ class GLWidget(QOpenGLWidget):
         self.paint_objs[ind].matr = np.transpose(matr)
 
     def setMatr_off(self,matr,ind):
+        #print("matr")
+        #print(matr)
         self.paint_objs[ind].matr_off = np.transpose(matr)
 
     

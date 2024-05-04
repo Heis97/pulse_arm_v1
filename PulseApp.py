@@ -507,28 +507,30 @@ class PulseApp(QtWidgets.QWidget):
         L5 = 0.1825
         L6 = 0.1325
         l = [L1,L2,L3,L4,L5,L6]
-        base1 = self.viewer3d.addModel_ret(r"C:\Users\1\Desktop\misis\in situ printer\rozum\lowres\0.STL")
-        base2 = self.viewer3d.addModel_ret(r"C:\Users\1\Desktop\misis\in situ printer\rozum\lowres\1.STL")
+        base1 = self.viewer3d.addModel_ret(r"D:\работа\МИСиС\rozum\solid\Rozum in situ\lowres\0.STL")
+        base2 = self.viewer3d.addModel_ret(r"D:\работа\МИСиС\rozum\solid\Rozum in situ\lowres\1.STL")
         self.q_draw = []
-        self.q_draw.append(self.viewer3d.addModel_ret(r"C:\Users\1\Desktop\misis\in situ printer\rozum\lowres\2.STL"))
-        self.q_draw.append(self.viewer3d.addModel_ret(r"C:\Users\1\Desktop\misis\in situ printer\rozum\lowres\3.STL"))     
-        self.q_draw.append(self.viewer3d.addModel_ret(r"C:\Users\1\Desktop\misis\in situ printer\rozum\lowres\4.STL"))      
-        self.q_draw.append(self.viewer3d.addModel_ret(r"C:\Users\1\Desktop\misis\in situ printer\rozum\lowres\5.STL"))
-        self.q_draw.append(self.viewer3d.addModel_ret(r"C:\Users\1\Desktop\misis\in situ printer\rozum\lowres\6.STL"))
-        self.q_draw.append(self.viewer3d.addModel_ret(r"C:\Users\1\Desktop\misis\in situ printer\rozum\lowres\7.STL"))
+        self.q_draw.append(self.viewer3d.addModel_ret(r"D:\работа\МИСиС\rozum\solid\Rozum in situ\lowres\2.STL"))
+        self.q_draw.append(self.viewer3d.addModel_ret(r"D:\работа\МИСиС\rozum\solid\Rozum in situ\lowres\3.STL"))     
+        self.q_draw.append(self.viewer3d.addModel_ret(r"D:\работа\МИСиС\rozum\solid\Rozum in situ\lowres\4.STL"))      
+        self.q_draw.append(self.viewer3d.addModel_ret(r"D:\работа\МИСиС\rozum\solid\Rozum in situ\lowres\5.STL"))
+        self.q_draw.append(self.viewer3d.addModel_ret(r"D:\работа\МИСиС\rozum\solid\Rozum in situ\lowres\6.STL"))
+        self.q_draw.append(self.viewer3d.addModel_ret(r"D:\работа\МИСиС\rozum\solid\Rozum in situ\lowres\7.STL"))
 
-        self.viewer3d.setMatr_off(pulse_matrix(0,0,0,np.pi/2,0,0),base1)
-        self.viewer3d.setMatr_off(pulse_matrix(0,0,0,np.pi/2,0,0),base2)
-        self.viewer3d.setMatr_off(pulse_matrix(0,-L1+0,0,0,np.pi,0),self.q_draw[0])
+        self.viewer3d.setMatr_off(pulse_matrix(10000,0,0,    np.pi/2,0,0),base1)
+        self.viewer3d.setMatr_off(pulse_matrix(10000,0,0,    np.pi/2,0,0),base2)
+        self.viewer3d.setMatr_off(pulse_matrix(10000,-L1+0,0,    0,np.pi,0),self.q_draw[0])#ax2
 
-        self.viewer3d.setMatr_off(np.dot(np.dot(pulse_matrix(0,0,0,0,0,np.pi/2),pulse_matrix(0,-L1-L2+0,0,0,0,0)),pulse_matrix(0,0,0,0,np.pi,0)),self.q_draw[1])
-        self.viewer3d.setMatr_off(np.dot(np.dot(pulse_matrix(0,0,0,0,0,np.pi/2),pulse_matrix(0,-L1-L2-L3+0,0,0,0,0)),pulse_matrix(0,0,0,0,np.pi,0)),self.q_draw[2])
+        self.viewer3d.setMatr_off(np.dot(np.dot(pulse_matrix(0,0,0,    0,0,np.pi/2),pulse_matrix(0,-L1-L2+0,0,0,0,0)),pulse_matrix(0,0,0,0,np.pi,0)),self.q_draw[1])#ax3
 
-        self.viewer3d.setMatr_off(np.dot(np.dot(pulse_matrix(0,0,0,np.pi/2,0,0),pulse_matrix(0,-L1-L2-L3,L4+0,0,0,0)),pulse_matrix(0,0,0,0,0,0)),self.q_draw[3])
 
-        self.viewer3d.setMatr_off(np.dot(np.dot(pulse_matrix(0,0,0,0,np.pi,np.pi),pulse_matrix(0,-L1-L2-L3-L5,L4+0,0,0,0)),pulse_matrix(0,0,0,0,0,0)),self.q_draw[4])
+        self.viewer3d.setMatr_off(np.dot(np.dot(pulse_matrix(0,0,0,     0,0,np.pi/2),pulse_matrix(0,-L1-L2-L3+0,0,0,0,0)),pulse_matrix(0,0,0,0,np.pi,0)),self.q_draw[2])#ax4
 
-        self.viewer3d.setMatr_off(np.dot(np.dot(pulse_matrix(0,0,0,np.pi,0,0),pulse_matrix(0,-L1-L2-L3-L5,L4+L6,0,0,0)),pulse_matrix(0,0,0,0,0,0)),self.q_draw[5])
+        self.viewer3d.setMatr_off(np.dot(np.dot(pulse_matrix(0,0,0,     np.pi/2,0,0),pulse_matrix(0,-L1-L2-L3,L4+0,0,0,0)),pulse_matrix(0,0,0,0,0,0)),self.q_draw[3])#ax5
+
+        self.viewer3d.setMatr_off(np.dot(np.dot(pulse_matrix(0,0,0,   0,np.pi,np.pi),pulse_matrix(0,-L1-L2-L3-L5,L4+0,0,0,0)),pulse_matrix(0,0,0,0,0,0)),self.q_draw[4])#ax6
+
+        self.viewer3d.setMatr_off(np.dot(np.dot(pulse_matrix(0,0,0,     np.pi,0,0),pulse_matrix(0,-L1-L2-L3-L5,L4+L6,0,0,0)),pulse_matrix(0,0,0,0,0,0)),self.q_draw[5])#ax7
 
         #self.q_draw.append(self.viewer3d.addModel_ret(r"C:\Users\1\Desktop\misis\in situ printer\rozum\lowres\t1.STL"))
 
@@ -546,6 +548,8 @@ class PulseApp(QtWidgets.QWidget):
         for i in range(len(q_draw)):
             if i < len(q.angles):
                 self.viewer3d.setMatr(solv_pms[i],q_draw[i])
+                print("qi: ",i)
+                print(solv_pms[i])
             else:
                 pass
                 self.viewer3d.setMatr(solv_pms[len(q.angles)-1],q_draw[i])
@@ -782,7 +786,7 @@ class PulseApp(QtWidgets.QWidget):
         self.viewer3d = GLWidget(self)
         self.viewer3d.setGeometry(QtCore.QRect(900, 10, 600, 600))
         self.viewer3d.draw_start_frame(10.)
-        #self.draw_rob3d()
+        self.draw_rob3d()
 
         self.but_connect_robot = QPushButton('Подключиться', self)
         self.but_connect_robot.setGeometry(QtCore.QRect(100, 100, 140, 30))
