@@ -460,6 +460,9 @@ class PulseApp(QtWidgets.QWidget):
 
         self.plotter = Plotter(self)
 
+        p_st =  pos_dict_to_point3d(self.settins_pulse.tools["skin_am_10ml"]["tcp"])
+        m = pulse_matrix_p(p_st)
+        print(m)
         #self.test_cur_prog()
         #self.test3()
         #print(vel_to_st2(10,1,20.1))
@@ -467,6 +470,7 @@ class PulseApp(QtWidgets.QWidget):
 
         #pose = p_to_q(Point3D(0.1,0.1,0.1,_pitch = 0.0,_roll = 0.,_yaw=0.))
         #print(str(pose))
+
         
         
     
