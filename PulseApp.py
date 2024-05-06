@@ -365,10 +365,13 @@ class RobPosThread(QtCore.QThread):
             #print(cur_posit_m)
             try:
                 pose = self.pulse_arm.get_pose()
+                position_t = self.pulse_arm.get_position()
                 position:Point3D = q_to_p(Pose3D(pose_to_list (pose)),False)
                 position = p3d_cur_pulse(position,self.pulse_arm.tool,self.pulse_arm.base)
                 #print(pose)
-                self.label.setText("Joint position:\n"+pose_to_str(pose)+"\n\n"+"Cartesian position:\n"+position.ToStringPulseMM())  
+                #self.label.setText("Joint position:\n"+pose_to_str(pose)+"\n\n"+"Cartesian position:\n"+position.ToStringPulseMM())  
+                self.label.setText("Joint position:\n"+pose_to_str(pose)+"\n\n"+"Cartesian position:\n"+position_to_str(position_t)
+                                   +"\n\n"+"Cartesian position_int:\n"+position.ToStringPulseMM())  
                 self.pulse_arm.cur_posit_3d = position
                 self.pulse_arm.cur_posit = position.ToStringPulseMM(4," ")
 
@@ -790,7 +793,7 @@ class PulseApp(QtWidgets.QWidget):
         self.viewer3d = GLWidget(self)
         self.viewer3d.setGeometry(QtCore.QRect(900, 10, 600, 600))
         self.viewer3d.draw_start_frame(10.)
-        self.draw_rob3d()
+        #self.draw_rob3d()
 
         self.but_connect_robot = QPushButton('Подключиться', self)
         self.but_connect_robot.setGeometry(QtCore.QRect(100, 100, 140, 30))
@@ -1360,7 +1363,7 @@ class PulseApp(QtWidgets.QWidget):
         
         #print(positions)
         vel1 = 1
-        vel2 = 0.01
+        vel2 = 0.005
 
         acs1 = 50
         acs2 = 0.05

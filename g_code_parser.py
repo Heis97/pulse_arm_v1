@@ -134,7 +134,7 @@ def parse_g_code_pulse(code:str,units:float = 1)->"list[Point3D]":
                     if coord[0]=="A":
                         roll = float(coord[1:])
                     if coord[0]=="B":
-                        pitch = -float(coord[1:])
+                        pitch = float(coord[1:])
                     if coord[0]=="C":
                         yaw = float(coord[1:])
 

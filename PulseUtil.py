@@ -38,12 +38,17 @@ def find_center_sphere_4p(ps:list[Point3D]):
 def base_calibration(points):
     ps = poses_dict_to_point3d(points)
     vx = compute_vector(ps[0],ps[1])
-    vz = Flat3D.compFlat(ps[0],ps[1],ps[2]).abc
+    vz = Flat3D.compFlat(ps[0],ps[1],ps[2]).abc.normalyse()
     if vz.z <0:
         vz = vz*-1
     vy = (vz*vx).normalyse()
+    print(vx.magnitude(),vy.magnitude(),vz.magnitude())
     m = matr_from_vecs(vx,vy,vz,ps[0])
     m_inv =  np.linalg.inv(m)
+    eye = np.dot(m,m_inv)
+    print("m",m)
+    print("m_inv",m_inv)
+    print("eye",eye)
     return position_from_matrix_pulse(m_inv)
 
 def orient_tool_calibration(points):
@@ -71,7 +76,10 @@ def orient_tool_calibration_1p(p_flange,p_tool):
     return position_from_matrix_pulse(p_t1)
 
 def matr_from_vecs(rx:Point3D,ry:Point3D,rz:Point3D,pos:Point3D):
-    return np.array([[rx.x,rx.y,rx.z,pos.x],[ry.x,ry.y,ry.z,pos.y],[rz.x,rz.y,rz.z,pos.z],[0.,0.,0.,1.]])
+    return np.array([[rx.x,rx.y,rx.z,pos.x],
+                     [ry.x,ry.y,ry.z,pos.y],
+                     [rz.x,rz.y,rz.z,pos.z],
+                     [0.,0.,0.,1.]])
     
 def compute_vector(p1:Point3D,p2:Point3D):
     pd = p2-p1
