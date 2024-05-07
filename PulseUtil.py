@@ -34,6 +34,18 @@ def find_center_sphere_4p(ps:list[Point3D]):
     R = math.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0) + (z1 - z0) * (z1 - z0))
     return [Point3D(x0, y0, z0),Point3D(R,R,R)]
 
+def inv_rot_matr(m):
+    x = m[0][3]
+    y = m[1][3]
+    z = m[2][3]
+    m_t = m.transpose()
+    m_t[0][3] = x
+    m_t[1][3] = y
+    m_t[2][3] = z
+    m_t[3][0] = 0.
+    m_t[3][1] = 0.
+    m_t[3][2] = 0.
+    return m_t
 
 def base_calibration(points):
     ps = poses_dict_to_point3d(points)
@@ -42,14 +54,14 @@ def base_calibration(points):
     if vz.z <0:
         vz = vz*-1
     vy = (vz*vx).normalyse()
-    print(vx.magnitude(),vy.magnitude(),vz.magnitude())
+
     m = matr_from_vecs(vx,vy,vz,ps[0])
+    m = inv_rot_matr(m)
     m_inv =  np.linalg.inv(m)
-    eye = np.dot(m,m_inv)
-    print("m",m)
-    print("m_inv",m_inv)
-    print("eye",eye)
-    return position_from_matrix_pulse(m_inv)
+
+    return position_from_matrix_pulse(m)
+
+
 
 def orient_tool_calibration(points):
     ps = poses_dict_to_point3d(points)
@@ -95,8 +107,6 @@ def poses_dict_to_point3d(pos_dict:list[dict])->list[Point3D]:
     for p in pos_dict:
         ps.append(pos_dict_to_point3d(p))
     return ps
-    
-#def 
 
 def calibrate_tcp_4p(points:list[Point3D]):
 
