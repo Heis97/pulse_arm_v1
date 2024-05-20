@@ -1,9 +1,11 @@
 from pulseapi import  RobotPulse, pose, position, PulseApiException, MT_JOINT, MT_LINEAR,jog,create_box_obstacle,LinearMotionParameters,InterpolationType,tool_info
 from pdhttp import Position,Point,Rotation,Pose,MotorStatus,PoseTimestamp,PositionTimestamp,ToolInfo
 from PulseUtil import *
+from api.robot_api import *
 
 class PulseRobotExt(object):
     robot: RobotPulse
+    robot_v3: RobotAPI
     base: Point3D = Point3D(0,0,0)
     tool: Point3D= Point3D(0,0,0)
     cur_posit :str = ""
@@ -14,6 +16,7 @@ class PulseRobotExt(object):
     cur_i_prog:int = 0
     cur_progr_line:float = 0
     rem_thr = None
+    new_controller:bool = None
 
 
     def update_buf(self):
@@ -21,13 +24,21 @@ class PulseRobotExt(object):
         if len(self.buf_pos_3d)> self.buf_len:
             del self.buf_pos_3d[0]
 
-    def __init__(self,host) -> None:
-        if host is not None:       
-            self.robot = RobotPulse(host)
+    def __init__(self,host,new_controller:bool = False) -> None:
+        self.new_controller = new_controller
+        if host is not None:
+            if new_controller:       
+                self.robot = RobotAPI(host)
+            else:
+                self.robot = RobotPulse(host)
+                
 
 
     def get_pose(self):
-        return self.robot.get_pose()
+        if self.new_controller:
+            return self.robot.get_pose()
+        else:
+            return self.robot.get_pose()
     
     def get_position(self):
         return self.robot.get_position()
