@@ -917,7 +917,7 @@ class PulseApp(QtWidgets.QWidget):
         but = self.sender()
         acs = 0.1        
         x,y,z,Rx,Ry,Rz = self.mask_from_button(but.text())
-        self.pulse_robot.jogging(jog(x=acs*x,y=acs*y,z=acs*z,rx=acs*Rx,ry=acs*Ry,rz=acs*Rz))
+        self.pulse_robot.jogging(acs*x,acs*y,acs*z,acs*Rx,acs*Ry,cs*Rz)
 
 
     def axis_move(self):
@@ -930,7 +930,7 @@ class PulseApp(QtWidgets.QWidget):
         pos,rot = position_sum2(self.pulse_robot.get_position(),position_delt)
         pos_rel = position(pos,rot)
 
-        self.pulse_robot.robot.set_position(pos_rel , velocity=vel, acceleration=acs,motion_type=MT_LINEAR)
+        self.pulse_robot.set_position(pos_rel , velocity=vel, acceleration=acs,motion_type=MT_LINEAR)
         #self.pulse_robot.await_stop()
 
     def mask_from_button(self,name):
@@ -1327,7 +1327,7 @@ class PulseApp(QtWidgets.QWidget):
     def set_cur_start_point(self):
         self.cur_start_point = self.get_cur_item_from_combo(self.combo_start_points,self.settins_pulse.start_points)
         if self.cur_start_point is not None:
-            self.pulse_robot.robot.set_position(Position(self.cur_start_point["point"],self.cur_start_point["rotation"]),velocity=5,acceleration=1)
+            self.pulse_robot.set_position(Position(self.cur_start_point["point"],self.cur_start_point["rotation"]),velocity=5,acceleration=1)
             #self.pulse_robot.await_stop()
 
     def exec_prog_arm_rel(self):
@@ -1341,7 +1341,7 @@ class PulseApp(QtWidgets.QWidget):
         print(positions)
         vel = vel1
         acs = acs1
-        self.pulse_robot.robot.set_position(positions[0],velocity=vel,acceleration=acs,motion_type=MT_LINEAR)
+        self.pulse_robot.set_position(positions[0],velocity=vel,acceleration=acs,motion_type=MT_LINEAR)
         
         vel = vel2
         acs = acs2
@@ -1349,13 +1349,13 @@ class PulseApp(QtWidgets.QWidget):
         dn = 950
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
         for i in range(int(len(positions)/dn)+1):
-            self.pulse_robot.robot.set_position(positions[dn*i],velocity=vel1,acceleration=acs1,motion_type=MT_LINEAR)        
+            self.pulse_robot.set_position(positions[dn*i],velocity=vel1,acceleration=acs1,motion_type=MT_LINEAR)        
             linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel2,acceleration=acs2)
             print("load",dn)
             if len(positions)>dn*(i+1)+1:
-                self.pulse_robot.robot.run_linear_positions(positions[dn*i:dn*(i+1)],linear_motion_parameters)
+                self.pulse_robot.run_linear_positions(positions[dn*i:dn*(i+1)],linear_motion_parameters)
             else:
-                self.pulse_robot.robot.run_linear_positions(positions[dn*i:],linear_motion_parameters)
+                self.pulse_robot.run_linear_positions(positions[dn*i:],linear_motion_parameters)
 
 
 
@@ -1376,22 +1376,22 @@ class PulseApp(QtWidgets.QWidget):
         #print(positions)
         vel = vel1
         acs = acs1
-        self.pulse_robot.robot.set_position(positions[0],velocity=vel,acceleration=acs,motion_type=MT_LINEAR)
+        self.pulse_robot.set_position(positions[0],velocity=vel,acceleration=acs,motion_type=MT_LINEAR)
         
         vel = vel2
         acs = acs2
         #linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
-        #self.pulse_robot.robot.run_linear_positions(positions[:800],linear_motion_parameters)
+        #self.pulse_robot.run_linear_positions(positions[:800],linear_motion_parameters)
         dn = 950
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
         for i in range(int(len(positions)/dn)+1):
-            self.pulse_robot.robot.set_position(positions[dn*i],velocity=vel1,acceleration=acs1,motion_type=MT_LINEAR)        
+            self.pulse_robot.set_position(positions[dn*i],velocity=vel1,acceleration=acs1,motion_type=MT_LINEAR)        
             linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel2,acceleration=acs2)
             print("load",dn)
             if len(positions)>dn*(i+1)+1:
-                self.pulse_robot.robot.run_linear_positions(positions[dn*i:dn*(i+1)],linear_motion_parameters)
+                self.pulse_robot.run_linear_positions(positions[dn*i:dn*(i+1)],linear_motion_parameters)
             else:
-                self.pulse_robot.robot.run_linear_positions(positions[dn*i:],linear_motion_parameters)
+                self.pulse_robot.run_linear_positions(positions[dn*i:],linear_motion_parameters)
 
 
     def exec_prog_arm_abs(self):
@@ -1401,10 +1401,10 @@ class PulseApp(QtWidgets.QWidget):
         """vel = 0.01
         acs = 0.1
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
-        self.pulse_robot.robot.set_position(positions[0],velocity=5,acceleration=0.5,motion_type = MT_LINEAR)
+        self.pulse_robot.set_position(positions[0],velocity=5,acceleration=0.5,motion_type = MT_LINEAR)
         print(positions[0])
         #try:
-        self.pulse_robot.robot.run_linear_positions(positions,linear_motion_parameters)"""
+        self.pulse_robot.run_linear_positions(positions,linear_motion_parameters)"""
 
         vel1 = 2
         vel2 = 0.01
@@ -1414,7 +1414,7 @@ class PulseApp(QtWidgets.QWidget):
         #print(positions)
         vel = vel1
         acs = acs1
-        #self.pulse_robot.robot.set_position(positions[0],velocity=vel,acceleration=acs,motion_type=MT_LINEAR)
+        #self.pulse_robot.set_position(positions[0],velocity=vel,acceleration=acs,motion_type=MT_LINEAR)
         
         vel = vel2
         acs = acs2
@@ -1437,10 +1437,10 @@ class PulseApp(QtWidgets.QWidget):
         """vel = 0.01
         acs = 0.1
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
-        self.pulse_robot.robot.set_position(positions[0],velocity=5,acceleration=0.5,motion_type = MT_LINEAR)
+        self.pulse_robot.set_position(positions[0],velocity=5,acceleration=0.5,motion_type = MT_LINEAR)
         print(positions[0])
         #try:
-        self.pulse_robot.robot.run_linear_positions(positions,linear_motion_parameters)"""
+        self.pulse_robot.run_linear_positions(positions,linear_motion_parameters)"""
 
         self.pulse_robot.set_pose(positions[0],speed= 10) 
 

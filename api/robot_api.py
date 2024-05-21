@@ -818,26 +818,26 @@ class RobotAPI:
     def set_tool_capsule_count(self, ncap):
         self._cmd(CTRLR_COMS_SET_TOOL_CAPSULE_COUNT, struct.pack("2i", 0, ncap))
 
-    def get_act_pos_deg(rr):
+    def get_act_pos_q(rr):
         """
         get radian axes values and convert them to degrees
         return list of 6 axes degrees
         """
-        act_q = list(rr.ctrl.data["act_q"])
+        """act_q = list(rr.ctrl.data["act_q"])
         for i in range(0, 5):
-            act_q[i] = math.degrees(act_q[i])
-        return act_q
+            act_q[i] = math.degrees(act_q[i])"""
+        return list(rr.ctrl.data["act_q"])
 
     def get_act_pos_cartesian(rr):
         """
         convert cartesian pos to cm and degree
         """
-        act_x = list(rr.ctrl.data["act_x"])
+        """act_x = list(rr.ctrl.data["act_x"])
         for i in range(0, 3):
             act_x[i] = act_x[i] * 100
         for i in range(3, 6):
-            act_x[i] = math.degrees(act_x[i])
-        return act_x
+            act_x[i] = math.degrees(act_x[i])"""
+        return list(rr.ctrl.data["act_x"])
 
 
 
