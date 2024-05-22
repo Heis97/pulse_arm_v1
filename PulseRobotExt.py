@@ -3,6 +3,19 @@ from pdhttp import Position,Point,Rotation,Pose,MotorStatus,PoseTimestamp,Positi
 from PulseUtil import *
 from api.robot_api import *
 
+
+def posit_to_list(posit:Position):
+    p3d = position_to_p3d(posit)
+    return p3d_to_list(p3d)
+
+def p3d_to_list(p3d:Point3D):
+    return [p3d.x,p3d.y,p3d.z,p3d.pitch,p3d.roll,p3d.yaw]
+
+
+host_old = "http://10.10.10.20:8081"
+host_v3 = "192.168.0.50"
+
+
 class PulseRobotExt(object):
     robot: RobotPulse
     robot_v3: RobotAPI
@@ -24,25 +37,27 @@ class PulseRobotExt(object):
         if len(self.buf_pos_3d)> self.buf_len:
             del self.buf_pos_3d[0]
 
-    def __init__(self,host,controller_v3:bool = False) -> None:
+    def __init__(self,controller_v3:bool = False) -> None:
         self.controller_v3 = controller_v3
-        if host is not None:
-            if self.controller_v3:       
-                self.robot_v3 = RobotAPI(host)
-            else:
-                self.robot = RobotPulse(host)
+        if self.controller_v3:   
+            #print("connect v3")    
+            self.robot_v3 = RobotAPI(host_v3)
+            self.robot_v3.init_robot()
+        else:
+            self.robot = RobotPulse(host_old)
                 
 
 
     def get_pose(self):
         if self.controller_v3:
-            return self.robot_v3.data["act_q"]
+            return self.robot_v3.get_act_pos_q()
         else:
             return self.robot.get_pose()
     
     def get_position(self):
         if self.controller_v3:
-            return self.robot_v3.data["act_x"]
+            list_pos = self.robot_v3.get_act_pos_cartesian()
+            return position(list_pos[0:3],list_pos[3:6])
         else:
             return self.robot.get_position()
     
@@ -66,7 +81,10 @@ class PulseRobotExt(object):
                      _motion_type: str = MT_LINEAR):
         if self.controller_v3:
             #pos = [_t_p.point.x(),_t_p.point.y(),_t_p.point.z(),_t_p.rotation.x(),_t_p.rotation.y(),_t_p.rotation.z()]
-            return self.robot_v3.move_l(posit_to_list(pos),_velocity,_acceleration)
+            self.robot_v3.move_l(posit_to_list(_t_p),_velocity,_acceleration)
+            self.robot_v3.run_wps()
+            #self.robot_v3.colab_await_buffer(0)
+            return 
         else:
             return self.robot.set_position(target_position=_t_p,
                                        velocity=_velocity,
@@ -81,17 +99,16 @@ class PulseRobotExt(object):
                 tcp_max_velocity = None,
                 motion_type: str = MT_JOINT):
         if self.controller_v3:
-            return self.robot_v3.move_j(target_pose.angles,speed,acceleration)
+            self.robot_v3.move_j(target_pose.angles,speed,acceleration)
+            self.robot_v3.run_wps()
+            #self.robot_v3.colab_await_buffer(0)
+            return 
+        
         else:
             return self.robot.set_pose(target_pose,speed,velocity ,acceleration, tcp_max_velocity,motion_type)
         #return self.robot.set_pose(target_pose,speed,velocity ,acceleration, tcp_max_velocity,motion_type)
     
-    def posit_to_list(posit:Position):
-        p3d = position_to_p3d(posit)
-        return p3d_to_list(p3d)
 
-    def p3d_to_list(p3d:Point3D):
-        return [p3d.x,p3d.y,p3d.z,p3d.pitch,p3d.roll,p3d.yaw]
 
     def run_linear_positions(self,positions: list[Position],
                                 motion_parameters: LinearMotionParameters):

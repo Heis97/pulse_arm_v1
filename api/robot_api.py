@@ -214,7 +214,7 @@ class RobotAPI:
         Using this motion increases the speed of reaching a point compared to other types of motions, the robot moves to a given point along the shortest path.
         The trajectory will be an unknown curve, use this type of motion if the trajectory is of secondary importance.
 
-        :param position: target position of 6 axes in degree, format list [0, 0, 0, 0, 0, 0], degree
+        :param position: target position of 6 axes in degree, format list [0, 0, 0, 0, 0, 0], rad
         :param speed: target speed deg/s
         :param acceleration: target acceleration deg/s2
         :param blend: blending radius
@@ -239,7 +239,7 @@ class RobotAPI:
         (recalculation of the given Cartesian coordinates into the axial values of the manipulator).
 
 
-        :param position: target position in cartesian space, format list [X, Y, Z, rx, ry, rz] sm, degree
+        :param position: target position in cartesian space, format list [X, Y, Z, rx, ry, rz] m, degree
         :param speed: target speed m/s
         :param acceleration: target acceleration m/s2
         :param blend: blending radius
@@ -272,8 +272,8 @@ class RobotAPI:
                 L motion:
                     add_wp_deg(t=1, des_x=[-39.00, -13.50, 42.33, -179.99, 0, 90.00], vmax_t=1, amax_t=1, amax_r=1, vmax_r=1, rblend=0)
                     des_x:
-                    - first 3 value is TCP pos in cartesian space (sm)
-                    - value 4-6 rotation around axes of TCP X, Y, Z, (degree)
+                    - first 3 value is TCP pos in cartesian space (m)
+                    - value 4-6 rotation around axes of TCP X, Y, Z, (rad)
                 :param t:
                 :param des_q:
                 :param des_x:

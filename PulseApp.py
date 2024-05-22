@@ -363,42 +363,45 @@ class RobPosThread(QtCore.QThread):
             #print(cur_posit_m_comp)
 
             #print(cur_posit_m)
-            try:
-                pose = self.pulse_arm.get_pose()
-                position_t = self.pulse_arm.get_position()
-                position:Point3D = q_to_p(Pose3D(pose_to_list (pose)),False)
-                position = p3d_cur_pulse(position,self.pulse_arm.tool,self.pulse_arm.base)
-                #print(pose)
-                #self.label.setText("Joint position:\n"+pose_to_str(pose)+"\n\n"+"Cartesian position:\n"+position.ToStringPulseMM())  
-                self.label.setText("Joint position:\n"+pose_to_str(pose)+"\n\n"+"Cartesian position:\n"+position_to_str(position_t)
-                                   +"\n\n"+"Cartesian position_int:\n"+position.ToStringPulseMM())  
-                self.pulse_arm.cur_posit_3d = position
-                self.pulse_arm.cur_posit = position.ToStringPulseMM(4," ")
+            #try:
+            angles = self.pulse_arm.get_pose().angles
+            pose = Pose3D(angles )
+            position_t = self.pulse_arm.get_position()
+            position:Point3D = q_to_p(pose,False)
+            #print("p1",position.ToStringPulseMM())
+            position = p3d_cur_pulse(position,self.pulse_arm.tool,self.pulse_arm.base)
+            #print(pose )
+            #print("p2",position.ToStringPulseMM())
+            #self.label.setText("Joint position:\n"+pose_to_str(pose)+"\n\n"+"Cartesian position:\n"+position.ToStringPulseMM())  
+            self.label.setText("Joint position:\n"+list_to_str(angles)+"\n\n"+"Cartesian position:\n"+position_to_str(position_t)
+                                +"\n\n"+"Cartesian position_int:\n"+position.ToStringPulseMM())  
+            self.pulse_arm.cur_posit_3d = position
+            self.pulse_arm.cur_posit = position.ToStringPulseMM(4," ")
 
-                #print(position)
-                self.pulse_arm.update_buf()
-                #print("update")
-                self.pulse_arm.current_progress_prog()
-                #print("cur_prog")
-                self.label.setText(self.label.text()+"\n Line: "+str(self.pulse_arm.cur_i_prog)+", "+str(self.pulse_arm.cur_progr_line)+"%")
+            #print(position)
+            self.pulse_arm.update_buf()
+            #print("update")
+            self.pulse_arm.current_progress_prog()
+            #print("cur_prog")
+            self.label.setText(self.label.text()+"\n Line: "+str(self.pulse_arm.cur_i_prog)+", "+str(self.pulse_arm.cur_progr_line)+"%")
 
-                #print(self.pulse_arm.cur_i_prog )
-                """if self.pulse_arm.rem_thr is not None and self.pulse_arm.cur_prog_3d is not None and self.pulse_arm.cur_i_prog>0:
-                    cur_prog_p = self.pulse_arm.cur_prog_3d[self.pulse_arm.cur_i_prog]
-                    mes = str(cur_prog_p.g)+" "+str(cur_prog_p.b)
-                    print(mes)
-                    self.pulse_arm.rem_thr.conn.send(mes.encode())"""
+            #print(self.pulse_arm.cur_i_prog )
+            """if self.pulse_arm.rem_thr is not None and self.pulse_arm.cur_prog_3d is not None and self.pulse_arm.cur_i_prog>0:
+                cur_prog_p = self.pulse_arm.cur_prog_3d[self.pulse_arm.cur_i_prog]
+                mes = str(cur_prog_p.g)+" "+str(cur_prog_p.b)
+                print(mes)
+                self.pulse_arm.rem_thr.conn.send(mes.encode())"""
 
-                """if self.pulse_arm.cur_prog_3d is not None and self.pulse_arm.cur_i_prog>0:
-                    cur_prog_p = self.pulse_arm.cur_prog_3d[self.pulse_arm.cur_i_prog]
-                    mes = str(cur_prog_p.g)+" "+str(cur_prog_p.b)
-                    print(mes)"""
-                    #self.pulse_arm.rem_thr.conn.send(mes.encode())
+            """if self.pulse_arm.cur_prog_3d is not None and self.pulse_arm.cur_i_prog>0:
+                cur_prog_p = self.pulse_arm.cur_prog_3d[self.pulse_arm.cur_i_prog]
+                mes = str(cur_prog_p.g)+" "+str(cur_prog_p.b)
+                print(mes)"""
+                #self.pulse_arm.rem_thr.conn.send(mes.encode())
 
 
-                if self.writing:
-                    self.feedback.append(str(pose))
-            except BaseException:
+            if self.writing:
+                self.feedback.append(str(pose))
+            #except BaseException:
                 pass
 
 
@@ -429,7 +432,7 @@ class RobPosThread(QtCore.QThread):
             sleep(self.timeDelt)
 
 
-host = "http://10.10.10.20:8081"
+
 
 
 class ax(Enum):
@@ -463,7 +466,7 @@ class PulseApp(QtWidgets.QWidget):
 
         self.plotter = Plotter(self)
 
-        """p1 =  self.settins_pulse.start_points["b0605_1a"]
+        p1 =  self.settins_pulse.start_points["b0605_1a"]
         p2 =  self.settins_pulse.start_points["b0605_1b"]
         p3 =  self.settins_pulse.start_points["b0605_1c"]
 
@@ -471,7 +474,7 @@ class PulseApp(QtWidgets.QWidget):
         print("p1: "+pos_dict_to_point3d(p1).ToStringPulseMM(4,", "))
         print("p2: "+pos_dict_to_point3d(p2).ToStringPulseMM(4,", "))
         print("p3: "+pos_dict_to_point3d(p3).ToStringPulseMM(4,", "))
-        print("base: "+p.ToStringPulseMM(4,", "))"""
+        print("base: "+p.ToStringPulseMM(4,", "))
         #self.test_cur_prog()
         #self.test3()
         #print(vel_to_st2(10,1,20.1))
@@ -845,7 +848,8 @@ class PulseApp(QtWidgets.QWidget):
         save_file( self.coords_thread.feedback,"feedback.json")
 
     def connect_robot(self):
-        self.pulse_robot = PulseRobotExt(host)
+        self.pulse_robot = PulseRobotExt(False)
+        
         self.coords_thread = RobPosThread(self.pulse_robot,self.lab_coord,self.writing_signal)
 
 
@@ -917,20 +921,20 @@ class PulseApp(QtWidgets.QWidget):
         but = self.sender()
         acs = 0.1        
         x,y,z,Rx,Ry,Rz = self.mask_from_button(but.text())
-        self.pulse_robot.jogging(acs*x,acs*y,acs*z,acs*Rx,acs*Ry,cs*Rz)
+        self.pulse_robot.jogging(acs*x,acs*y,acs*z,acs*Rx,acs*Ry,acs*Rz)
 
 
     def axis_move(self):
         but = self.sender()
-        acs = 5   
-        vel = 4     
+        acs = 0.1  
+        vel = 0.1     
         step = 0.1
         x,y,z,Rx,Ry,Rz = self.mask_from_button(but.text())        
         position_delt = position([step*x, step*y, step*z], [step*Rx, step*Ry, step*Rz])
         pos,rot = position_sum2(self.pulse_robot.get_position(),position_delt)
         pos_rel = position(pos,rot)
 
-        self.pulse_robot.set_position(pos_rel , velocity=vel, acceleration=acs,motion_type=MT_LINEAR)
+        self.pulse_robot.set_position(pos_rel , _velocity=vel, _acceleration=acs,_motion_type=MT_LINEAR)
         #self.pulse_robot.await_stop()
 
     def mask_from_button(self,name):
@@ -1327,7 +1331,7 @@ class PulseApp(QtWidgets.QWidget):
     def set_cur_start_point(self):
         self.cur_start_point = self.get_cur_item_from_combo(self.combo_start_points,self.settins_pulse.start_points)
         if self.cur_start_point is not None:
-            self.pulse_robot.set_position(Position(self.cur_start_point["point"],self.cur_start_point["rotation"]),velocity=5,acceleration=1)
+            self.pulse_robot.set_position(Position(self.cur_start_point["point"],self.cur_start_point["rotation"]),_velocity=5,_acceleration=1)
             #self.pulse_robot.await_stop()
 
     def exec_prog_arm_rel(self):

@@ -51,15 +51,15 @@ def base_calibration(points):
     ps = poses_dict_to_point3d(points)
     vx = compute_vector(ps[0],ps[1])
     vz = Flat3D.compFlat(ps[0],ps[1],ps[2]).abc.normalyse()
-    if vz.z <0:
-        vz = vz*-1
+    #if vz.z <0:
+        #vz = vz*-1
     vy = (vz*vx).normalyse()
 
     m = matr_from_vecs(vx,vy,vz,ps[0])
-    m = inv_rot_matr(m)
+    #m = inv_rot_matr(m)
     m_inv =  np.linalg.inv(m)
 
-    return position_from_matrix_pulse(m)
+    return position_from_matrix_pulse(m_inv)
 
 
 
@@ -171,13 +171,17 @@ def comp_matrs_ps(q:Pose3D,rad:bool = True)->list[Point3D]:
     return pms
 
 
-def calc_forward_kinem_pulse(q:Pose3D,rad:bool = False,n = 6):
+def calc_forward_kinem_pulse(q:Pose3D,rad:bool = False,n = 6,pulse90:bool = True):
     L1 = 0.2311
-    L2 = 0.45
-    L3 = 0.37
+    L2 = 0.375
+    L3 = 0.295
     L4 = 0.1351
     L5 = 0.1825
     L6 = 0.1325
+
+    if pulse90:
+        L2 = 0.45
+        L3 = 0.37
     #print(q)
     if not rad:
         q.angles = toRad(q.angles)
@@ -210,6 +214,7 @@ def to_degree(q):
 
 
 def p3d_cur_pulse(flange:Point3D,tool:Point3D,base:Point3D):
+
     cur_flange_m = pulse_matrix_p(flange)
 
     cur_base_m = pulse_matrix_p(base)
@@ -786,6 +791,14 @@ def pose_to_list(p)->list:
     if type(p) == Pose or type(p) == PoseTimestamp:
         p = p.to_dict()
     return p["angles"]
+
+def list_to_str(p,separator:str ="\n")->list: 
+    ns = ["X: ","Y: ","Z: ","Rx: ","Ry: ","Rz: "]
+    ret = ""
+    for i in range(6):
+        pre = ns[i]
+        ret+= pre+str(p[i])+separator
+    return ret
 
 def position_to_str(p,separator:str ="\n",simple:bool = False)->str:
     if type(p) == Position or type(p) == PositionTimestamp:
