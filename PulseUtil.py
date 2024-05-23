@@ -57,7 +57,7 @@ def base_calibration(points):
 
     m = matr_from_vecs(vx,vy,vz,ps[0])
     m = inv_rot_matr(m)
-    #m_inv =  np.linalg.inv(m)
+    m =  np.linalg.inv(m)
 
     return position_from_matrix_pulse(m)
 

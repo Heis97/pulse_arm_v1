@@ -363,45 +363,45 @@ class RobPosThread(QtCore.QThread):
             #print(cur_posit_m_comp)
 
             #print(cur_posit_m)
-            #try:
-            angles = self.pulse_arm.get_pose().angles
-            pose = Pose3D(angles )
-            position_t = self.pulse_arm.get_position()
-            position:Point3D = q_to_p(pose,False)
-            #print("p1",position.ToStringPulseMM())
-            position = p3d_cur_pulse(position,self.pulse_arm.tool,self.pulse_arm.base)
-            #print(pose )
-            #print("p2",position.ToStringPulseMM())
-            #self.label.setText("Joint position:\n"+pose_to_str(pose)+"\n\n"+"Cartesian position:\n"+position.ToStringPulseMM())  
-            self.label.setText("Joint position:\n"+list_to_str(angles)+"\n\n"+"Cartesian position:\n"+position_to_str(position_t)
-                                +"\n\n"+"Cartesian position_int:\n"+position.ToStringPulseMM())  
-            self.pulse_arm.cur_posit_3d = position
-            self.pulse_arm.cur_posit = position.ToStringPulseMM(4," ")
+            try:
+                angles = self.pulse_arm.get_pose().angles
+                pose = Pose3D(angles )
+                position_t = self.pulse_arm.get_position()
+                position:Point3D = q_to_p(pose,False)
+                #print("p1",position.ToStringPulseMM())
+                position = p3d_cur_pulse(position,self.pulse_arm.tool,self.pulse_arm.base)
+                #print(pose )
+                #print("p2",position.ToStringPulseMM())
+                #self.label.setText("Joint position:\n"+pose_to_str(pose)+"\n\n"+"Cartesian position:\n"+position.ToStringPulseMM())  
+                self.label.setText("Joint position:\n"+list_to_str(angles)+"\n\n"+"Cartesian position:\n"+position_to_str(position_t)
+                                    +"\n\n"+"Cartesian position_int:\n"+position.ToStringPulseMM())  
+                self.pulse_arm.cur_posit_3d = position
+                self.pulse_arm.cur_posit = position.ToStringPulseMM(4," ")
 
-            #print(position)
-            self.pulse_arm.update_buf()
-            #print("update")
-            self.pulse_arm.current_progress_prog()
-            #print("cur_prog")
-            self.label.setText(self.label.text()+"\n Line: "+str(self.pulse_arm.cur_i_prog)+", "+str(self.pulse_arm.cur_progr_line)+"%")
+                #print(position)
+                self.pulse_arm.update_buf()
+                #print("update")
+                self.pulse_arm.current_progress_prog()
+                #print("cur_prog")
+                self.label.setText(self.label.text()+"\n Line: "+str(self.pulse_arm.cur_i_prog)+", "+str(self.pulse_arm.cur_progr_line)+"%")
 
-            #print(self.pulse_arm.cur_i_prog )
-            """if self.pulse_arm.rem_thr is not None and self.pulse_arm.cur_prog_3d is not None and self.pulse_arm.cur_i_prog>0:
-                cur_prog_p = self.pulse_arm.cur_prog_3d[self.pulse_arm.cur_i_prog]
-                mes = str(cur_prog_p.g)+" "+str(cur_prog_p.b)
-                print(mes)
-                self.pulse_arm.rem_thr.conn.send(mes.encode())"""
+                #print(self.pulse_arm.cur_i_prog )
+                """if self.pulse_arm.rem_thr is not None and self.pulse_arm.cur_prog_3d is not None and self.pulse_arm.cur_i_prog>0:
+                    cur_prog_p = self.pulse_arm.cur_prog_3d[self.pulse_arm.cur_i_prog]
+                    mes = str(cur_prog_p.g)+" "+str(cur_prog_p.b)
+                    print(mes)
+                    self.pulse_arm.rem_thr.conn.send(mes.encode())"""
 
-            """if self.pulse_arm.cur_prog_3d is not None and self.pulse_arm.cur_i_prog>0:
-                cur_prog_p = self.pulse_arm.cur_prog_3d[self.pulse_arm.cur_i_prog]
-                mes = str(cur_prog_p.g)+" "+str(cur_prog_p.b)
-                print(mes)"""
-                #self.pulse_arm.rem_thr.conn.send(mes.encode())
+                """if self.pulse_arm.cur_prog_3d is not None and self.pulse_arm.cur_i_prog>0:
+                    cur_prog_p = self.pulse_arm.cur_prog_3d[self.pulse_arm.cur_i_prog]
+                    mes = str(cur_prog_p.g)+" "+str(cur_prog_p.b)
+                    print(mes)"""
+                    #self.pulse_arm.rem_thr.conn.send(mes.encode())
 
 
-            if self.writing:
-                self.feedback.append(str(pose))
-            #except BaseException:
+                if self.writing:
+                    self.feedback.append(str(pose))
+            except BaseException:
                 pass
 
 
@@ -1330,7 +1330,7 @@ class PulseApp(QtWidgets.QWidget):
         self.text_prog_code = QTextEdit(self)
         self.text_prog_code.setGeometry(QtCore.QRect(1150, 560, 500, 400))
 
-        self.text_prog_code.setText("G1 X0 Y0 Z10\nG1 X0 Y0 Z0\nG1 X0 Y30 Z0\nG1 X1 Y30\nG1 X1 Y0")
+        self.text_prog_code.setText("G1 X0 Y0 Z10\nG1 X0 Y0 Z1\nG1 X0 Y30 Z1\nG1 X1 Y30\nG1 X1 Y0")
 
 
     def set_cur_work_pose(self):
@@ -1347,6 +1347,7 @@ class PulseApp(QtWidgets.QWidget):
 
     def exec_prog_arm_rel(self):
 
+        
         positions = self.generate_traj_xyz_rel()
         vel1 = 1
         vel2 = 0.01
@@ -1356,7 +1357,7 @@ class PulseApp(QtWidgets.QWidget):
         print(positions)
         vel = vel1
         acs = acs1
-        self.pulse_robot.set_position(positions[0],velocity=vel,acceleration=acs,motion_type=MT_LINEAR)
+        self.pulse_robot.set_position(positions[0],_velocity=vel,_acceleration=acs,_motion_type=MT_LINEAR)
         
         vel = vel2
         acs = acs2
@@ -1364,7 +1365,7 @@ class PulseApp(QtWidgets.QWidget):
         dn = 950
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
         for i in range(int(len(positions)/dn)+1):
-            self.pulse_robot.set_position(positions[dn*i],velocity=vel1,acceleration=acs1,motion_type=MT_LINEAR)        
+            self.pulse_robot.set_position(positions[dn*i],_velocity=vel1,_acceleration=acs1,_motion_type=MT_LINEAR)        
             linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel2,acceleration=acs2)
             print("load",dn)
             if len(positions)>dn*(i+1)+1:
@@ -1391,7 +1392,7 @@ class PulseApp(QtWidgets.QWidget):
         #print(positions)
         vel = vel1
         acs = acs1
-        self.pulse_robot.set_position(positions[0],velocity=vel,acceleration=acs,motion_type=MT_LINEAR)
+        self.pulse_robot.set_position(positions[0],_velocity=vel,_acceleration=acs,_motion_type=MT_LINEAR)
         
         vel = vel2
         acs = acs2
@@ -1400,7 +1401,7 @@ class PulseApp(QtWidgets.QWidget):
         dn = 950
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
         for i in range(int(len(positions)/dn)+1):
-            self.pulse_robot.set_position(positions[dn*i],velocity=vel1,acceleration=acs1,motion_type=MT_LINEAR)        
+            self.pulse_robot.set_position(positions[dn*i],_velocity=vel1,_acceleration=acs1,_motion_type=MT_LINEAR)        
             linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel2,acceleration=acs2)
             print("load",dn)
             if len(positions)>dn*(i+1)+1:
@@ -1496,7 +1497,7 @@ class PulseApp(QtWidgets.QWidget):
             #r = [0,0,0]        
             pos:Position = position(p,r,blend=0.0001)  
             if i>2:
-                
+                print(p[0]*1000,p[1]*1000,p[2]*1000,r)       
                 if self.dist(p,points[-1])>dist_min*1e-3:
                     p1 = Point3D(p[0],p[1],p[2])
                     p2 = Point3D(points[-1][0],points[-1][1],points[-1][2])
@@ -1515,7 +1516,7 @@ class PulseApp(QtWidgets.QWidget):
                 ps_filt.append(ps[i])
         #print(ps)
         print("#######################################")
-        return positions,ps_filt
+        return positions
     
     def traj_prep_pose(self,ps:list[Point3D]):
         """ps: degr"""
@@ -1567,32 +1568,43 @@ class PulseApp(QtWidgets.QWidget):
         
         return positions
     
+    def remove_rot(self,ps:"list[Point3D]"):
+        for p in ps:
+            p.roll = 0
+            p.pitch = 0
+            p.yaw = 0
+        return ps
+
     def generate_traj_xyz_rel(self):
         self.cur_start_point = self.get_cur_item_from_combo(self.combo_start_points,self.settins_pulse.start_points)
-        ps = parse_g_code(self.text_prog_code.toPlainText())
+        ps = parse_g_code_pulse(self.text_prog_code.toPlainText(),0.001)
         start_point = self.cur_start_point["point"]
         start_rot =  self.cur_start_point["rotation"]
 
         points = []
-        p = [start_point["x"],start_point["y"],start_point["z"]]
-        r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
-        pos = position(p,r)
+        p_s = [start_point["x"],start_point["y"],start_point["z"]]
+        r_s = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
+        p_off = Point3D(x = start_point["x"],y = start_point["y"],z = start_point["z"],
+                        _roll = start_rot["roll"],_pitch = start_rot["pitch"],_yaw = start_rot["yaw"])
+        ps = self.remove_rot(ps)
+        positions = self.traj_prep(ps,p_off)
+        """pos = position(p,r)
         points.append(p)
         positions = []
         for i in range(len(ps)): 
-
-            p = [0.001*ps[i].x+p[0],0.001*ps[i].y+p[1],0.001*ps[i].z+p[2]]
+            print(ps[i].x,ps[i].y,ps[i].z)
+            p = [0.001*ps[i].x+points[0][0],0.001*ps[i].y+points[0][1],0.001*ps[i].z+points[0][2]]
             r = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
             
             pos = position(p,r,blend=0.0001) 
             if self.dist(p,points[-1])>0.003:
-                print(pos)
+                print(p,r)
                 positions.append(pos)
-                points.append(p)
+                points.append(p)"""
 
         #for i in range(len(positions)):
             #print(i," ",positions[i])
-        
+         
         return positions
 #-----------------------------------------------------------------------------------
     def generate_traj_abc(self):        

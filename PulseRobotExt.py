@@ -122,7 +122,7 @@ class PulseRobotExt(object):
         else:
             return self.robot.run_linear_positions(positions,motion_parameters)
     
-    def run_linear_positions(self,positions: list[Position],ps: list[Point3D],
+    """def run_linear_positions(self,positions: list[Position],ps: list[Point3D],
                                 motion_parameters: LinearMotionParameters):
         self.cur_prog_3d = ps
         self.cur_i_prog = 0
@@ -131,7 +131,7 @@ class PulseRobotExt(object):
             return
             #return self.robot_v3.move_j(target_pose.angles,speed,acceleration)
         else:
-            return self.robot.run_linear_positions(positions,motion_parameters)
+            return self.robot.run_linear_positions(positions,motion_parameters)"""
     
     """def run_poses(self,positions: list[Pose],ps: list[Point3D],
                                 motion_parameters: LinearMotionParameters):
