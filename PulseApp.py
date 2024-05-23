@@ -466,9 +466,20 @@ class PulseApp(QtWidgets.QWidget):
 
         self.plotter = Plotter(self)
 
-        p1 =  self.settins_pulse.start_points["b0605_1a"]
+        """p1 =  self.settins_pulse.start_points["b0605_1a"]
         p2 =  self.settins_pulse.start_points["b0605_1b"]
         p3 =  self.settins_pulse.start_points["b0605_1c"]
+
+        p = base_calibration([p1,p2,p3])
+        print("p1: "+pos_dict_to_point3d(p1).ToStringPulseMM(4,", "))
+        print("p2: "+pos_dict_to_point3d(p2).ToStringPulseMM(4,", "))
+        print("p3: "+pos_dict_to_point3d(p3).ToStringPulseMM(4,", "))
+        print("base: "+p.ToStringPulseMM(4,", "))"""
+
+
+        p1 =  self.settins_pulse.start_points["b2205_1a"]
+        p2 =  self.settins_pulse.start_points["b2205_1b"]
+        p3 =  self.settins_pulse.start_points["b2205_1c"]
 
         p = base_calibration([p1,p2,p3])
         print("p1: "+pos_dict_to_point3d(p1).ToStringPulseMM(4,", "))
