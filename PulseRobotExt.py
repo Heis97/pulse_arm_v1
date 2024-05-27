@@ -40,7 +40,7 @@ class PulseRobotExt(object):
     def __init__(self,controller_v3:bool = False) -> None:
         self.controller_v3 = controller_v3
         if self.controller_v3:   
-            #print("connect v3")    
+            print("connect v3")    
             self.robot_v3 = RobotAPI(host_v3)
             self.robot_v3.init_robot()
         else:
@@ -50,7 +50,7 @@ class PulseRobotExt(object):
 
     def get_pose(self):
         if self.controller_v3:
-            return self.robot_v3.get_act_pos_q()
+            return Pose(self.robot_v3.get_act_pos_q())
         else:
             return self.robot.get_pose()
     
@@ -83,7 +83,7 @@ class PulseRobotExt(object):
             #pos = [_t_p.point.x(),_t_p.point.y(),_t_p.point.z(),_t_p.rotation.x(),_t_p.rotation.y(),_t_p.rotation.z()]
             self.robot_v3.move_l(posit_to_list(_t_p),_velocity,_acceleration)
             self.robot_v3.run_wps()
-            #self.robot_v3.colab_await_buffer(0)
+            self.robot_v3.await_motion()
             return 
         else:
             return self.robot.set_position(target_position=_t_p,

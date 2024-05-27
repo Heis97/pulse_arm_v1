@@ -15,6 +15,8 @@ from KukaRobot import *
 from PulseRobotExt import *
 from Plotter import Plotter
 
+controller_v3 = False
+
 
 def fullsum(l:"list[QPointF]"):
     p = QPointF(0,0)
@@ -365,9 +367,9 @@ class RobPosThread(QtCore.QThread):
             #print(cur_posit_m)
             try:
                 angles = self.pulse_arm.get_pose().angles
-                pose = Pose3D(angles )
+                pose = Pose3D(angles)
                 position_t = self.pulse_arm.get_position()
-                position:Point3D = q_to_p(pose,False)
+                position:Point3D = q_to_p(pose,controller_v3)
                 #print("p1",position.ToStringPulseMM())
                 position = p3d_cur_pulse(position,self.pulse_arm.tool,self.pulse_arm.base)
                 #print(pose )
@@ -859,7 +861,7 @@ class PulseApp(QtWidgets.QWidget):
         save_file( self.coords_thread.feedback,"feedback.json")
 
     def connect_robot(self):
-        self.pulse_robot = PulseRobotExt(False)
+        self.pulse_robot = PulseRobotExt(controller_v3)
         
         self.coords_thread = RobPosThread(self.pulse_robot,self.lab_coord,self.writing_signal)
 
@@ -867,16 +869,18 @@ class PulseApp(QtWidgets.QWidget):
     def disconnect_robot(self):
         self.pulse_robot = None
 
-    def add_axis_buttons(self,name:ax, pos:QtCore.QRect,f_press):
+    def add_axis_buttons(self,name:ax, pos:QtCore.QRect,f_press,f_release):
         but_ax_positive = QPushButton(str(name)[-1:]+'+', self)
         but_ax_positive.setGeometry(pos)
         but_ax_positive.pressed.connect(f_press)
-        but_ax_positive.released.connect(self.stop_robot)
+        if f_release is not None:
+            but_ax_positive.released.connect(f_release)
         pos2 = QtCore.QRect(pos.x(),pos.y()+pos.height()+10,pos.width(),pos.height())
         but_ax_negative = QPushButton(str(name)[-1:]+'-', self)
         but_ax_negative.setGeometry(pos2)
         but_ax_negative.pressed.connect(f_press)
-        but_ax_negative.released.connect(self.stop_robot)
+        if f_release is not None:
+            but_ax_negative.released.connect(f_release)
 
     def build_position(self):
         self.but_home_position = QPushButton('Изначальное положение', self)
@@ -894,8 +898,8 @@ class PulseApp(QtWidgets.QWidget):
         axis = [ax.X,ax.Y,ax.Z,ax.U,ax.V,ax.W]
         i=0
         for axe in axis:           
-            self.add_axis_buttons(axe,QtCore.QRect(100+40*i, 340, 30, 30),self.axis_jog)
-            self.add_axis_buttons(axe,QtCore.QRect(100+40*i, 440, 30, 30),self.axis_move)
+            self.add_axis_buttons(axe,QtCore.QRect(100+40*i, 340, 30, 30),self.axis_jog,self.stop_robot)
+            self.add_axis_buttons(axe,QtCore.QRect(100+40*i, 440, 30, 30),self.axis_move,None  )
             i+=1
 
         """self.add_axis_buttons(ax.X,QtCore.QRect(100, 340, 30, 30),self.axis_jog)
@@ -942,9 +946,12 @@ class PulseApp(QtWidgets.QWidget):
         step = 0.1
         x,y,z,Rx,Ry,Rz = self.mask_from_button(but.text())        
         position_delt = position([step*x, step*y, step*z], [step*Rx, step*Ry, step*Rz])
-        pos,rot = position_sum2(self.pulse_robot.get_position(),position_delt)
+        pos_cur = self.pulse_robot.get_position()
+        pos,rot = position_sum2(pos_cur,position_delt)
         pos_rel = position(pos,rot)
-
+        print("pos_cur",pos_cur)
+        print("position_delt",position_delt)
+        print("pos_rel",pos_rel)
         self.pulse_robot.set_position(pos_rel , _velocity=vel, _acceleration=acs,_motion_type=MT_LINEAR)
         #self.pulse_robot.await_stop()
 
