@@ -15,7 +15,7 @@ from KukaRobot import *
 from PulseRobotExt import *
 from Plotter import Plotter
 
-controller_v3 = True
+controller_v3 = False
 
 
 def fullsum(l:"list[QPointF]"):
@@ -1616,7 +1616,7 @@ class PulseApp(QtWidgets.QWidget):
 #-----------------------------------------------------------------------------------
     def generate_traj_abc(self):        
         ps = parse_g_code_pulse(self.text_prog_code.toPlainText(),0.001)
-        p_off = Point3D()
+        p_off = Point3D(_yaw = -1)
         #p_off.z+=5*1e-3
         positions,ps_filt = self.traj_prep(ps,p_off)
         
