@@ -15,7 +15,7 @@ from KukaRobot import *
 from PulseRobotExt import *
 from Plotter import Plotter
 
-controller_v3 = False
+controller_v3 = True
 
 
 def fullsum(l:"list[QPointF]"):
