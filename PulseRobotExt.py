@@ -63,7 +63,8 @@ class PulseRobotExt(object):
     
     def stop(self):
         if self.controller_v3:
-            return self.robot_v3.stby()
+            return self.robot_v3.hold()
+            #return self.robot_v3.stby()
         else:
             return self.robot.stop()
     

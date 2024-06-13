@@ -15,7 +15,7 @@ from KukaRobot import *
 from PulseRobotExt import *
 from Plotter import Plotter
 
-controller_v3 = False
+controller_v3 = True
 
 
 def fullsum(l:"list[QPointF]"):
@@ -1430,11 +1430,11 @@ class PulseApp(QtWidgets.QWidget):
         self.pulse_robot.run_linear_positions(positions,linear_motion_parameters)"""
 
         vel1 = 2
-        vel2 = 0.01
+        vel2 = 0.1
 
         acs1 = 50
-        acs2 = 0.01
-        #print(positions)
+        acs2 = 0.1
+        print(positions)
         vel = vel1
         acs = acs1
         #self.pulse_robot.set_position(positions[0],velocity=vel,acceleration=acs,motion_type=MT_LINEAR)
@@ -1445,13 +1445,13 @@ class PulseApp(QtWidgets.QWidget):
         dn = 950
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
         for i in range(int(len(positions)/dn)+1):
-            self.pulse_robot.set_position(positions[dn*i],_velocity=vel1,_acceleration=acs1,_motion_type=MT_LINEAR)        
+            self.pulse_robot.set_position(positions[dn*i],_velocity=vel2,_acceleration=acs2,_motion_type=MT_LINEAR)   #vel,acs1      
             linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel2,acceleration=acs2)
             print("load",dn)
             if len(positions)>dn*(i+1)+1:
-                self.pulse_robot.run_linear_positions(positions[dn*i:dn*(i+1)],ps_filt[dn*i:dn*(i+1)],linear_motion_parameters)
+                self.pulse_robot.run_linear_positions(positions[dn*i:dn*(i+1)],linear_motion_parameters)
             else:
-                self.pulse_robot.run_linear_positions(positions[dn*i:],ps_filt[dn*i:],linear_motion_parameters)
+                self.pulse_robot.run_linear_positions(positions[dn*i:],linear_motion_parameters)
 
     def exec_prog_arm_poses(self):
         #self.apply_settings_to_robot()
@@ -1523,7 +1523,7 @@ class PulseApp(QtWidgets.QWidget):
                 ps_filt.append(ps[i])
         #print(ps)
         print("#######################################")
-        return positions
+        return positions,ps_filt
     
     def traj_prep_pose(self,ps:list[Point3D]):
         """ps: degr"""
@@ -1617,6 +1617,7 @@ class PulseApp(QtWidgets.QWidget):
     def generate_traj_abc(self):        
         ps = parse_g_code_pulse(self.text_prog_code.toPlainText(),0.001)
         p_off = Point3D(_yaw = -1)
+        p_off = Point3D()
         #p_off.z+=5*1e-3
         positions,ps_filt = self.traj_prep(ps,p_off)
         
