@@ -2,6 +2,7 @@ from pulseapi import  RobotPulse, pose, position, PulseApiException, MT_JOINT, M
 from pdhttp import Position,Point,Rotation,Pose,MotorStatus,PoseTimestamp,PositionTimestamp,ToolInfo
 from PulseUtil import *
 from api.robot_api import *
+from threading import Thread
 
 
 def posit_to_list(posit:Position):
@@ -17,6 +18,7 @@ host_v3 = "192.168.0.50"
 
 
 class PulseRobotExt(object):
+    zg = False
     robot: RobotPulse
     robot_v3: RobotAPI
     base: Point3D = Point3D(0,0,0)
@@ -109,7 +111,11 @@ class PulseRobotExt(object):
             return self.robot.set_pose(target_pose,speed,velocity ,acceleration, tcp_max_velocity,motion_type)
         #return self.robot.set_pose(target_pose,speed,velocity ,acceleration, tcp_max_velocity,motion_type)
     
-
+    def run_positions_v3(self,positions: list[Position],
+                                motion_parameters: LinearMotionParameters):
+        for pos in positions: self.robot_v3.move_l(posit_to_list(pos),motion_parameters.velocity,motion_parameters.acceleration) 
+        self.robot_v3.run_wps()
+        self.robot_v3.await_motion()
 
     def run_linear_positions(self,positions: list[Position],
                                 motion_parameters: LinearMotionParameters):
@@ -117,9 +123,8 @@ class PulseRobotExt(object):
         self.cur_i_prog = 0
 
         if self.controller_v3:
-            for pos in positions: self.robot_v3.move_l(posit_to_list(pos),motion_parameters.velocity,motion_parameters.acceleration) 
-            return
-            #return self.robot_v3.move_j(target_pose.angles,speed,acceleration)
+            t = Thread(target=self.run_positions_v3(positions,motion_parameters))
+            t.start()
         else:
             return self.robot.run_linear_positions(positions,motion_parameters)
     
@@ -190,6 +195,12 @@ class PulseRobotExt(object):
     
     def relax(self):
         if self.controller_v3:
+            if self.zg==False:
+                self.robot_v3.zg(True)
+                self.zg = True
+            else:
+                self.robot_v3.zg(False)
+                self.zg = False
             return
         else:
             return self.robot.relax()

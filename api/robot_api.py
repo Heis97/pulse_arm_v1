@@ -131,11 +131,12 @@ class RobotAPI:
 
     def _connect(self):
         try:
-            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self._init_control()
+            """self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.connect((self.ip, self.coms_port))
             self.socket.settimeout(3)
             self.socket.setblocking(True)
-            logging.debug(f"Socket connect [{self.ip}:{self.coms_port}] --> Ok")
+            logging.debug(f"Socket connect [{self.ip}:{self.coms_port}] --> Ok")"""
             self._cmd(CTRLR_COMS_UNLOCK, struct.pack("I", CTRLR_PROTO_VERSION));
             return True
         except Exception as error:
@@ -147,7 +148,7 @@ class RobotAPI:
 
     def _recv(self, l):
         try:
-            d = self.socket.recv(l)
+            d = self.ctrl.sd.recv(l)
             if d == b'':
                 print("CTRL connection lost")
                 self._stop()
@@ -159,7 +160,7 @@ class RobotAPI:
 
     def _send(self, d):
         try:
-            s = self.socket.send(d)
+            s = self.ctrl._send(d)
             if s == 0:
                 print("CTRL connection lost")
                 self._stop()
@@ -710,9 +711,9 @@ class RobotAPI:
         if not self._connect():
             self._stop()
         print('connected')
-        if not self._init_control():
+        """if not self._init_control():
             self._stop()
-        print('init complete')
+        print('init complete')"""
         if not self.run():
             self._stop()
         print('run')

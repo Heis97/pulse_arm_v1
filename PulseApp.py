@@ -495,8 +495,11 @@ class PulseApp(QtWidgets.QWidget):
 
         #pose = p_to_q(Point3D(0.1,0.1,0.1,_pitch = 0.0,_roll = 0.,_yaw=0.))
         #print(str(pose))
+        #t = Thread(target=self.test_thr("positions,motion_parameters"))
+        #t.start()
 
-        
+    def test_thr(self,tet):
+        print("text+_"+tet)   
         
     
     def test_geom(self):
