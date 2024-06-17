@@ -4,7 +4,7 @@ from typing import Callable, Any
 COMS_PORT = 29001
 RTD_PORT = 29000
 
-from .ctrl import Control
+from .ctrl_v2 import Control_v2
 import logging
 import sys
 import socket
@@ -106,7 +106,7 @@ class Variables:
         self.rblend = 0
 
 
-class RobotAPI:
+class RobotAPI_v2:
     def __init__(self, ip):
         self.coms_port = COMS_PORT
         self.rtd_port = RTD_PORT
@@ -123,7 +123,7 @@ class RobotAPI:
         self.waypoints_list = []
 
     def _init_control(self):
-        self.ctrl = Control(ip=self.ip)
+        self.ctrl = Control_v2(ip=self.ip)
         if not self.ctrl.start_thread():
             self.ctrl = None
         return True
@@ -131,11 +131,12 @@ class RobotAPI:
 
     def _connect(self):
         try:
-            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self._init_control()
+            """self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.connect((self.ip, self.coms_port))
             self.socket.settimeout(3)
             self.socket.setblocking(True)
-            logging.debug(f"Socket connect [{self.ip}:{self.coms_port}] --> Ok")
+            logging.debug(f"Socket connect [{self.ip}:{self.coms_port}] --> Ok")"""
             self._cmd(CTRLR_COMS_UNLOCK, struct.pack("I", CTRLR_PROTO_VERSION));
             return True
         except Exception as error:
@@ -147,7 +148,7 @@ class RobotAPI:
 
     def _recv(self, l):
         try:
-            d = self.socket.recv(l)
+            d = self.ctrl.sd.recv(l)
             if d == b'':
                 print("CTRL connection lost")
                 self._stop()
@@ -159,7 +160,7 @@ class RobotAPI:
 
     def _send(self, d):
         try:
-            s = self.socket.send(d)
+            s = self.ctrl._send(d)
             if s == 0:
                 print("CTRL connection lost")
                 self._stop()
@@ -214,15 +215,17 @@ class RobotAPI:
         Using this motion increases the speed of reaching a point compared to other types of motions, the robot moves to a given point along the shortest path.
         The trajectory will be an unknown curve, use this type of motion if the trajectory is of secondary importance.
 
-        :param position: target position of 6 axes in degree, format list [0, 0, 0, 0, 0, 0], degree
+        :param position: target position of 6 axes in degree, format list [0, 0, 0, 0, 0, 0], rad
         :param speed: target speed deg/s
         :param acceleration: target acceleration deg/s2
         :param blend: blending radius
         """
         self.waypoints_list.append({'type': MOVE_J, 'data': (position, speed, acceleration, blend)})
-        self.add_wp(t=0, des_q=position, vmax_j=speed, amax_j=acceleration, rblend=blend)
+        self.add_wp_deg(t=0, des_q=position, vmax_j=speed, amax_j=acceleration, rblend=blend)
        
        
+
+
     def move_l(self, position, speed, acceleration, blend = 0):
         """
         Функция создает целевую точку перемещения типа line.
@@ -237,7 +240,7 @@ class RobotAPI:
         (recalculation of the given Cartesian coordinates into the axial values of the manipulator).
 
 
-        :param position: target position in cartesian space, format list [X, Y, Z, rx, ry, rz] sm, degree
+        :param position: target position in cartesian space, format list [X, Y, Z, rx, ry, rz] m, degree
         :param speed: target speed m/s
         :param acceleration: target acceleration m/s2
         :param blend: blending radius
@@ -270,8 +273,8 @@ class RobotAPI:
                 L motion:
                     add_wp_deg(t=1, des_x=[-39.00, -13.50, 42.33, -179.99, 0, 90.00], vmax_t=1, amax_t=1, amax_r=1, vmax_r=1, rblend=0)
                     des_x:
-                    - first 3 value is TCP pos in cartesian space (sm)
-                    - value 4-6 rotation around axes of TCP X, Y, Z, (degree)
+                    - first 3 value is TCP pos in cartesian space (m)
+                    - value 4-6 rotation around axes of TCP X, Y, Z, (rad)
                 :param t:
                 :param des_q:
                 :param des_x:
@@ -291,14 +294,14 @@ class RobotAPI:
         des_q_rad = des_q.copy()
         des_x_rad = des_x.copy()
 
-        for i in range(0,6):
+        """for i in range(0,6):
             des_q_rad[i] = _to_rad(des_q[i])
 
         for i in range(0,3):
             des_x_rad[i] = des_x[i]/100
 
         for i in range(3,6):
-            des_x_rad[i] = _to_rad(des_x[i])
+            des_x_rad[i] = _to_rad(des_x[i])"""
 
         self.add_wp(
             t,
@@ -523,8 +526,10 @@ class RobotAPI:
                 self._stop()
 
     def await_accepted(self):
+        print("while acc")
         while int(self.ctrl.data["cmd_cntr"]) != self._cmd_cntr:
-            time.sleep(0.001)
+            time.sleep(0.1)
+            print(self.ctrl.run)
             if not self.ctrl.run:
                 self._stop()
 
@@ -583,7 +588,9 @@ class RobotAPI:
         self._cmd(CTRLR_COMS_MOVE_SCALE, struct.pack("dd", self.scale_v, self.scale_a))
 
     def run_wps(self):
+        print("await_acc")
         self.await_accepted()
+        print("cmd")
         self._cmd(CTRLR_COMS_MOVE_RUN)
 
     def run(self):
@@ -591,7 +598,6 @@ class RobotAPI:
             time.sleep(0.1)
             try:
                 if self.ctrl.data["state"] <= 1:
-
                     self._cmd(CTRLR_COMS_POWER, struct.pack("i", CTRLR_COMS_POWER_CMD_OFF))
                 break
             except:
@@ -709,9 +715,9 @@ class RobotAPI:
         if not self._connect():
             self._stop()
         print('connected')
-        if not self._init_control():
+        """if not self._init_control():
             self._stop()
-        print('init complete')
+        print('init complete')"""
         if not self.run():
             self._stop()
         print('run')

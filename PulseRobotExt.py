@@ -1,6 +1,7 @@
 from pulseapi import  RobotPulse, pose, position, PulseApiException, MT_JOINT, MT_LINEAR,jog,create_box_obstacle,LinearMotionParameters,InterpolationType,tool_info
 from pdhttp import Position,Point,Rotation,Pose,MotorStatus,PoseTimestamp,PositionTimestamp,ToolInfo
 from PulseUtil import *
+from api.robot_api_v2 import *
 from api.robot_api import *
 from threading import Thread
 
@@ -83,10 +84,9 @@ class PulseRobotExt(object):
                      _tcp_max_velocity = None, 
                      _motion_type: str = MT_LINEAR):
         if self.controller_v3:
-            #pos = [_t_p.point.x(),_t_p.point.y(),_t_p.point.z(),_t_p.rotation.x(),_t_p.rotation.y(),_t_p.rotation.z()]
-            self.robot_v3.move_l(posit_to_list(_t_p),_velocity,_acceleration)
-            self.robot_v3.run_wps()
-            self.robot_v3.await_motion()
+            t = Thread(target=self.run_position_v3(_t_p,_velocity,_acceleration,_tcp_max_velocity,_motion_type))
+            t.start()
+            #self.run_position_v3(_t_p,_velocity,_acceleration,_tcp_max_velocity,_motion_type)
             return 
         else:
             return self.robot.set_position(target_position=_t_p,
@@ -111,11 +111,24 @@ class PulseRobotExt(object):
             return self.robot.set_pose(target_pose,speed,velocity ,acceleration, tcp_max_velocity,motion_type)
         #return self.robot.set_pose(target_pose,speed,velocity ,acceleration, tcp_max_velocity,motion_type)
     
+    def run_position_v3(self,_t_p:Position,
+                     _velocity = None,
+                     _acceleration = None,
+                     _tcp_max_velocity = None, 
+                     _motion_type: str = MT_LINEAR):
+        #print("move_l")
+        self.robot_v3.move_l(posit_to_list(_t_p),_velocity,_acceleration)
+        #print("run_wps")
+        self.robot_v3.run_wps()
+        #print("await_mot")
+        #self.robot_v3.await_motion()
+        return
+
     def run_positions_v3(self,positions: list[Position],
                                 motion_parameters: LinearMotionParameters):
         for pos in positions: self.robot_v3.move_l(posit_to_list(pos),motion_parameters.velocity,motion_parameters.acceleration) 
         self.robot_v3.run_wps()
-        self.robot_v3.await_motion()
+        #self.robot_v3.await_motion()
 
     def run_linear_positions(self,positions: list[Position],
                                 motion_parameters: LinearMotionParameters):

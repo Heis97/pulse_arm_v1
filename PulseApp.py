@@ -1,7 +1,7 @@
 from time import sleep
 import sys
 from PyQt5 import QtCore,  QtWidgets
-from PyQt5.QtWidgets import (QPushButton, QLineEdit, QApplication,QTextEdit,QLabel,QComboBox,QRadioButton)
+from PyQt5.QtWidgets import (QPushButton, QLineEdit, QApplication,QTextEdit,QLabel,QComboBox,QRadioButton,QButtonGroup)
 from PyQt5.QtCore import Qt,QRect,QPointF
 from enum import Enum
 import json
@@ -344,6 +344,7 @@ class RobPosThread(QtCore.QThread):
         self.start()   
         self.writing = False
         self.feedback = []
+        #data_signal = QtCore.pyqtSignal(str)
         slot.connect(self.set_writing)
 
     def set_writing(self,val):
@@ -352,84 +353,28 @@ class RobPosThread(QtCore.QThread):
             self.feedback = []
 
     def run(self):
+        i=0
         while True:
-            
-            #cur_posit = self.pulse_arm.get_position()
+            #i+=1
+            #print(i)
+            #try:
+            angles = self.pulse_arm.get_pose().angles
+            pose = Pose3D(angles)
+            position_t = self.pulse_arm.get_position()
+            position:Point3D = q_to_p(pose,controller_v3)
+            position = p3d_cur_pulse(position,self.pulse_arm.tool,self.pulse_arm.base)
+            self.label.setText("Joint position:\n"+list_to_str(angles)+"\n\n"+"Cartesian position:\n"+position_to_str(position_t)
+                                +"\n\n"+"Cartesian position_int:\n"+position.ToStringPulseMM())  
+            self.pulse_arm.cur_posit_3d = position
+            self.pulse_arm.cur_posit = position.ToStringPulseMM(4," ")
+            self.pulse_arm.update_buf()
+            self.pulse_arm.current_progress_prog()
+            self.label.setText(self.label.text()+"\n Line: "+str(self.pulse_arm.cur_i_prog)+", "+str(self.pulse_arm.cur_progr_line)+"%")
+            if self.writing:
+                self.feedback.append(str(pose))
+            #except BaseException:
+                #pass
 
-            #cur_posit = self.pulse_arm.get_position()
-
-            #cur_posit_m = pulse_matrix_p(position_to_p3d(cur_posit))
-
-            #cur_posit_m_comp = pulse_FK(pose_to_list(self.pulse_arm.get_pose()))
-
-            #print(cur_posit_m_comp)
-
-            #print(cur_posit_m)
-            try:
-                angles = self.pulse_arm.get_pose().angles
-                pose = Pose3D(angles)
-                position_t = self.pulse_arm.get_position()
-                position:Point3D = q_to_p(pose,controller_v3)
-                #print("p1",position.ToStringPulseMM())
-                position = p3d_cur_pulse(position,self.pulse_arm.tool,self.pulse_arm.base)
-                #print(pose )
-                #print("p2",position.ToStringPulseMM())
-                #self.label.setText("Joint position:\n"+pose_to_str(pose)+"\n\n"+"Cartesian position:\n"+position.ToStringPulseMM())  
-                self.label.setText("Joint position:\n"+list_to_str(angles)+"\n\n"+"Cartesian position:\n"+position_to_str(position_t)
-                                    +"\n\n"+"Cartesian position_int:\n"+position.ToStringPulseMM())  
-                self.pulse_arm.cur_posit_3d = position
-                self.pulse_arm.cur_posit = position.ToStringPulseMM(4," ")
-
-                #print(position)
-                self.pulse_arm.update_buf()
-                #print("update")
-                self.pulse_arm.current_progress_prog()
-                #print("cur_prog")
-                self.label.setText(self.label.text()+"\n Line: "+str(self.pulse_arm.cur_i_prog)+", "+str(self.pulse_arm.cur_progr_line)+"%")
-
-                #print(self.pulse_arm.cur_i_prog )
-                """if self.pulse_arm.rem_thr is not None and self.pulse_arm.cur_prog_3d is not None and self.pulse_arm.cur_i_prog>0:
-                    cur_prog_p = self.pulse_arm.cur_prog_3d[self.pulse_arm.cur_i_prog]
-                    mes = str(cur_prog_p.g)+" "+str(cur_prog_p.b)
-                    print(mes)
-                    self.pulse_arm.rem_thr.conn.send(mes.encode())"""
-
-                """if self.pulse_arm.cur_prog_3d is not None and self.pulse_arm.cur_i_prog>0:
-                    cur_prog_p = self.pulse_arm.cur_prog_3d[self.pulse_arm.cur_i_prog]
-                    mes = str(cur_prog_p.g)+" "+str(cur_prog_p.b)
-                    print(mes)"""
-                    #self.pulse_arm.rem_thr.conn.send(mes.encode())
-
-
-                if self.writing:
-                    self.feedback.append(str(pose))
-            except BaseException:
-                pass
-
-
-            """else:
-                try:
-                    motors = self.pulse_arm.status_motors()
-                    position = self.pulse_arm.get_position()
-
-                    
-
-                    self.pulse_arm.cur_posit = position_to_str(position," ",True)
-                    self.label.setText("Joint position:\n"+pose_to_str(pose)+"\n\n"+"Cartesian position:\n"+position_to_str(position)+"\n\n"+motor_state_to_str(motors))  
-                    pass               
-                except BaseException:
-                    pass"""
-                #print(str(pose))
-            
-
-            #cur_posit_comp = position_from_matrix_pulse(cur_posit_m_comp)
-
-            #print(Point3D.ToStringPulse(self.pulse_arm.tool,delim=", "),"\n",self.pulse_arm.get_tool_info())
-
-            #p3d = p3d_cur_pulse(cur_posit_comp,self.pulse_arm.tool,self.pulse_arm.base)
-
-            #print(pulse_matrix_p(position_to_p3d(cur_posit)))
-            
         
             sleep(self.timeDelt)
 
@@ -456,7 +401,7 @@ class PulseApp(QtWidgets.QWidget):
     plotter:Plotter = None
     writing_signal = QtCore.pyqtSignal(bool)
 
-    
+    move_dist = 0
     
 
     def __init__(self, parent=None):
@@ -905,21 +850,39 @@ class PulseApp(QtWidgets.QWidget):
             self.add_axis_buttons(axe,QtCore.QRect(100+40*i, 440, 30, 30),self.axis_move,None  )
             i+=1
 
-        """self.add_axis_buttons(ax.X,QtCore.QRect(100, 340, 30, 30),self.axis_jog)
-        self.add_axis_buttons(ax.Y,QtCore.QRect(140, 340, 30, 30),self.axis_jog)
-        self.add_axis_buttons(ax.Z,QtCore.QRect(180, 340, 30, 30),self.axis_jog)
+        self.b_gr = QButtonGroup()
+        dy = 22
+        y_st = 520
+        radiobutton = QRadioButton("100 mm",self)
+        radiobutton.setAccessibleName("100")
+        radiobutton.setGeometry(100,y_st,100,40)
+        radiobutton.toggled.connect(self.radio_b_cl)
+        self.b_gr.addButton(radiobutton, 0)
 
-        self.add_axis_buttons(ax.U,QtCore.QRect(220, 340, 30, 30),self.axis_jog)
-        self.add_axis_buttons(ax.V,QtCore.QRect(260, 340, 30, 30),self.axis_jog)
-        self.add_axis_buttons(ax.W,QtCore.QRect(300, 340, 30, 30),self.axis_jog)
+        radiobutton = QRadioButton("10 mm",self)
+        radiobutton.setAccessibleName("10")
+        radiobutton.setGeometry(100,y_st+dy,100,40)
+        radiobutton.setChecked(True)
+        radiobutton.toggled.connect(self.radio_b_cl)
+        self.b_gr.addButton(radiobutton, 1)
 
-        self.add_axis_buttons(ax.X,QtCore.QRect(100, 440, 30, 30),self.axis_move)
-        self.add_axis_buttons(ax.Y,QtCore.QRect(140, 440, 30, 30),self.axis_move)
-        self.add_axis_buttons(ax.Z,QtCore.QRect(180, 440, 30, 30),self.axis_move)
+        radiobutton = QRadioButton("1 mm",self)
+        radiobutton.setAccessibleName("1")
+        radiobutton.setGeometry(100,y_st+2*dy,100,40)
+        radiobutton.toggled.connect(self.radio_b_cl)
+        self.b_gr.addButton(radiobutton, 2)
 
-        self.add_axis_buttons(ax.U,QtCore.QRect(220, 440, 30, 30),self.axis_move)
-        self.add_axis_buttons(ax.V,QtCore.QRect(260, 440, 30, 30),self.axis_move)
-        self.add_axis_buttons(ax.W,QtCore.QRect(300, 440, 30, 30),self.axis_move)"""
+        radiobutton = QRadioButton("0.1 mm",self)
+        radiobutton.setAccessibleName("0.1")
+        radiobutton.setGeometry(100,y_st+3*dy,100,40)
+        radiobutton.toggled.connect(self.radio_b_cl)
+        self.b_gr.addButton(radiobutton, 3)
+
+
+    def radio_b_cl(self):
+        radioButton:QRadioButton = self.sender()
+        if radioButton.isChecked():
+            self.move_dist = float(radioButton.accessibleName())
 
     def home_position(self):
         home_pose = pose([0, -90, 0, -90, -90, 0])
@@ -946,7 +909,7 @@ class PulseApp(QtWidgets.QWidget):
         but = self.sender()
         acs = 0.1  
         vel = 0.1     
-        step = 0.1
+        step = self.move_dist*10e-3
         x,y,z,Rx,Ry,Rz = self.mask_from_button(but.text())        
         position_delt = position([step*x, step*y, step*z], [step*Rx, step*Ry, step*Rz])
         pos_cur = self.pulse_robot.get_position()
@@ -1342,6 +1305,10 @@ class PulseApp(QtWidgets.QWidget):
 
         self.text_prog_code.setText("G1 X0 Y0 Z10\nG1 X0 Y0 Z1\nG1 X0 Y30 Z1\nG1 X1 Y30\nG1 X1 Y0")
 
+        text_prog = """G1 X-258.0 Y334.0 Z326.0 A-0.3 B1.4 C-2.4\nG1 X-248.0 Y334.0 Z326.0 A-0.3 B1.4 C-2.4\nG1 X-248.0 Y344.0 Z326.0 A-0.3 B1.4 C-2.4\nG1 X-258.0 Y344.0 Z326.0 A-0.3 B1.4 C-2.4\n"""
+
+        self.text_prog_code.setText(text_prog)
+
 
     def set_cur_work_pose(self):
         self.cur_work_pose = self.get_cur_item_from_combo(self.combo_work_poses,self.settins_pulse.work_poses)
@@ -1482,10 +1449,6 @@ class PulseApp(QtWidgets.QWidget):
                     self.pulse_robot.run_linear_positions(positions[dn*i:dn*(i+1)],ps_filt[dn*i:dn*(i+1)],linear_motion_parameters)
                 else:
                     self.pulse_robot.run_linear_positions(positions[dn*i:],ps_filt[dn*i:],linear_motion_parameters)"""
-
-
-
-    
 
 
     def stop_ex_robot(self):

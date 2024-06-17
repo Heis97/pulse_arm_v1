@@ -110,7 +110,7 @@ PARAMETERS_LIST = (
 STRUCT_FORMAT = "6d4H105d14b4d14b4d"
 
 
-class Control:
+class Control_v2:
     def __init__(self, ip, port=PORT_INPUT):
         self.data = {}
         self.ip = ip
@@ -160,9 +160,30 @@ class Control:
                 n += p[1]
             #print(unpack_data)
         except Exception as error:
+            print("run false rec")
             self.logger.error(error)
             self.run = False
             sys.exit()
+    def _stop(self):
+        print("Exiting...")
+        sys.exit()
+
+    def _send(self, d):
+        try:
+            s = self.sd.send(d)
+            if s == 0:
+                print("CTRL connection lost")
+                self._stop()
+        except Exception as error:
+            print("CTRL _send err")
+            self._stop()
+            return False
+
+    def _cmd(self, cmd_type, data = []):
+        self._send(struct.pack("i", len(data) + 4))
+        self._send(struct.pack("i", cmd_type))
+        if len(data) > 0:
+            self._send(data)
 
     def _thread(self, main_thread):
         self.logger.debug("Recive data thread started")
@@ -171,6 +192,7 @@ class Control:
                 self.sd.close()
                 break
             self._recive_data()
+            #print(self.run)
         self.logger.debug("Recive data thread stopped")
 
     def start_thread(self):

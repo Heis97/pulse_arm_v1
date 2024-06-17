@@ -1,5 +1,5 @@
 import sys
-from api.robot_api import RobotAPI
+from api.robot_api_v2 import RobotAPI
 import time
 pi = 3.1415926535
 addr = "192.168.0.50"  # ip localhost?+,192.168.0.50
