@@ -836,7 +836,11 @@ class RobotAPI:
             act_x[i] = act_x[i] * 100
         for i in range(3, 6):
             act_x[i] = math.degrees(act_x[i])"""
-        return list(rr.ctrl.data["act_x"])
+        act_x = list(rr.ctrl.data["act_x"])
+        """act_x_v2 = act_x.copy()
+        act_x_v2[3] = act_x[4]
+        act_x_v2[4] = act_x[3]"""
+        return act_x
 
 
 

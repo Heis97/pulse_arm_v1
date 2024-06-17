@@ -150,9 +150,13 @@ def calc_pos(dh_params:list[list]):
     matrs = []
     for dh_param in dh_params:
         matrs.append(create_dhmatr(dh_param))
+
+    
     matr_res = np.eye(4)
+    #print("start________________________")
     for matr in matrs:
         matr_res = np.dot(matr_res,matr)
+        #print("matr\n",matr_res)
     return matr_res
 
 def comp_axes_ps(qs:list,rad:bool = True)->list[Point3D]:
@@ -171,7 +175,7 @@ def comp_matrs_ps(q:Pose3D,rad:bool = True)->list[Point3D]:
     return pms
 
 
-def calc_forward_kinem_pulse(q:Pose3D,rad:bool = False,n = 6,pulse90:bool = True):
+def calc_forward_kinem_pulse(q:Pose3D,rad:bool = False,n = 6, pulse75:bool = True):
     L1 = 0.2311
     L2 = 0.375
     L3 = 0.295
@@ -179,13 +183,13 @@ def calc_forward_kinem_pulse(q:Pose3D,rad:bool = False,n = 6,pulse90:bool = True
     L5 = 0.1825
     L6 = 0.1325
 
-    if pulse90:
+    if not pulse75:
         L2 = 0.45
         L3 = 0.37
     #print(q)
     if not rad:
         q.angles = toRad(q.angles)
-    
+    #q.angles.reverse()
     dh_params = [
         [ q.angles[0], np.pi / 2, 0, L1],
         [ q.angles[1],  0, -L2, 0],
@@ -194,8 +198,11 @@ def calc_forward_kinem_pulse(q:Pose3D,rad:bool = False,n = 6,pulse90:bool = True
         [ q.angles[4], -np.pi / 2, 0, L5],
         [ q.angles[5],  0, 0, L6]
     ]
-
-    p = position_from_matrix_pulse(calc_pos(dh_params[:n]))
+    #print("dh_params",dh_params)
+    pos = calc_pos(dh_params[:n])
+    #print(pos)
+    p = position_from_matrix_pulse(pos)
+    #print(p.ToString())
     p.t = q.t
     return p
 
@@ -280,7 +287,7 @@ def p_to_q(position:Point3D,t:int = 1)->Pose3D:
     return calc_inverse_kinem_pulse_priv(position,var[t][0],var[t][1],var[t][2])
 
 def q_to_p(pose:Pose3D, isRad:bool = True)->Point3D:
-    return calc_forward_kinem_pulse(pose,isRad)
+    return calc_forward_kinem_pulse(pose,isRad,6,isRad )
 
 
 def calc_inters_2circ(x1,y1,x2,y2,R1,R2,sign):

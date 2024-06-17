@@ -121,14 +121,14 @@ class PulseRobotExt(object):
         #print("run_wps")
         self.robot_v3.run_wps()
         #print("await_mot")
-        #self.robot_v3.await_motion()
+        self.robot_v3.await_motion()
         return
 
     def run_positions_v3(self,positions: list[Position],
                                 motion_parameters: LinearMotionParameters):
         for pos in positions: self.robot_v3.move_l(posit_to_list(pos),motion_parameters.velocity,motion_parameters.acceleration) 
         self.robot_v3.run_wps()
-        #self.robot_v3.await_motion()
+        self.robot_v3.await_motion()
 
     def run_linear_positions(self,positions: list[Position],
                                 motion_parameters: LinearMotionParameters):

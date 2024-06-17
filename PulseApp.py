@@ -358,11 +358,23 @@ class RobPosThread(QtCore.QThread):
             #i+=1
             #print(i)
             #try:
+            
             angles = self.pulse_arm.get_pose().angles
             pose = Pose3D(angles)
             position_t = self.pulse_arm.get_position()
+            #print(pose.angles)
             position:Point3D = q_to_p(pose,controller_v3)
+            #print(position.ToStringPulseMM())
             position = p3d_cur_pulse(position,self.pulse_arm.tool,self.pulse_arm.base)
+
+            m_pos_t = pulse_matrix_p(position_to_p3d(position_t))
+            m_pos = pulse_matrix_p(position)
+
+            m_pos_t_inv =  np.linalg.inv(m_pos_t)
+            #m_pos_t_inv =  np.linalg.inv(m_pos_t)
+            m_del = np.dot(m_pos_t_inv,m_pos)
+            print(m_del)
+
             self.label.setText("Joint position:\n"+list_to_str(angles)+"\n\n"+"Cartesian position:\n"+position_to_str(position_t)
                                 +"\n\n"+"Cartesian position_int:\n"+position.ToStringPulseMM())  
             self.pulse_arm.cur_posit_3d = position
@@ -1313,13 +1325,13 @@ class PulseApp(QtWidgets.QWidget):
     def set_cur_work_pose(self):
         self.cur_work_pose = self.get_cur_item_from_combo(self.combo_work_poses,self.settins_pulse.work_poses)
         if self.cur_work_pose is not None:
-            self.pulse_robot.set_pose(Pose(self.cur_work_pose["angles"]),5)
+            self.pulse_robot.set_pose(Pose(self.cur_work_pose["angles"]),0.1)
             #self.pulse_robot.await_stop()
 
     def set_cur_start_point(self):
         self.cur_start_point = self.get_cur_item_from_combo(self.combo_start_points,self.settins_pulse.start_points)
         if self.cur_start_point is not None:
-            self.pulse_robot.set_position(Position(self.cur_start_point["point"],self.cur_start_point["rotation"]),_velocity=5,_acceleration=1)
+            self.pulse_robot.set_position(Position(self.cur_start_point["point"],self.cur_start_point["rotation"]),_velocity=0.1,_acceleration=0.1)
             #self.pulse_robot.await_stop()
 
     def exec_prog_arm_rel(self):
