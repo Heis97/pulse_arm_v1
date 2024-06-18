@@ -55,6 +55,8 @@ class PulseRobotExt(object):
         if self.controller_v3:
             return Pose(self.robot_v3.get_act_pos_q())
         else:
+            #pose_deg = 
+
             return self.robot.get_pose()
     
     def get_position(self):

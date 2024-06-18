@@ -822,10 +822,10 @@ class RobotAPI:
         get radian axes values and convert them to degrees
         return list of 6 axes degrees
         """
-        """act_q = list(rr.ctrl.data["act_q"])
+        act_q = list(rr.ctrl.data["act_q"])
         for i in range(0, 5):
-            act_q[i] = math.degrees(act_q[i])"""
-        return list(rr.ctrl.data["act_q"])
+            act_q[i] = math.degrees(act_q[i])
+        return  act_q
 
     def get_act_pos_cartesian(rr):
         """
