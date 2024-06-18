@@ -220,7 +220,7 @@ class RobotAPI:
         :param blend: blending radius
         """
         self.waypoints_list.append({'type': MOVE_J, 'data': (position, speed, acceleration, blend)})
-        self.add_wp(t=0, des_q=position, vmax_j=speed, amax_j=acceleration, rblend=blend)
+        self.add_wp_deg(t=0, des_q=position, vmax_j=speed, amax_j=acceleration, rblend=blend)
        
        
     def move_l(self, position, speed, acceleration, blend = 0):
@@ -823,8 +823,11 @@ class RobotAPI:
         return list of 6 axes degrees
         """
         act_q = list(rr.ctrl.data["act_q"])
-        for i in range(0, 5):
+        #print("actq1: ", act_q)
+        for i in range(6):
             act_q[i] = math.degrees(act_q[i])
+
+        #print("actq2: ", act_q)
         return  act_q
 
     def get_act_pos_cartesian(rr):
@@ -837,10 +840,13 @@ class RobotAPI:
         for i in range(3, 6):
             act_x[i] = math.degrees(act_x[i])"""
         act_x = list(rr.ctrl.data["act_x"])
-        """act_x_v2 = act_x.copy()
+        act_x_v2 = act_x.copy()
         act_x_v2[3] = act_x[4]
-        act_x_v2[4] = act_x[3]"""
-        return act_x
+        act_x_v2[4] = act_x[3]
+        """print("___________")
+        print(act_x)
+        print(act_x_v2)"""
+        return act_x_v2
 
 
 

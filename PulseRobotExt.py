@@ -62,6 +62,8 @@ class PulseRobotExt(object):
     def get_position(self):
         if self.controller_v3:
             list_pos = self.robot_v3.get_act_pos_cartesian()
+            
+
             return position(list_pos[0:3],list_pos[3:6])
         else:
             return self.robot.get_position()
@@ -104,9 +106,12 @@ class PulseRobotExt(object):
                 tcp_max_velocity = None,
                 motion_type: str = MT_JOINT):
         if self.controller_v3:
-            self.robot_v3.move_j(target_pose.angles,speed,acceleration)
-            self.robot_v3.run_wps()
-            #self.robot_v3.colab_await_buffer(0)
+            t = Thread(target=self.run_pose_v3(target_pose,speed,
+                velocity,
+                acceleration,
+                tcp_max_velocity,
+                motion_type))
+            t.start()
             return 
         
         else:
@@ -123,6 +128,18 @@ class PulseRobotExt(object):
         #print("run_wps")
         self.robot_v3.run_wps()
         #print("await_mot")
+        #self.robot_v3.await_motion()
+        return
+    
+    def run_pose_v3(self,target_pose:Pose,
+                speed= None,
+                velocity = None,
+                acceleration = None,
+                tcp_max_velocity = None,
+                motion_type: str = MT_JOINT):
+        self.robot_v3.move_j(target_pose.angles,speed,acceleration)
+        self.robot_v3.run_wps()
+        #self.robot_v3.a
         self.robot_v3.await_motion()
         return
 
@@ -130,7 +147,7 @@ class PulseRobotExt(object):
                                 motion_parameters: LinearMotionParameters):
         for pos in positions: self.robot_v3.move_l(posit_to_list(pos),motion_parameters.velocity,motion_parameters.acceleration) 
         self.robot_v3.run_wps()
-        self.robot_v3.await_motion()
+        #self.robot_v3.await_motion()
 
     def run_linear_positions(self,positions: list[Position],
                                 motion_parameters: LinearMotionParameters):

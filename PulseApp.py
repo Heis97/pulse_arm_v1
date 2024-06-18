@@ -15,7 +15,7 @@ from KukaRobot import *
 from PulseRobotExt import *
 from Plotter import Plotter
 
-controller_v3 = False
+controller_v3 = True
 
 
 def fullsum(l:"list[QPointF]"):
@@ -363,17 +363,21 @@ class RobPosThread(QtCore.QThread):
             pose = Pose3D(angles)
             position_t = self.pulse_arm.get_position()
             #print(pose.angles)
-            position:Point3D = q_to_p(pose,controller_v3)
+            position:Point3D = q_to_p(pose,False,controller_v3)
             #print(position.ToStringPulseMM())
             position = p3d_cur_pulse(position,self.pulse_arm.tool,self.pulse_arm.base)
 
             m_pos_t = pulse_matrix_p(position_to_p3d(position_t))
             m_pos = pulse_matrix_p(position)
+            """print("m_pos")
+            print(m_pos)
+            print("m_pos_t")
+            print(m_pos_t)"""
 
             m_pos_t_inv =  np.linalg.inv(m_pos_t)
             #m_pos_t_inv =  np.linalg.inv(m_pos_t)
             m_del = np.dot(m_pos_t_inv,m_pos)
-            print(m_del)
+            
 
             self.label.setText("Joint position:\n"+list_to_str(angles)+"\n\n"+"Cartesian position:\n"+position_to_str(position_t)
                                 +"\n\n"+"Cartesian position_int:\n"+position.ToStringPulseMM())  
@@ -921,7 +925,7 @@ class PulseApp(QtWidgets.QWidget):
         but = self.sender()
         acs = 0.1  
         vel = 0.1     
-        step = self.move_dist*10e-3
+        step = self.move_dist*10e-4
         x,y,z,Rx,Ry,Rz = self.mask_from_button(but.text())        
         position_delt = position([step*x, step*y, step*z], [step*Rx, step*Ry, step*Rz])
         pos_cur = self.pulse_robot.get_position()
@@ -1325,7 +1329,10 @@ class PulseApp(QtWidgets.QWidget):
     def set_cur_work_pose(self):
         self.cur_work_pose = self.get_cur_item_from_combo(self.combo_work_poses,self.settins_pulse.work_poses)
         if self.cur_work_pose is not None:
-            self.pulse_robot.set_pose(Pose(self.cur_work_pose["angles"]),0.1)
+            pose = Pose(self.cur_work_pose["angles"])
+            #print(pose.angles)
+            #print(self.pulse_robot.get_pose())
+            self.pulse_robot.set_pose(pose,0.1)
             #self.pulse_robot.await_stop()
 
     def set_cur_start_point(self):

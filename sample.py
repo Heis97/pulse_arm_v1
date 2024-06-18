@@ -1,5 +1,5 @@
 import sys
-from api.robot_api_v2 import RobotAPI
+from api.robot_api import RobotAPI
 import time
 pi = 3.1415926535
 addr = "192.168.0.50"  # ip localhost?+,192.168.0.50
@@ -25,7 +25,7 @@ def off():
 
 def qs():
     print("rr.run()")
-    rr.run()
+    #rr.run()
     #time.sleep(10)
     #rr.off()
     #if rr.hold_happened:
@@ -62,14 +62,15 @@ def cart_2():
 
 def home():
     print("rr.run()")
-    rr.run()
+    rr.init_robot()
+    #rr.run()
     #time.sleep(10)
     #rr.off()
     #if rr.hold_happened:
         #rr.hold()
     #while True:
     print("rr.move")
-    rr.move_j([0, -pi/2, 0, -pi/2, 0, 0], 0.5, 0.5, blend=0)
+    rr.move_j([0, -pi/2, 0, -pi/2, 0, 0], 0.1, 0.1, blend=0)
     print("rr.run_wps")
     rr.run_wps()
     rr.await_motion()
@@ -83,7 +84,7 @@ def home():
 if __name__ == '__main__':
     print("rr.connect")
     connect()
-    set_parameters()
+    #set_parameters()
     #rr.run()
 
     #time.sleep(30)
@@ -93,7 +94,7 @@ if __name__ == '__main__':
     #rr.run()
     #cart_2()
     #print(rr.ctrl.data["act_x"])
-    #qs()
+    qs()
     #off()
     #home()
     #time.sleep(20)

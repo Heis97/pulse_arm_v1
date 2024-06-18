@@ -226,7 +226,7 @@ def p3d_cur_pulse(flange:Point3D,tool:Point3D,base:Point3D):
 
     cur_base_m = pulse_matrix_p(base)
     cur_tool_m = pulse_matrix_p(tool)
-
+    
     end_p = np.dot(cur_flange_m,cur_tool_m) 
     end_p = np.dot(cur_base_m,end_p) 
 
@@ -286,8 +286,8 @@ def p_to_q(position:Point3D,t:int = 1)->Pose3D:
     var = [[-1,-1,-1],[-1,-1,1],[-1,1,-1],[-1,1,1],[1,-1,-1],[1,-1,1],[1,1,-1],[1,1,1]]
     return calc_inverse_kinem_pulse_priv(position,var[t][0],var[t][1],var[t][2])
 
-def q_to_p(pose:Pose3D, isRad:bool = True)->Point3D:
-    return calc_forward_kinem_pulse(pose,isRad,6,isRad )
+def q_to_p(pose:Pose3D, isRad:bool = True, controller_v3:bool = True)->Point3D:
+    return calc_forward_kinem_pulse(pose,isRad,6, controller_v3)
 
 
 def calc_inters_2circ(x1,y1,x2,y2,R1,R2,sign):
