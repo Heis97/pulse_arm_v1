@@ -646,6 +646,13 @@ def pulse_rot_matrix(Rx,Ry,Rz)->np.ndarray:
     mxy = np.dot( mx, my)
     return np.dot(mxy, mz)
 
+def pulse_rot_matrix_v3(Rx,Ry,Rz)->np.ndarray:
+    mx = rotatedX(Rx)
+    my = rotatedY(Ry)
+    mz = rotatedZ(Rz)
+    mxy = np.dot( mx, my)
+    return np.dot(mxy, mz)
+
 def pulse_matrix(x,y,z,Rx,Ry,Rz)->np.ndarray:
     rot = pulse_rot_matrix(Rx,Ry,Rz)
     rot[0][3] = x
@@ -658,6 +665,16 @@ def pulse_matrix(x,y,z,Rx,Ry,Rz)->np.ndarray:
 def pulse_matrix_p(p:Point3D)->np.ndarray:
     #print(p.roll,p.pitch,p.yaw)
     rot = pulse_rot_matrix(p.roll,p.pitch,p.yaw)
+    rot[0][3] = p.x
+    rot[1][3] = p.y
+    rot[2][3] = p.z
+
+    #rot = np.linalg.inv(rot)
+    return rot
+
+def pulse_matrix_p_v3(p:Point3D)->np.ndarray:
+    #print(p.roll,p.pitch,p.yaw)
+    rot = pulse_rot_matrix_v3(p.pitch,p.roll,p.yaw)
     rot[0][3] = p.x
     rot[1][3] = p.y
     rot[2][3] = p.z
