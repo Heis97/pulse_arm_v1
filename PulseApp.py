@@ -428,16 +428,18 @@ class PulseApp(QtWidgets.QWidget):
         self.build()  
 
         self.plotter = Plotter(self)
-        p1 = pos_dict_to_point3d( self.settins_pulse.start_points["test_p2"])
-        pose1 = Pose3D( self.settins_pulse.work_poses["test_p2"]["angles"])
-        p1_p = q_to_p(pose1,False)
+        
 
+    def test_kin_v3(self):
+        p1 = pos_dict_to_point3d( self.settins_pulse.start_points["test_p1"])
+        pose1 = Pose3D( self.settins_pulse.work_poses["test_p1"]["angles"])
+        p1_p = q_to_p(pose1,False)
+        print(p1.ToString())
+        print(p1_p.ToString())
         m1 = pulse_matrix_p_v3(p1)
         m1_p = pulse_matrix_p(p1_p)
         print("m1\n",m1)
         print("m1_p\n",m1_p)
-
-        
 
     def test_base(self):
         """p1 =  self.settins_pulse.start_points["b0605_1a"]

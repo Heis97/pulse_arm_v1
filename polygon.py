@@ -150,7 +150,7 @@ class Point3D(object):
         return self
 
     def ToString(self)->str:
-        return str(self.x)+" "+str(self.y)+" "+str(self.z)+str(self.pitch)+" "+str(self.roll)+" "+str(self.yaw)+";"
+        return str(self.x)+" "+str(self.y)+" "+str(self.z)+" "+str(self.pitch)+" "+str(self.roll)+" "+str(self.yaw)+";"
 
     def ToStringPulse(self,pres = 3,delim = "\n")->str:
         return str(round(self.x,pres))+delim+str(round(self.y,pres))+delim+str(round(self.z,pres))+delim+str(round(self.roll,pres))+delim+str(round(self.pitch,pres))+delim+str(round(self.yaw,pres))
@@ -646,7 +646,7 @@ def pulse_rot_matrix(Rx,Ry,Rz)->np.ndarray:
     mxy = np.dot( mx, my)
     return np.dot(mxy, mz)
 
-def pulse_rot_matrix_v3(Rx,Ry,Rz)->np.ndarray:
+def pulse_rot_matrix_v3(Rz,Rx,Ry)->np.ndarray:
     mx = rotatedX(Rx)
     my = rotatedY(Ry)
     mz = rotatedZ(Rz)
