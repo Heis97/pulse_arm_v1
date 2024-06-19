@@ -367,16 +367,12 @@ class RobPosThread(QtCore.QThread):
             #print(position.ToStringPulseMM())
             position = p3d_cur_pulse(position,self.pulse_arm.tool,self.pulse_arm.base)
 
-            m_pos_t = pulse_matrix_p(position_to_p3d(position_t))
+            """m_pos_t = pulse_matrix_p(position_to_p3d(position_t))
             m_pos = pulse_matrix_p(position)
-            """print("m_pos")
+            print("m_pos")
             print(m_pos)
             print("m_pos_t")
             print(m_pos_t)"""
-
-            m_pos_t_inv =  np.linalg.inv(m_pos_t)
-            #m_pos_t_inv =  np.linalg.inv(m_pos_t)
-            m_del = np.dot(m_pos_t_inv,m_pos)
             
 
             self.label.setText("Joint position:\n"+list_to_str(angles)+"\n\n"+"Cartesian position:\n"+position_to_str(position_t)
@@ -428,18 +424,37 @@ class PulseApp(QtWidgets.QWidget):
         self.build()  
 
         self.plotter = Plotter(self)
-        
+        #self.test_kin_v3()
 
     def test_kin_v3(self):
-        p1 = pos_dict_to_point3d( self.settins_pulse.start_points["test_p1"])
-        pose1 = Pose3D( self.settins_pulse.work_poses["test_p1"]["angles"])
+        p1 = pos_dict_to_point3d( self.settins_pulse.start_points["test_p5"])
+        pose1 = Pose3D( self.settins_pulse.work_poses["test_p5"]["angles"])
         p1_p = q_to_p(pose1,False)
-        print(p1.ToString())
-        print(p1_p.ToString())
+        print("p1_v3: ",p1.ToString())
+        print("p1_v1: ",p1_p.ToString())
         m1 = pulse_matrix_p_v3(p1)
         m1_p = pulse_matrix_p(p1_p)
         print("m1\n",m1)
         print("m1_p\n",m1_p)
+        p_l = [p1.x,p1.y,p1.z,p1.roll,p1.pitch,p1.yaw]
+        p_l_v1 = pos_v3_to_v1(p_l)
+        p_l_v3 = pos_v1_to_v3(p_l_v1)
+        p_l_v1b = pos_v3_to_v1(p_l_v3)
+        print("p_lv3a", p_l)
+        print("p_l_v3",p_l_v3)
+        print("p_l_v1",p_l_v1)
+        
+        print("p_l_v1b",p_l_v1b)
+        
+        p = Point3D(p_l[0],p_l[1],p_l[2], _roll= p_l[3],_pitch= p_l[4],_yaw= p_l[5])
+        m = pulse_matrix_p_v3(p)
+        print(m)
+        p = p3d_from_matrix_pulse_v3(m)
+        #p = position_from_matrix_pulse(m)
+        print("p_l2", [p.x,p.y,p.z,p.roll,p.pitch,p.yaw])
+
+
+
 
     def test_base(self):
         """p1 =  self.settins_pulse.start_points["b0605_1a"]

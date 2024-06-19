@@ -294,8 +294,8 @@ class RobotAPI:
         for i in range(0,6):
             des_q_rad[i] = _to_rad(des_q[i])
 
-        for i in range(0,3):
-            des_x_rad[i] = des_x[i]/100
+        """for i in range(0,3):
+            des_x_rad[i] = des_x[i]/100"""
 
         for i in range(3,6):
             des_x_rad[i] = _to_rad(des_x[i])
@@ -839,14 +839,8 @@ class RobotAPI:
             act_x[i] = act_x[i] * 100
         for i in range(3, 6):
             act_x[i] = math.degrees(act_x[i])"""
-        act_x = list(rr.ctrl.data["act_x"])
-        act_x_v2 = act_x.copy()
-        act_x_v2[3] = act_x[4]
-        act_x_v2[4] = act_x[3]
-        """print("___________")
-        print(act_x)
-        print(act_x_v2)"""
-        return act_x_v2
+
+        return list(rr.ctrl.data["act_x"])
 
 
 

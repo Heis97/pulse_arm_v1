@@ -150,7 +150,7 @@ class Point3D(object):
         return self
 
     def ToString(self)->str:
-        return str(self.x)+" "+str(self.y)+" "+str(self.z)+" "+str(self.pitch)+" "+str(self.roll)+" "+str(self.yaw)+";"
+        return str(self.x)+" "+str(self.y)+" "+str(self.z)+" "+str(self.roll)+" "+str(self.pitch)+" "+str(self.yaw)+";"
 
     def ToStringPulse(self,pres = 3,delim = "\n")->str:
         return str(round(self.x,pres))+delim+str(round(self.y,pres))+delim+str(round(self.z,pres))+delim+str(round(self.roll,pres))+delim+str(round(self.pitch,pres))+delim+str(round(self.yaw,pres))
@@ -646,12 +646,12 @@ def pulse_rot_matrix(Rx,Ry,Rz)->np.ndarray:
     mxy = np.dot( mx, my)
     return np.dot(mxy, mz)
 
-def pulse_rot_matrix_v3(Rz,Rx,Ry)->np.ndarray:
+def pulse_rot_matrix_v3(Rx,Ry,Rz)->np.ndarray:
     mx = rotatedX(Rx)
     my = rotatedY(Ry)
     mz = rotatedZ(Rz)
-    mxy = np.dot( mx, my)
-    return np.dot(mxy, mz)
+    mxy = np.dot( my, mx)
+    return np.dot(mz, mxy)
 
 def pulse_matrix(x,y,z,Rx,Ry,Rz)->np.ndarray:
     rot = pulse_rot_matrix(Rx,Ry,Rz)
@@ -674,7 +674,7 @@ def pulse_matrix_p(p:Point3D)->np.ndarray:
 
 def pulse_matrix_p_v3(p:Point3D)->np.ndarray:
     #print(p.roll,p.pitch,p.yaw)
-    rot = pulse_rot_matrix_v3(p.pitch,p.roll,p.yaw)
+    rot = pulse_rot_matrix_v3(p.roll,p.pitch,p.yaw)
     rot[0][3] = p.x
     rot[1][3] = p.y
     rot[2][3] = p.z
@@ -695,7 +695,7 @@ def position_from_matrix(m):
 
     return x,y,z,a,b,c
 
-def position_from_matrix_kuka(m):
+def position_from_matrix_kuka(m)->Point3D:
     x = m[0][3]
     y = m[1][3]
     z = m[2][3]
@@ -706,7 +706,19 @@ def position_from_matrix_kuka(m):
         a = np.arcsin(m[2][1] / np.cos(b))
         c = np.arcsin(m[1][0] / np.cos(b))
 
-    return x,y,z,a,b,c
+    return Point3D(x,y,z,_roll=a,_pitch=b,_yaw=c)
+
+def p3d_from_matrix_pulse_v3(m)->Point3D:
+    x = m[0][3]
+    y = m[1][3]
+    z = m[2][3]
+
+    a = np.arctan(m[1][0]/m[0][0])
+    b = np.arcsin(-m[2][0])
+    c = np.arctan(m[2][1]/m[2][2])
+
+
+    return Point3D(x,y,z,_roll=c,_pitch=b,_yaw=a)
 
 def comb_angle(angle:float,case:int):
     if case ==0: return angle

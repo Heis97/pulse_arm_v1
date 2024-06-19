@@ -11,7 +11,20 @@ def posit_to_list(posit:Position):
     return p3d_to_list(p3d)
 
 def p3d_to_list(p3d:Point3D):
-    return [p3d.x,p3d.y,p3d.z,p3d.pitch,p3d.roll,p3d.yaw]
+    return [p3d.x,p3d.y,p3d.z,p3d.roll,p3d.pitch,p3d.yaw]
+
+def pos_v3_to_v1(p_l):
+    p = Point3D(p_l[0],p_l[1],p_l[2], _roll= p_l[3],_pitch= p_l[4],_yaw= p_l[5])
+    m = pulse_matrix_p_v3(p)
+    #print("m_v3: ",m)
+    p = position_from_matrix_pulse(m)
+    return [p.x,p.y,p.z,p.roll,p.pitch,p.yaw]
+
+def pos_v1_to_v3(p_l):
+    p = Point3D(p_l[0],p_l[1],p_l[2], _roll= p_l[3],_pitch= p_l[4],_yaw= p_l[5])
+    m = pulse_matrix_p(p)
+    p = p3d_from_matrix_pulse_v3(m)
+    return [p.x,p.y,p.z,p.roll,p.pitch,p.yaw]
 
 
 host_old = "http://10.10.10.20:8081"
@@ -33,6 +46,7 @@ class PulseRobotExt(object):
     cur_progr_line:float = 0
     rem_thr = None
     controller_v3:bool = None
+    pos_v3 = None
 
 
     def update_buf(self):
@@ -62,8 +76,9 @@ class PulseRobotExt(object):
     def get_position(self):
         if self.controller_v3:
             list_pos = self.robot_v3.get_act_pos_cartesian()
-            
-
+            #print("list1: ",list_pos)
+            list_pos =  pos_v3_to_v1(list_pos)
+            #print("list2: ",list_pos)
             return position(list_pos[0:3],list_pos[3:6])
         else:
             return self.robot.get_position()
@@ -90,7 +105,6 @@ class PulseRobotExt(object):
         if self.controller_v3:
             t = Thread(target=self.run_position_v3(_t_p,_velocity,_acceleration,_tcp_max_velocity,_motion_type))
             t.start()
-            #self.run_position_v3(_t_p,_velocity,_acceleration,_tcp_max_velocity,_motion_type)
             return 
         else:
             return self.robot.set_position(target_position=_t_p,
@@ -123,11 +137,11 @@ class PulseRobotExt(object):
                      _acceleration = None,
                      _tcp_max_velocity = None, 
                      _motion_type: str = MT_LINEAR):
-        #print("move_l")
-        self.robot_v3.move_l(posit_to_list(_t_p),_velocity,_acceleration)
-        #print("run_wps")
-        self.robot_v3.run_wps()
-        #print("await_mot")
+        #pos v1_to_v3
+        print("1",self.robot_v3.get_act_pos_cartesian())
+        print("2",pos_v1_to_v3(posit_to_list(  _t_p)))
+        #self.robot_v3.move_l(pos_v1_to_v3(posit_to_list(  _t_p)),_velocity,_acceleration)
+        #self.robot_v3.run_wps()
         #self.robot_v3.await_motion()
         return
     
@@ -145,7 +159,7 @@ class PulseRobotExt(object):
 
     def run_positions_v3(self,positions: list[Position],
                                 motion_parameters: LinearMotionParameters):
-        for pos in positions: self.robot_v3.move_l(posit_to_list(pos),motion_parameters.velocity,motion_parameters.acceleration) 
+        for pos in positions: self.robot_v3.move_l(pos_v1_to_v3(posit_to_list(pos)),motion_parameters.velocity,motion_parameters.acceleration) 
         self.robot_v3.run_wps()
         #self.robot_v3.await_motion()
 
@@ -193,10 +207,10 @@ class PulseRobotExt(object):
     def change_tool_info(self,new_tool_info:ToolInfo):
         self.tool = pos_dict_to_point3d(new_tool_info.tcp.to_dict())
         if self.controller_v3:
-            return self.robot_v3.set_tool(p3d_to_list(self.tool))
+            return self.robot_v3.set_tool(pos_v1_to_v3(p3d_to_list( self.tool)))
         else:
             return self.robot.change_tool_info(new_tool_info)
-        return self.robot.change_tool_info(new_tool_info)
+        #return self.robot.change_tool_info(new_tool_info)
     
     def get_tool_info(self):
         if self.controller_v3:

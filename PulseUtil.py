@@ -200,7 +200,7 @@ def calc_forward_kinem_pulse(q:Pose3D,rad:bool = False,n = 6, pulse75:bool = Tru
     ]
     #print("dh_params",dh_params)
     pos = calc_pos(dh_params[:n])
-    print("pos\n",pos)
+    #print("pos\n",pos)
     p = position_from_matrix_pulse(pos)
     #print(p.ToString())
     p.t = q.t
