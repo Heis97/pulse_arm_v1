@@ -708,7 +708,7 @@ def position_from_matrix_kuka(m)->Point3D:
 
     return Point3D(x,y,z,_roll=a,_pitch=b,_yaw=c)
 
-def p3d_from_matrix_pulse_v3(m)->Point3D:
+def p3d_from_matrix_pulse_v3_simple(m)->Point3D:
     x = m[0][3]
     y = m[1][3]
     z = m[2][3]
@@ -719,6 +719,26 @@ def p3d_from_matrix_pulse_v3(m)->Point3D:
 
 
     return Point3D(x,y,z,_roll=c,_pitch=b,_yaw=a)
+
+def p3d_from_matrix_pulse_v3(m:np.ndarray):
+    x = m[0][3]
+    y = m[1][3]
+    z = m[2][3]
+
+    sRy = -m[2][0]
+    cRy = (1-sRy**2)**0.5
+
+    sRz = m[1][0]/cRy
+    cRz = m[0][0]/cRy
+
+    sRx = m[2][1]/cRy
+    cRx = m[2][2]/cRy
+    
+    Rx = np.sign(sRx)* arccos(cRx)
+    Ry =  np.arcsin(sRy)
+    Rz = np.sign(sRz)*arccos(cRz)
+
+    return Point3D(x,y,z,_roll = Rx,_pitch = Ry, _yaw = Rz)#-np.pi -
 
 def comb_angle(angle:float,case:int):
     if case ==0: return angle
