@@ -32,15 +32,24 @@ def qs():
         #rr.hold()
     #while True:
     print("rr.move")
-    rr.move_j([0, -pi/2, 0, -pi/2, 0, 0], 0.5, 0.5, blend=0)
-    rr.move_j([0, -pi/2, 0, -pi/2,pi/4, 0], 0.5, 0.5, blend=0)
-    rr.move_j([0, -pi/2, 0, -pi/2, 0, 0], 0.5, 0.5, blend=0)
-    rr.move_j([0, -pi/2, 0, -pi/2,pi/4, 0], 0.5, 0.5, blend=0)
-    rr.move_j([0, -pi/2, 0, -pi/2, 0, 0], 0.5, 0.5, blend=0)
+    rr.move_j([-30.644653320312504,
+            -95.0972900390625,
+            99.13363647460938,
+            -6.060028076171868,
+            -25.648139953613285,
+            17.38958740234375], 0.5, 0.5, blend=0)
+    
+    rr.move_j([-30.644653320312504,
+            -95.0972900390625,
+            94.13363647460938,
+            -6.060028076171868,
+            -25.648139953613285,
+            17.38958740234375], 0.5, 0.5, blend=0)
+    
     print("rr.run_wps")
     rr.run_wps()
     print("rr.await")
-    rr.colab_await_buffer(0)
+    #rr.colab_await_buffer(0)
     #rr.await_motion()
 
 def cart_1():
@@ -98,7 +107,7 @@ if __name__ == '__main__':
     print(rr.ctrl.data["act_q"])
     print(rr.ikine(rr.ctrl.data["act_x"]))
     #print(rr.get_dh_model())
-    #qs()
+    qs()
     #off()
     #home()
     #time.sleep(20)

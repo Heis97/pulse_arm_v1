@@ -120,12 +120,17 @@ class PulseRobotExt(object):
                 tcp_max_velocity = None,
                 motion_type: str = MT_JOINT):
         if self.controller_v3:
-            t = Thread(target=self.run_pose_v3(target_pose,speed,
+            """t = Thread(target=self.run_pose_v3(target_pose,speed,
                 velocity,
                 acceleration,
                 tcp_max_velocity,
                 motion_type))
-            t.start()
+            t.start()"""
+            self.run_pose_v3(target_pose,speed,
+                velocity,
+                acceleration,
+                tcp_max_velocity,
+                motion_type)
             return 
         
         else:
@@ -138,10 +143,10 @@ class PulseRobotExt(object):
                      _tcp_max_velocity = None, 
                      _motion_type: str = MT_LINEAR):
         #pos v1_to_v3
-        print("1",self.robot_v3.get_act_pos_cartesian())
-        print("2",pos_v1_to_v3(posit_to_list(  _t_p)))
-        #self.robot_v3.move_l(pos_v1_to_v3(posit_to_list(  _t_p)),_velocity,_acceleration)
-        #self.robot_v3.run_wps()
+        #print("1",self.robot_v3.get_act_pos_cartesian())
+        #print("2",pos_v1_to_v3(posit_to_list(  _t_p)))
+        self.robot_v3.move_l(pos_v1_to_v3(posit_to_list(  _t_p)),_velocity,_acceleration)
+        self.robot_v3.run_wps()
         #self.robot_v3.await_motion()
         return
     
@@ -151,10 +156,13 @@ class PulseRobotExt(object):
                 acceleration = None,
                 tcp_max_velocity = None,
                 motion_type: str = MT_JOINT):
+        if speed is None: speed = 0.1
+        if acceleration is None: acceleration = 0.1
         self.robot_v3.move_j(target_pose.angles,speed,acceleration)
         self.robot_v3.run_wps()
+        #self.robot_v3.colab_await_buffer(0)
         #self.robot_v3.a
-        self.robot_v3.await_motion()
+        #self.robot_v3.await_motion()
         return
 
     def run_positions_v3(self,positions: list[Position],
@@ -207,7 +215,9 @@ class PulseRobotExt(object):
     def change_tool_info(self,new_tool_info:ToolInfo):
         self.tool = pos_dict_to_point3d(new_tool_info.tcp.to_dict())
         if self.controller_v3:
-            return self.robot_v3.set_tool(pos_v1_to_v3(p3d_to_list( self.tool)))
+            self.robot_v3.set_tool(pos_v1_to_v3(p3d_to_list( self.tool)))
+            self.robot_v3.hold()
+            return 
         else:
             return self.robot.change_tool_info(new_tool_info)
         #return self.robot.change_tool_info(new_tool_info)
@@ -221,6 +231,7 @@ class PulseRobotExt(object):
     
     def freeze(self):
         if self.controller_v3:
+            self.robot_v3.hold()
             return
         else:
             return self.robot.freeze()

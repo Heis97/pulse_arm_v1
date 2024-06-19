@@ -413,7 +413,7 @@ class PulseApp(QtWidgets.QWidget):
     plotter:Plotter = None
     writing_signal = QtCore.pyqtSignal(bool)
 
-    move_dist = 0
+    move_dist = 10
     
 
     def __init__(self, parent=None):
@@ -424,7 +424,7 @@ class PulseApp(QtWidgets.QWidget):
         self.build()  
 
         self.plotter = Plotter(self)
-        self.test_kin_v3()
+        #self.test_kin_v3()
 
     def test_kin_v3(self):
         p1 = pos_dict_to_point3d( self.settins_pulse.start_points["test_p5"])
@@ -959,9 +959,9 @@ class PulseApp(QtWidgets.QWidget):
         pos_cur = self.pulse_robot.get_position()
         pos,rot = position_sum2(pos_cur,position_delt)
         pos_rel = position(pos,rot)
-        print("pos_cur",pos_cur)
+        """print("pos_cur",pos_cur)
         print("position_delt",position_delt)
-        print("pos_rel",pos_rel)
+        print("pos_rel",pos_rel)"""
         self.pulse_robot.set_position(pos_rel , _velocity=vel, _acceleration=acs,_motion_type=MT_LINEAR)
         #self.pulse_robot.await_stop()
 
@@ -1358,8 +1358,8 @@ class PulseApp(QtWidgets.QWidget):
         self.cur_work_pose = self.get_cur_item_from_combo(self.combo_work_poses,self.settins_pulse.work_poses)
         if self.cur_work_pose is not None:
             pose = Pose(self.cur_work_pose["angles"])
-            #print(pose.angles)
-            #print(self.pulse_robot.get_pose())
+            print(pose.angles)
+            print(self.pulse_robot.get_pose())
             self.pulse_robot.set_pose(pose,0.1)
             #self.pulse_robot.await_stop()
 
