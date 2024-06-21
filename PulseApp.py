@@ -1447,10 +1447,10 @@ class PulseApp(QtWidgets.QWidget):
         self.pulse_robot.run_linear_positions(positions,linear_motion_parameters)"""
 
         vel1 = 2
-        vel2 = 0.1
+        vel2 = 0.005
 
         acs1 = 50
-        acs2 = 0.1
+        acs2 = 0.01
         print(positions)
         vel = vel1
         acs = acs1
@@ -1507,7 +1507,7 @@ class PulseApp(QtWidgets.QWidget):
         """ps: mm, p_off: m"""
         points = []
         positions = []
-        dist_min = 0.9
+        dist_min = 1.9
         ps_filt = []
         k = 1
         for i in range(len(ps)): 
@@ -1515,7 +1515,7 @@ class PulseApp(QtWidgets.QWidget):
             p = [p_off.x+ps[i].x,p_off.y+ps[i].y,p_off.z+ps[i].z]
             r = [p_off.roll+ps[i].roll*k,p_off.pitch+ps[i].pitch*k,p_off.yaw+ps[i].yaw*k]    
             #r = [0,0,0]        
-            pos:Position = position(p,r,blend=0.0001)  
+            pos:Position = position(p,r,blend=0.001)  
             if i>2:
                 print(p[0]*1000,p[1]*1000,p[2]*1000,r)       
                 if self.dist(p,points[-1])>dist_min*1e-3:
@@ -1525,7 +1525,7 @@ class PulseApp(QtWidgets.QWidget):
                     v1 = p2-p1
                     v2 = p3-p2
                     alph = Point3D.ang(v1,v2)
-                    if abs(abs(alph)%np.pi)>0.003: 
+                    if abs(abs(alph)%np.pi)>0.1: 
                         #print(pos)                                             
                         positions.append(pos)
                         points.append(p)

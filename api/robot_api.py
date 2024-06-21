@@ -223,7 +223,7 @@ class RobotAPI:
         self.add_wp_deg(t=0, des_q=position, vmax_j=speed, amax_j=acceleration, rblend=blend)
        
        
-    def move_l(self, position, speed, acceleration, blend = 0):
+    def move_l(self, position, speed, acceleration, blend = 0.001):
         """
         Функция создает целевую точку перемещения типа line.
         Данное перемещение является перемещением по траектории, линейным.Центральная точка инструмента пермещается с постоянной скоростью.
