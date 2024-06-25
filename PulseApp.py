@@ -15,7 +15,7 @@ from KukaRobot import *
 from PulseRobotExt import *
 from Plotter import Plotter
 
-controller_v3 = True
+controller_v3 = False
 
 
 def fullsum(l:"list[QPointF]"):
@@ -357,35 +357,35 @@ class RobPosThread(QtCore.QThread):
         while True:
             #i+=1
             #print(i)
-            #try:
+            try:
             
-            angles = self.pulse_arm.get_pose().angles
-            pose = Pose3D(angles)
-            position_t = self.pulse_arm.get_position()
-            #print(pose.angles)
-            position:Point3D = q_to_p(pose,False,controller_v3)
-            #print(position.ToStringPulseMM())
-            position = p3d_cur_pulse(position,self.pulse_arm.tool,self.pulse_arm.base)
+                angles = self.pulse_arm.get_pose().angles
+                pose = Pose3D(angles)
+                position_t = self.pulse_arm.get_position()
+                #print(pose.angles)
+                position:Point3D = q_to_p(pose,False,controller_v3)
+                #print(position.ToStringPulseMM())
+                position = p3d_cur_pulse(position,self.pulse_arm.tool,self.pulse_arm.base)
 
-            """m_pos_t = pulse_matrix_p(position_to_p3d(position_t))
-            m_pos = pulse_matrix_p(position)
-            print("m_pos")
-            print(m_pos)
-            print("m_pos_t")
-            print(m_pos_t)"""
-            
+                """m_pos_t = pulse_matrix_p(position_to_p3d(position_t))
+                m_pos = pulse_matrix_p(position)
+                print("m_pos")
+                print(m_pos)
+                print("m_pos_t")
+                print(m_pos_t)"""
+                
 
-            self.label.setText("Joint position:\n"+list_to_str(angles)+"\n\n"+"Cartesian position:\n"+position_to_str(position_t)
-                                +"\n\n"+"Cartesian position_int:\n"+position.ToStringPulseMM())  
-            self.pulse_arm.cur_posit_3d = position
-            self.pulse_arm.cur_posit = position.ToStringPulseMM(4," ")
-            self.pulse_arm.update_buf()
-            self.pulse_arm.current_progress_prog()
-            self.label.setText(self.label.text()+"\n Line: "+str(self.pulse_arm.cur_i_prog)+", "+str(self.pulse_arm.cur_progr_line)+"%")
-            if self.writing:
-                self.feedback.append(str(pose))
-            #except BaseException:
-                #pass
+                self.label.setText("Joint position:\n"+list_to_str(angles)+"\n\n"+"Cartesian position:\n"+position_to_str(position_t)
+                                    +"\n\n"+"Cartesian position_int:\n"+position.ToStringPulseMM())  
+                self.pulse_arm.cur_posit_3d = position
+                self.pulse_arm.cur_posit = position.ToStringPulseMM(4," ")
+                self.pulse_arm.update_buf()
+                self.pulse_arm.current_progress_prog()
+                self.label.setText(self.label.text()+"\n Line: "+str(self.pulse_arm.cur_i_prog)+", "+str(self.pulse_arm.cur_progr_line)+"%")
+                if self.writing:
+                    self.feedback.append(str(pose))
+            except BaseException:
+                pass
 
         
             sleep(self.timeDelt)
@@ -1446,8 +1446,8 @@ class PulseApp(QtWidgets.QWidget):
         #try:
         self.pulse_robot.run_linear_positions(positions,linear_motion_parameters)"""
 
-        vel1 = 2
-        vel2 = 0.005
+        vel1 = 0.5
+        vel2 = 0.008
 
         acs1 = 50
         acs2 = 0.01
@@ -1462,7 +1462,7 @@ class PulseApp(QtWidgets.QWidget):
         dn = 950
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
         for i in range(int(len(positions)/dn)+1):
-            self.pulse_robot.set_position(positions[dn*i],_velocity=vel2,_acceleration=acs2,_motion_type=MT_LINEAR)   #vel,acs1      
+            self.pulse_robot.set_position(positions[dn*i],_velocity=vel1,_acceleration=acs1,_motion_type=MT_LINEAR)   #vel,acs1    //v3: vel2 acs2  
             linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel2,acceleration=acs2)
             print("load",dn)
             if len(positions)>dn*(i+1)+1:
@@ -1515,7 +1515,7 @@ class PulseApp(QtWidgets.QWidget):
             p = [p_off.x+ps[i].x,p_off.y+ps[i].y,p_off.z+ps[i].z]
             r = [p_off.roll+ps[i].roll*k,p_off.pitch+ps[i].pitch*k,p_off.yaw+ps[i].yaw*k]    
             #r = [0,0,0]        
-            pos:Position = position(p,r,blend=0.001)  
+            pos:Position = position(p,r,blend=0.0001)  
             if i>2:
                 print(p[0]*1000,p[1]*1000,p[2]*1000,r)       
                 if self.dist(p,points[-1])>dist_min*1e-3:
@@ -1525,7 +1525,7 @@ class PulseApp(QtWidgets.QWidget):
                     v1 = p2-p1
                     v2 = p3-p2
                     alph = Point3D.ang(v1,v2)
-                    if abs(abs(alph)%np.pi)>0.1: 
+                    if abs(abs(alph)%np.pi)>0.001: 
                         #print(pos)                                             
                         positions.append(pos)
                         points.append(p)
@@ -1578,7 +1578,7 @@ class PulseApp(QtWidgets.QWidget):
             r = [ps[i].roll,ps[i].pitch,ps[i].yaw]
             #r = [0,0,0]
             pos = position(p,r,blend=0.0001) 
-            if self.dist(p,points[-1])>0.001:
+            if self.dist(p,points[-1])>0.003:
                 print(pos)
                 positions.append(pos)
                 points.append(p)
