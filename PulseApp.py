@@ -1516,21 +1516,35 @@ class PulseApp(QtWidgets.QWidget):
             r = [p_off.roll+ps[i].roll*k,p_off.pitch+ps[i].pitch*k,p_off.yaw+ps[i].yaw*k]    
             #r = [0,0,0]        
             pos:Position = position(p,r,blend=0.0001)  
-            if i>2:
+            if i>2 and i<len(ps)-1:
                 print(p[0]*1000,p[1]*1000,p[2]*1000,r)       
                 if self.dist(p,points[-1])>dist_min*1e-3:
+                    p0 = Point3D(ps[i+1].x,ps[i+1].y,ps[i+1].z)
                     p1 = Point3D(p[0],p[1],p[2])
                     p2 = Point3D(points[-1][0],points[-1][1],points[-1][2])
                     p3 = Point3D(points[-2][0],points[-2][1],points[-2][2])
+                    v0 = p1-p0
                     v1 = p2-p1
                     v2 = p3-p2
+                    
                     alph = Point3D.ang(v1,v2)
+
+                    gamma =np.pi- abs(abs(Point3D.ang(v0,v1))%np.pi) 
                     if abs(abs(alph)%np.pi)>0.001: 
-                        #print(pos)                                             
+                        #print(pos)       
+                        part = 3# must be >2  
+                        d0 = v0.magnitude()
+                        d1 = v1.magnitude()
+                        d = min(d0,d1)
+
+                        r = (dist_min*1e-3)/part #(d*math.tan(gamma/2))/part
+                        print(i," ",r)
+                        pos.blend = 0.0001 #r                              
                         positions.append(pos)
                         points.append(p)
                         ps_filt.append(ps[i])
             else:
+                pos.blend = 0.0001
                 positions.append(pos)
                 points.append(p)
                 ps_filt.append(ps[i])
