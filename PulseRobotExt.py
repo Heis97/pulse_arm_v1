@@ -88,6 +88,9 @@ class PulseRobotExt(object):
             return self.robot_v3.hold()
             #return self.robot_v3.stby()
         else:
+            
+            
+            #return self.robot.zg_on()
             return self.robot.stop()
     
     def recover(self):
@@ -260,7 +263,8 @@ class PulseRobotExt(object):
                 self.zg = False
             return
         else:
-            return self.robot.relax()
+            return self.robot.zg_on()
+            #return self.robot.relax()
     
     def status_motors(self):
         if self.controller_v3:

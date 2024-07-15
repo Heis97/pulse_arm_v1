@@ -1529,7 +1529,7 @@ class PulseApp(QtWidgets.QWidget):
                     
                     alph = Point3D.ang(v1,v2)
 
-                    gamma =np.pi- abs(abs(Point3D.ang(v0,v1))%np.pi) 
+                    gamma = np.pi - abs(abs(Point3D.ang(v0,v1))%np.pi) 
                     if abs(abs(alph)%np.pi)>0.001: 
                         #print(pos)       
                         part = 3# must be >2  
