@@ -326,7 +326,7 @@ class RemoteControlThread(QtCore.QThread):
                         self.base = 1
                     elif "f" in data:
                         #print("pos",self.pulse_arm.cur_posit)
-                        pos = self.pulse_arm.cur_posit+"\n"
+                        pos = self.pulse_arm.cur_posit+" pulse \n"
                         print(pos.encode())
                         self.conn.send(pos.encode())
                         self.workmode = 0
