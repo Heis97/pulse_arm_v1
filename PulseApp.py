@@ -15,7 +15,7 @@ from KukaRobot import *
 from PulseRobotExt import *
 from Plotter import Plotter
 
-controller_v3 = False
+controller_v3 = RobotType.pulse_v36
 
 
 def fullsum(l:"list[QPointF]"):
@@ -357,35 +357,35 @@ class RobPosThread(QtCore.QThread):
         while True:
             #i+=1
             #print(i)
-            try:
+            #try:
             
-                angles = self.pulse_arm.get_pose().angles
-                pose = Pose3D(angles)
-                position_t = self.pulse_arm.get_position()
-                #print(pose.angles)
-                position:Point3D = q_to_p(pose,False,controller_v3)
-                #print(position.ToStringPulseMM())
-                position = p3d_cur_pulse(position,self.pulse_arm.tool,self.pulse_arm.base)
+            angles = self.pulse_arm.get_pose().angles
+            pose = Pose3D(angles)
+            position_t = self.pulse_arm.get_position()
+            #print(pose.angles)
+            position:Point3D = q_to_p(pose,False,controller_v3)
+            #print(position.ToStringPulseMM())
+            position = p3d_cur_pulse(position,self.pulse_arm.tool,self.pulse_arm.base)
 
-                """m_pos_t = pulse_matrix_p(position_to_p3d(position_t))
-                m_pos = pulse_matrix_p(position)
-                print("m_pos")
-                print(m_pos)
-                print("m_pos_t")
-                print(m_pos_t)"""
-                
+            """m_pos_t = pulse_matrix_p(position_to_p3d(position_t))
+            m_pos = pulse_matrix_p(position)
+            print("m_pos")
+            print(m_pos)
+            print("m_pos_t")
+            print(m_pos_t)"""
+            
 
-                self.label.setText("Joint position:\n"+list_to_str(angles)+"\n\n"+"Cartesian position:\n"+position_to_str(position_t)
-                                    +"\n\n"+"Cartesian position_int:\n"+position.ToStringPulseMM())  
-                self.pulse_arm.cur_posit_3d = position
-                self.pulse_arm.cur_posit = position.ToStringPulseMM(4," ")
-                self.pulse_arm.update_buf()
-                self.pulse_arm.current_progress_prog()
-                self.label.setText(self.label.text()+"\n Line: "+str(self.pulse_arm.cur_i_prog)+", "+str(self.pulse_arm.cur_progr_line)+"%")
-                if self.writing:
-                    self.feedback.append(str(pose))
-            except BaseException:
-                pass
+            self.label.setText("Joint position:\n"+list_to_str(angles)+"\n\n"+"Cartesian position:\n"+position_to_str(position_t)
+                                +"\n\n"+"Cartesian position_int:\n"+position.ToStringPulseMM())  
+            self.pulse_arm.cur_posit_3d = position
+            self.pulse_arm.cur_posit = position.ToStringPulseMM(4," ")
+            self.pulse_arm.update_buf()
+            self.pulse_arm.current_progress_prog()
+            self.label.setText(self.label.text()+"\n Line: "+str(self.pulse_arm.cur_i_prog)+", "+str(self.pulse_arm.cur_progr_line)+"%")
+            if self.writing:
+                self.feedback.append(str(pose))
+            #except BaseException:
+             #   pass
 
         
             sleep(self.timeDelt)
