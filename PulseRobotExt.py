@@ -4,7 +4,7 @@ from PulseUtil import *
 from api.robot_api_v2 import *
 from api.robot_api import *
 from threading import Thread
-from .api.robot_api_rc5.API.rc_api import *  # type: ignore
+from api.robot_api_rc5.API.rc_api import *  # type: ignore
 
 
 def posit_to_list(posit:Position):

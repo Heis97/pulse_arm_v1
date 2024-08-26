@@ -1,20 +1,20 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from API.source.core.exceptions.data_validation_error.argument_error import (
+from source.core.exceptions.data_validation_error.argument_error import (
     validation
 )
-from API.source.features.tools import sleep
-from API.source.models.classes.enum_classes.state_classes import (
+from source.features.tools import sleep
+from source.models.classes.enum_classes.state_classes import (
     InComingSafetyStatus as Iss
 )
-from API.source.models.constants import CHECK_FREQUENCY_SEC
-from API.source.models.type_aliases import SafetyStatus_
+from source.models.constants import CHECK_FREQUENCY_SEC
+from source.models.type_aliases import SafetyStatus_
 
 if TYPE_CHECKING:
     from logging import Logger
 
-    from API.source.core.network.rtd_receiver_socket import RTDReceiver
+    from source.core.network.rtd_receiver_socket import RTDReceiver
 
 
 validate_literal = validation.validate_literal

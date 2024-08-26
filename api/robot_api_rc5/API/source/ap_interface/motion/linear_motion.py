@@ -2,36 +2,36 @@ from __future__ import annotations
 from struct import pack
 from typing import TYPE_CHECKING, Callable
 
-import API.source.features.mathematics.unit_convert as unit_c
-from API.source.features.tools import set_position_orientation_units
-from API.source.core.exceptions.data_validation_error.argument_error import (
+import source.features.mathematics.unit_convert as unit_c
+from source.features.tools import set_position_orientation_units
+from source.core.exceptions.data_validation_error.argument_error import (
     validation
 )
-from API.source.features.mathematics.coordinate_system import (
+from source.features.mathematics.coordinate_system import (
     convert_position_orientation
 )
-from API.source.features.tools import dataclass_to_tuple, literal_to_int
-from API.source.models.classes.data_classes.command_templates import (
+from source.features.tools import dataclass_to_tuple, literal_to_int
+from source.models.classes.data_classes.command_templates import (
     MOTION_SETUP, JogCommandTemplate, MoveCommandTemplate
 )
-from API.source.models.classes.enum_classes import state_classes
-from API.source.models.classes.enum_classes.controller_commands import (
+from source.models.classes.enum_classes import state_classes
+from source.models.classes.enum_classes.controller_commands import (
     AddWayPointCommand as Awp, JogModes as Jm
 )
-from API.source.models.constants import (
+from source.models.constants import (
     ACCEL_LIMITS, BLEND_LIMITS, JOG_CMD_PACK_FORMAT, ORIENTATION_SLICE,
     POSITION_ORIENTATION_LENGTH, POSITION_SLICE, SPEED_LIMITS
 )
-from API.source.models.type_aliases import (
+from source.models.type_aliases import (
     AngleUnits, JogAxis, JogDirection, PositionOrientation
 )
 
 if TYPE_CHECKING:
-    from API.source.ap_interface.motion.coordinate_system import (
+    from source.ap_interface.motion.coordinate_system import (
         CoordinateSystem
     )
-    from API.source.core.network.controller_socket import Controller
-    from API.source.core.network.rtd_receiver_socket import RTDReceiver
+    from source.core.network.controller_socket import Controller
+    from source.core.network.rtd_receiver_socket import RTDReceiver
 
 
 Omm = state_classes.OutComingMotionMode

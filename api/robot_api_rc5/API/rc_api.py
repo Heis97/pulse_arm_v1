@@ -6,27 +6,27 @@ from multiprocessing.pool import ThreadPool
 from struct import pack
 
 
-from .source.ap_interface.controller_state import ControllerState 
-from .source.ap_interface.io.io_host import IO 
-from .source.ap_interface.motion.motion_host import Motion
-from .source.ap_interface.payload import PayLoad
-from .source.ap_interface.safety_status import SafetyStatus
-from .source.ap_interface.tool import Tool
-from .source.core.exceptions.connection_error import ServerPingError
-from .source.core.exceptions.data_validation_error.version_error import (
+from source.ap_interface.controller_state import ControllerState 
+from source.ap_interface.io.io_host import IO 
+from source.ap_interface.motion.motion_host import Motion
+from source.ap_interface.payload import PayLoad
+from source.ap_interface.safety_status import SafetyStatus
+from source.ap_interface.tool import Tool
+from source.core.exceptions.connection_error import ServerPingError
+from source.core.exceptions.data_validation_error.version_error import (
     ControllerUnlockError, VersionError
 )
-from .source.core.network.controller_socket import Controller
-from .source.core.network.rtd_receiver_socket import RTDReceiver
-from .source.features.logger import set_logger
-from .source.features.state_handler import StateHandler
-from .source.models.classes.data_classes.api_version import (
+from source.core.network.controller_socket import Controller
+from source.core.network.rtd_receiver_socket import RTDReceiver
+from source.features.logger import set_logger
+from source.features.state_handler import StateHandler
+from source.models.classes.data_classes.api_version import (
     RobotInfo, Version
 )
-from .source.models.classes.enum_classes.controller_commands import (
+from source.models.classes.enum_classes.controller_commands import (
     ControllerUnlockCommand as Cun, Getters as Get, Setters as Set
 )
-from .source.models.type_aliases import ExcInfoType
+from source.models.type_aliases import ExcInfoType
 
 
 class RobotApi:

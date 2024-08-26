@@ -1,14 +1,14 @@
-from API.source.core.exceptions.data_validation_error.argument_error import (
+from source.core.exceptions.data_validation_error.argument_error import (
     validation
 )
-from API.source.models.classes.enum_classes.various_types import (
+from source.models.classes.enum_classes.various_types import (
     CoordinateSystemInfoType
 )
-from API.source.models.classes.data_classes.command_templates import (
+from source.models.classes.data_classes.command_templates import (
     MOTION_SETUP
 )
-from API.source.models.constants import POSITION_ORIENTATION_LENGTH
-from API.source.models.type_aliases import AngleUnits, PositionOrientation
+from source.models.constants import POSITION_ORIENTATION_LENGTH
+from source.models.type_aliases import AngleUnits, PositionOrientation
 
 validate_length = validation.validate_length
 validate_literal = validation.validate_literal

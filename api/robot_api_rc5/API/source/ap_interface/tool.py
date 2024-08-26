@@ -2,26 +2,26 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from struct import pack
 
-from API.source.models.type_aliases import AngleUnits, PositionOrientation
-from API.source.models.classes.enum_classes.controller_commands import (
+from source.models.type_aliases import AngleUnits, PositionOrientation
+from source.models.classes.enum_classes.controller_commands import (
     Getters as Get, Setters as Set
 )
 
-from API.source.core.exceptions.data_validation_error.argument_error import (
+from source.core.exceptions.data_validation_error.argument_error import (
     validation
 )
-from API.source.models.constants import (
+from source.models.constants import (
     CTRLR_SET_GET_TOOL_PACK_UNPACK_FORMAT, ORIENTATION_SLICE,
     POSITION_ORIENTATION_LENGTH, POSITION_SLICE
 )
-from API.source.models.classes.data_classes.command_templates import (
+from source.models.classes.data_classes.command_templates import (
     MOTION_SETUP
 )
-import API.source.features.mathematics.unit_convert as math_s
+import source.features.mathematics.unit_convert as math_s
 
 
 if TYPE_CHECKING:
-    from API.source.core.network.controller_socket import Controller
+    from source.core.network.controller_socket import Controller
 
 
 validate_literal = validation.validate_literal

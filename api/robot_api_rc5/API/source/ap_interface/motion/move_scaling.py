@@ -2,16 +2,16 @@ from __future__ import annotations
 from struct import pack
 from typing import TYPE_CHECKING, cast
 
-from API.source.models.classes.enum_classes.controller_commands import (
+from source.models.classes.enum_classes.controller_commands import (
     Getters as Get
 )
-from API.source.models.classes.enum_classes.controller_commands import (
+from source.models.classes.enum_classes.controller_commands import (
     Setters as Set
 )
-from API.source.models.constants import CTRLR_SET_MOVE_SCALE_PACK_UNPACK_FORMAT
+from source.models.constants import CTRLR_SET_MOVE_SCALE_PACK_UNPACK_FORMAT
 
 if TYPE_CHECKING:
-    from API.source.core.network.controller_socket import Controller
+    from source.core.network.controller_socket import Controller
 
 
 class MoveScaling:

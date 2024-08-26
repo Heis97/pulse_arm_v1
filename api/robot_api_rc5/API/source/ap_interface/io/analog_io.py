@@ -2,31 +2,31 @@ from __future__ import annotations
 from struct import pack
 from typing import TYPE_CHECKING
 
-from API.source.features.tools import sleep
-from API.source.models.classes.data_classes.command_templates import (
+from source.features.tools import sleep
+from source.models.classes.data_classes.command_templates import (
     SetOutputTemplate
 )
-from API.source.models.classes.enum_classes.controller_commands import (
+from source.models.classes.enum_classes.controller_commands import (
     Setters as Set
 )
-from API.source.models.constants import (
+from source.models.constants import (
     AMPERAGE_VALUES_RANGE, CHECK_FREQUENCY_SEC, CTRLR_IO_SET_VALUE_PACK_FORMAT,
     AVAILABLE_AN_IN_INDEX_COUNT, AVAILABLE_AN_OUT_INDEX_COUNT,
     VOLTAGE_INPUT_INDEXES_RANGE, VOLTAGE_VALUES_RANGE
 )
-from API.source.models.type_aliases import (
+from source.models.type_aliases import (
     AnalogIndex, CompareSigns, PowerUnits
 )
-from API.source.core.exceptions.data_validation_error.argument_error import (
+from source.core.exceptions.data_validation_error.argument_error import (
     validation
 )
-from API.source.features.tools import dataclass_to_tuple
+from source.features.tools import dataclass_to_tuple
 
 if TYPE_CHECKING:
     from logging import Logger
 
-    from API.source.core.network.rtd_receiver_socket import RTDReceiver
-    from API.source.core.network.controller_socket import Controller
+    from source.core.network.rtd_receiver_socket import RTDReceiver
+    from source.core.network.controller_socket import Controller
 
 
 validate_index = validation.validate_index

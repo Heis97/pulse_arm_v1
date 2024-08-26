@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 from typing import List, Tuple
-from API.source.models.constants import (CTRLR_MAX_DIG_OUT_BYTES,
+from source.models.constants import (CTRLR_MAX_DIG_OUT_BYTES,
                                          CTRLR_MAX_AN_OUT)
-from API.source.models.type_aliases import AngleUnits, PositionOrientation
+from source.models.type_aliases import AngleUnits, PositionOrientation
 
 
 @dataclass

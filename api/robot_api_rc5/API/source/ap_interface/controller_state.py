@@ -3,27 +3,27 @@ import select
 from struct import pack
 from typing import TYPE_CHECKING
 
-from API.source.core.exceptions.data_validation_error.argument_error import (
+from source.core.exceptions.data_validation_error.argument_error import (
     validation)
-from API.source.core.exceptions.data_validation_error.generic_error import (
+from source.core.exceptions.data_validation_error.generic_error import (
     FunctionTimeOutError, RobotCalibrationPositionError
 )
-from API.source.features.tools import sleep
-from API.source.models.classes.enum_classes.state_classes import (
+from source.features.tools import sleep
+from source.models.classes.enum_classes.state_classes import (
     InComingControllerState as Ics, OutComingControllerState as Ocs
 )
-from API.source.models.constants import (
+from source.models.constants import (
     CHECK_FREQUENCY_SEC, CTRLR_SET_GET_STATE_PACK_UNPACK_FORMAT,
     SET_CTRLR_STATE_AWAIT_SEC
 )
-from API.source.models.type_aliases import ControllerState_
+from source.models.type_aliases import ControllerState_
 
 if TYPE_CHECKING:
     from logging import Logger
 
-    from API.source.ap_interface.motion.joint_motion import JointMotion
-    from API.source.core.network.controller_socket import Controller
-    from API.source.core.network.rtd_receiver_socket import RTDReceiver
+    from source.ap_interface.motion.joint_motion import JointMotion
+    from source.core.network.controller_socket import Controller
+    from source.core.network.rtd_receiver_socket import RTDReceiver
 
 
 validate_literal = validation.validate_literal

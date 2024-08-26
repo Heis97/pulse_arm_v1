@@ -2,38 +2,38 @@ from __future__ import annotations
 from struct import pack
 from typing import TYPE_CHECKING, Callable, cast
 
-import API.source.features.mathematics.unit_convert as unit_c
-from API.source.core.exceptions.data_validation_error.argument_error import (
+import source.features.mathematics.unit_convert as unit_c
+from source.core.exceptions.data_validation_error.argument_error import (
     validation
 )
-from API.source.features.tools import dataclass_to_tuple, literal_to_int
-from API.source.models.classes.data_classes.command_templates import (
+from source.features.tools import dataclass_to_tuple, literal_to_int
+from source.models.classes.data_classes.command_templates import (
     MOTION_SETUP, JogCommandParametersTemplate, JointJogCommandTemplate,
     MoveCommandTemplate
 )
-from API.source.models.classes.enum_classes.controller_commands import (
+from source.models.classes.enum_classes.controller_commands import (
     AddWayPointCommand as Awp, Getters as Get, JointJogModes as Jm,
     Setters as Set
 )
-from API.source.features.tools import set_position_orientation_units
-from API.source.models.classes.enum_classes.various_types import JogParamInTCP
-from API.source.models.classes.enum_classes.state_classes import (
+from source.features.tools import set_position_orientation_units
+from source.models.classes.enum_classes.various_types import JogParamInTCP
+from source.models.classes.enum_classes.state_classes import (
     OutComingMotionMode as Omm
 )
-from API.source.models.constants import (
+from source.models.constants import (
     BLEND_LIMITS, CTRLR_GET_LAST_POSITION_UNPACK_FORMAT,
     CTRLR_JOINT_JOG_CMD_PACK_FORMAT, JOINT_ACCEL_LIMITS_DEG_SEC,
     JOINT_ACCEL_LIMITS_RAD_SEC, JOG_CMD_SET_GET_PARAMS_PACK_UNPACK_FORMAT,
     JOINT_COUNT, JOINT_SPEED_LIMITS_DEG_SEC, JOINT_SPEED_LIMITS_RAD_SEC,
     POSITION_ORIENTATION_LENGTH
 )
-from API.source.models.type_aliases import (
+from source.models.type_aliases import (
     AngleUnits, JogDirection, JointIndex, PositionOrientation,
 )
 
 if TYPE_CHECKING:
-    from API.source.core.network.controller_socket import Controller
-    from API.source.core.network.rtd_receiver_socket import RTDReceiver
+    from source.core.network.controller_socket import Controller
+    from source.core.network.rtd_receiver_socket import RTDReceiver
 
 
 validate_index = validation.validate_index

@@ -2,27 +2,27 @@ from __future__ import annotations
 from struct import pack
 from typing import TYPE_CHECKING
 
-from API.source.core.exceptions.data_validation_error.argument_error import (
+from source.core.exceptions.data_validation_error.argument_error import (
     validation
 )
-from API.source.core.exceptions.data_validation_error.generic_error import (
+from source.core.exceptions.data_validation_error.generic_error import (
     FunctionTimeOutError
 )
-from API.source.features.tools import sleep
-from API.source.models.classes.enum_classes.state_classes import (
+from source.features.tools import sleep
+from source.models.classes.enum_classes.state_classes import (
     InComingMotionMode as Imm, OutComingMotionMode as Omm
 )
-from API.source.models.constants import (
+from source.models.constants import (
     CHECK_FREQUENCY_SEC, EMPTY_BYTES, ENABLE, DISABLE,
     OMM_ENABLE_DISABLE_PACK_FORMAT, SET_MOTION_MODE_AWAIT_SEC
 )
-from API.source.models.type_aliases import MotionMode_
+from source.models.type_aliases import MotionMode_
 
 if TYPE_CHECKING:
     from logging import Logger
 
-    from API.source.core.network.rtd_receiver_socket import RTDReceiver
-    from API.source.core.network.controller_socket import Controller
+    from source.core.network.rtd_receiver_socket import RTDReceiver
+    from source.core.network.controller_socket import Controller
 
 
 validate_literal = validation.validate_literal

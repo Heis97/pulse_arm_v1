@@ -2,18 +2,18 @@ from __future__ import annotations
 from struct import pack
 from typing import TYPE_CHECKING, cast
 
-from API.source.core.exceptions.data_validation_error.argument_error import (
+from source.core.exceptions.data_validation_error.argument_error import (
     validation
 )
-from API.source.models.classes.enum_classes.controller_commands import (
+from source.models.classes.enum_classes.controller_commands import (
     Getters as Get, Setters as Set
 )
-from API.source.models.constants import (
+from source.models.constants import (
     CTRLR_SET_GET_PAYLOAD_PACK_UNPACK_FORMAT, TCP_POSITION_COUNT
 )
 
 if TYPE_CHECKING:
-    from API.source.core.network.controller_socket import Controller
+    from source.core.network.controller_socket import Controller
 
 
 validate_length = validation.validate_length

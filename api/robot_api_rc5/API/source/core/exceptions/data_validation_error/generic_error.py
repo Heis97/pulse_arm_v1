@@ -1,4 +1,4 @@
-from API.source.models.constants import TAB, TNL
+from source.models.constants import TAB, TNL
 
 
 class RobotCalibrationPositionError(Exception):

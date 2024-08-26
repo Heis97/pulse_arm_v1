@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from tkinter import Entry, Label
 
-from API.source.features.gui.custom_button import _CustomButton
+from source.features.gui.custom_button import _CustomButton
 
 
 BACKSPACE = 8

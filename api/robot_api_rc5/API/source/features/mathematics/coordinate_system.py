@@ -1,18 +1,18 @@
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from API.source.ap_interface.motion.coordinate_system import CoordinateSystem
-from API.source.core.exceptions.data_validation_error.generic_error import (
+from source.ap_interface.motion.coordinate_system import CoordinateSystem
+from source.core.exceptions.data_validation_error.generic_error import (
     CalculatePlaneError
 )
-from API.source.models.classes.enum_classes.various_types import (
+from source.models.classes.enum_classes.various_types import (
     CoordinateSystemInfoType
 )
-from API.source.models.classes.data_classes.command_templates import (
+from source.models.classes.data_classes.command_templates import (
     MOTION_SETUP
 )
-from API.source.models.constants import ORIENTATION_SLICE, POSITION_SLICE
-from API.source.models.type_aliases import AngleUnits, PositionOrientation
+from source.models.constants import ORIENTATION_SLICE, POSITION_SLICE
+from source.models.type_aliases import AngleUnits, PositionOrientation
 
 
 def get_transformation_parameters(

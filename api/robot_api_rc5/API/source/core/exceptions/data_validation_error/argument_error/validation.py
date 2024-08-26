@@ -2,18 +2,18 @@
 import re
 from typing import Iterable, Sized
 
-from API.source.core.exceptions.data_validation_error.argument_error import (
+from source.core.exceptions.data_validation_error.argument_error import (
     error as err
 )
-from API.source.models.classes.enum_classes.io_functions import (
+from source.models.classes.enum_classes.io_functions import (
     InputFunction, OutputFunction
 )
-from API.source.models.classes.enum_classes.state_classes import (
+from source.models.classes.enum_classes.state_classes import (
     InComingSafetyStatus as Iss, OutComingControllerState as Ocs,
     OutComingMotionMode as Omm
 )
-from API.source.models.constants import ALLOWED_GUI_ENTRY_SYMBOLS
-from API.source.models.type_aliases import (
+from source.models.constants import ALLOWED_GUI_ENTRY_SYMBOLS
+from source.models.type_aliases import (
     AngleUnits, CompareSigns, ControllerState_, JogAxis, JogDirection,
     LiteralType, MotionMode_, PowerUnits, SafetyStatus_
 )

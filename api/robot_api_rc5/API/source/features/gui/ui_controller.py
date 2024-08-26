@@ -2,32 +2,32 @@ from __future__ import annotations
 from tkinter import END, Tk
 from typing import TYPE_CHECKING
 
-from API.source.ap_interface.motion.coordinate_system import CoordinateSystem
-from API.source.features.gui.view import _WindowUI
-from API.source.features.gui.bindings import Binding, Sequences
-from API.source.features.mathematics.coordinate_system import (
+from source.ap_interface.motion.coordinate_system import CoordinateSystem
+from source.features.gui.view import _WindowUI
+from source.features.gui.bindings import Binding, Sequences
+from source.features.mathematics.coordinate_system import (
     convert_position_orientation
 )
-from API.source.models.classes.enum_classes.various_types import (
+from source.models.classes.enum_classes.various_types import (
     JogParamInTCP
 )
-from API.source.models.classes.data_classes.command_templates import (
+from source.models.classes.data_classes.command_templates import (
     MOTION_SETUP
 )
-from API.source.models.classes.enum_classes.various_types import (
+from source.models.classes.enum_classes.various_types import (
     AngleUnitTypes, GUICoordinateSystem, MotionTypes
 )
-from API.source.models.constants import (
+from source.models.constants import (
     JOYSTICK_ACCEL_MAX_DEG_SEC, JOYSTICK_ACCEL_MAX_RAD_SEC, JOINTS_COUNT,
     JOYSTICK_SPEED_MAX_DEG_SEC, JOYSTICK_SPEED_MAX_RAD_SEC,
 )
 
 if TYPE_CHECKING:
-    from API.source.ap_interface.motion.linear_motion import LinearMotion
-    from API.source.ap_interface.motion.joint_motion import JointMotion
-    from API.source.ap_interface.motion.motion_host import Motion
-    from API.source.ap_interface.motion.motion_mode import MotionMode
-    from API.source.ap_interface.motion.move_scaling import MoveScaling
+    from source.ap_interface.motion.linear_motion import LinearMotion
+    from source.ap_interface.motion.joint_motion import JointMotion
+    from source.ap_interface.motion.motion_host import Motion
+    from source.ap_interface.motion.motion_mode import MotionMode
+    from source.ap_interface.motion.move_scaling import MoveScaling
 
 
 class SimpleJoystickUI(Tk):

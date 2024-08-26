@@ -1,6 +1,6 @@
 from enum import Enum
 
-from API.source.models.classes.enum_classes.base_int_enum import BaseIntEnum
+from source.models.classes.enum_classes.base_int_enum import BaseIntEnum
 
 
 class AngleUnitTypes(str, Enum):

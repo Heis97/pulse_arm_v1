@@ -4,9 +4,9 @@ from datetime import datetime
 from signal import SIGINT, SIGTERM, signal
 from typing import Any, Callable, Generator, Tuple
 
-import API.source.features.mathematics.unit_convert as unit_c
-from API.source.models.constants import ORIENTATION_SLICE, POSITION_SLICE
-from API.source.models.type_aliases import AngleUnits, PositionOrientation
+import source.features.mathematics.unit_convert as unit_c
+from source.models.constants import ORIENTATION_SLICE, POSITION_SLICE
+from source.models.type_aliases import AngleUnits, PositionOrientation
 
 
 def dataclass_to_tuple(class_object: Any) -> Tuple[Any, ...]:

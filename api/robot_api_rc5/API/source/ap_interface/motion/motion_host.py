@@ -2,42 +2,42 @@ from __future__ import annotations
 from struct import pack
 from typing import TYPE_CHECKING
 
-from API.source.ap_interface.motion.joint_motion import JointMotion
-from API.source.ap_interface.motion.kinematics_solution import Kinematics
-from API.source.ap_interface.motion.linear_motion import LinearMotion
-from API.source.ap_interface.motion.motion_mode import MotionMode
-from API.source.ap_interface.motion.move_scaling import MoveScaling
-from API.source.core.exceptions.data_validation_error.argument_error import (
+from source.ap_interface.motion.joint_motion import JointMotion
+from source.ap_interface.motion.kinematics_solution import Kinematics
+from source.ap_interface.motion.linear_motion import LinearMotion
+from source.ap_interface.motion.motion_mode import MotionMode
+from source.ap_interface.motion.move_scaling import MoveScaling
+from source.core.exceptions.data_validation_error.argument_error import (
     validation
 )
-from API.source.core.exceptions.data_validation_error.generic_error import (
+from source.core.exceptions.data_validation_error.generic_error import (
     AddWaypointError
 )
-from API.source.features.gui.ui_controller import SimpleJoystickUI
-from API.source.features.tools import dataclass_to_tuple, sleep
-from API.source.models.classes.data_classes.command_templates import (
+from source.features.gui.ui_controller import SimpleJoystickUI
+from source.features.tools import dataclass_to_tuple, sleep
+from source.models.classes.data_classes.command_templates import (
     MOTION_SETUP, MoveCommandTemplate
 )
-from API.source.models.classes.enum_classes.controller_commands import (
+from source.models.classes.enum_classes.controller_commands import (
     AddWayPointCommand as Awp
 )
-from API.source.models.classes.enum_classes.state_classes import (
+from source.models.classes.enum_classes.state_classes import (
     OutComingMotionMode as Omm
 )
-from API.source.models.constants import (
+from source.models.constants import (
     CTRLR_ADD_WP_CMD_PACK_FORMAT, OMM_ENABLE_DISABLE_PACK_FORMAT,
     WP_ADD_TIMEOUT, CHECK_FREQUENCY_SEC, WP_COUNT_LIMITS, WP_COUNTER_MAX_VALUE
 )
-from API.source.models.type_aliases import AngleUnits
+from source.models.type_aliases import AngleUnits
 
 if TYPE_CHECKING:
     from logging import Logger
 
-    from API.source.ap_interface.motion.coordinate_system import (
+    from source.ap_interface.motion.coordinate_system import (
         CoordinateSystem
     )
-    from API.source.core.network.controller_socket import Controller
-    from API.source.core.network.rtd_receiver_socket import RTDReceiver
+    from source.core.network.controller_socket import Controller
+    from source.core.network.rtd_receiver_socket import RTDReceiver
 
 
 validate_value = validation.validate_value
