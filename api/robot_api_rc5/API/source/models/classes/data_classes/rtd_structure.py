@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from API.source.models.constants import (CTRLR_MAX_DIG_IN_BYTES,
+from source.models.constants import (CTRLR_MAX_DIG_IN_BYTES,
                                          CTRLR_MAX_DIG_OUT_BYTES,
                                          CTRLR_MAX_AN_IN,
                                          CTRLR_MAX_AN_OUT,

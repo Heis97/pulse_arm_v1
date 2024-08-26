@@ -1,17 +1,17 @@
 import struct
 from threading import main_thread
 from dataclasses import fields
-from API.source.models.constants import RTD_PORT
+from source.models.constants import RTD_PORT
 
-from API.source.models.classes.data_classes.rtd_structure import (
+from source.models.classes.data_classes.rtd_structure import (
     RTD, RTDataPackageBorders, STRUCT_FORMAT
 )
-from API.source.core.network.socket_factory import SocketWrapper
-from API.source.features.tools import sleep
-from API.source.core.exceptions.data_validation_error.parsing_error import (
+from source.core.network.socket_factory import SocketWrapper
+from source.features.tools import sleep
+from source.core.exceptions.data_validation_error.parsing_error import (
     RTDParsingError
 )
-from API.source.models.constants import CHECK_FREQUENCY_SEC
+from source.models.constants import CHECK_FREQUENCY_SEC
 
 
 class RTDReceiver(SocketWrapper):

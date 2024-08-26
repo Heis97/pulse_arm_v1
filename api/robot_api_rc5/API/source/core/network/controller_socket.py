@@ -3,10 +3,10 @@ import struct
 import time
 from typing import TYPE_CHECKING, Any
 
-from API.source.core.exceptions.data_validation_error.parsing_error import (
+from source.core.exceptions.data_validation_error.parsing_error import (
     CommandTypeError, CorruptedPackageError)
-from API.source.core.network.socket_factory import SocketWrapper
-from API.source.models.constants import (
+from source.core.network.socket_factory import SocketWrapper
+from source.models.constants import (
     CMD_PORT, CTRLR_CMD_PAYLOAD_LENGTH_SIZE, CTRLR_CMD_TYPE_LENGTH,
     EMPTY_BYTES, CTRLR_CMD_DATA_PACK_UNPACK_FORMAT
 )

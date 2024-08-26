@@ -3,12 +3,12 @@ from typing import TYPE_CHECKING
 
 import time
 from threading import main_thread
-from API.source.core.network.rtd_receiver_socket import RTDReceiver
-from API.source.core.exceptions.status_error.safety_status_error import (EmergencyStopError,
+from source.core.network.rtd_receiver_socket import RTDReceiver
+from source.core.exceptions.status_error.safety_status_error import (EmergencyStopError,
                                                                          SafetyViolationError,
                                                                          ControllerFaultError)
-from API.source.core.exceptions.status_error.controller_state_error import ControllerFailureError
-from API.source.models.classes.enum_classes.state_classes import (InComingControllerState as Ics,
+from source.core.exceptions.status_error.controller_state_error import ControllerFailureError
+from source.models.classes.enum_classes.state_classes import (InComingControllerState as Ics,
                                                                   InComingMotionMode as Imm,
                                                                   InComingSafetyStatus as Iss)
 

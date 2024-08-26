@@ -4,8 +4,8 @@ import sys
 from pathlib import Path
 from dataclasses import fields
 from datetime import datetime
-from API.source.models.classes.data_classes.logger_config_template import LoggerTemplate
-from API.source.models.constants import LOGGER_NAME
+from source.models.classes.data_classes.logger_config_template import LoggerTemplate
+from source.models.constants import LOGGER_NAME
 
 
 def set_logger(**kwargs) -> None | logging.Logger:

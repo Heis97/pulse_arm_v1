@@ -1,10 +1,10 @@
 import socket
 
-from API.source.core.exceptions.connection_error import (
+from source.core.exceptions.connection_error import (
     BrokenConnectionError, ClientDisconnectedError, EmptyPackageError,
     ServerConnectionError
 )
-from API.source.models.constants import EMPTY_BYTES
+from source.models.constants import EMPTY_BYTES
 
 
 class SocketWrapper:
