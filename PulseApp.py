@@ -15,7 +15,7 @@ from KukaRobot import *
 from PulseRobotExt import *
 from Plotter import Plotter
 
-controller_v3 = RobotType.pulse_v36
+controller_v3 = RobotType.pulse_v3
 
 
 def fullsum(l:"list[QPointF]"):
@@ -853,12 +853,12 @@ class PulseApp(QtWidgets.QWidget):
         save_file( self.coords_thread.feedback,"feedback.json")
 
     def connect_robot(self):
-        self.pulse_robot = PulseRobotExt(controller_v3)
-        
+        self.pulse_robot = PulseRobotExt(controller_v3)        
         self.coords_thread = RobPosThread(self.pulse_robot,self.lab_coord,self.writing_signal)
 
 
     def disconnect_robot(self):
+        self.pulse_robot.off()
         self.pulse_robot = None
 
     def add_axis_buttons(self,name:ax, pos:QtCore.QRect,f_press,f_release):

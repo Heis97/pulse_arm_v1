@@ -34,8 +34,9 @@ def pos_v1_to_v3(p_l):
 
 
 host_old = "http://10.10.10.20:8081"
-host_v3 = "192.168.0.50"
-host_v36 = "10.10.10.30"
+#host_v3 = "192.168.0.50"#cyto mb
+host_v3 = "192.168.10.71"#misis
+host_v36 = "192.168.0.10"
 
 
 class PulseRobotExt(object):
@@ -71,6 +72,8 @@ class PulseRobotExt(object):
         if self.controller_v3 is RobotType.pulse_v36:   
             print("connect v36")    
             self.robot_v36 = RobotApi(host_v36,enable_logger=True,log_std_level=logging.DEBUG,enable_logfile=True, logfile_level=logging.INFO)
+            self.robot_v36.controller_state.set('off')
+            self.robot_v36.controller_state.set('run')
             #print(self.robot_v36.controller_state.get())
             #self.robot_v36.
             #print("self.robot_v36.get_robot_info()")
@@ -117,7 +120,9 @@ class PulseRobotExt(object):
             
             #return self.robot.zg_on()
             return self.robot.stop()
-    
+    def off(self):
+        if self.controller_v3 is RobotType.pulse_v36:  
+            self.robot_v36.controller_state.set('off')
     def recover(self):
         if self.controller_v3 is RobotType.pulse_v3:  
             pass
@@ -134,7 +139,11 @@ class PulseRobotExt(object):
             t = Thread(target=self.run_position_v3(_t_p,_velocity,_acceleration,_tcp_max_velocity,_motion_type))
             t.start()
             return 
-        else:
+        if self.controller_v3 is RobotType.pulse_v36:  
+            t = Thread(target=self.run_position_v3(_t_p,_velocity,_acceleration,_tcp_max_velocity,_motion_type))
+            t.start()
+            return 
+        if self.controller_v3 is RobotType.pulse_v1:
             return self.robot.set_position(target_position=_t_p,
                                        velocity=_velocity,
                                        acceleration=_acceleration,
@@ -175,6 +184,21 @@ class PulseRobotExt(object):
         #print("2",pos_v1_to_v3(posit_to_list(  _t_p)))
         self.robot_v3.move_l(pos_v1_to_v3(posit_to_list(  _t_p)),_velocity,_acceleration)
         self.robot_v3.run_wps()
+        #self.robot_v3.await_motion()
+        return
+    
+    def run_position_v36(self,_t_p:Position,
+                     _velocity = None,
+                     _acceleration = None,
+                     _tcp_max_velocity = None, 
+                     _motion_type: str = MT_LINEAR):
+        #pos v1_to_v3
+        #print("1",self.robot_v3.get_act_pos_cartesian())
+        #print("2",pos_v1_to_v3(posit_to_list(  _t_p)))
+        self.robot_v36.motion.linear.add_new_waypoint(pos_v1_to_v3(posit_to_list(  _t_p)),_velocity,_acceleration)
+        self.robot_v36.motion.mode.set('move')
+        self.robot_v36.motion.wait_waypoint_completion(0)
+
         #self.robot_v3.await_motion()
         return
     
