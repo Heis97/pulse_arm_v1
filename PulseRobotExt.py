@@ -7,17 +7,22 @@ from threading import Thread
 from api.robot_api_rc5.API.rc_api import *  # type: ignore
 from enum import Enum
 
-class RobotType(Enum):
-    pulse_v1 = 1
-    pulse_v3 = 2
-    pulse_v36 = 3
+
 
 def posit_to_list(posit:Position):
     p3d = position_to_p3d(posit)
     return p3d_to_list(p3d)
 
+def posit_to_list_rc5(posit:Position):
+    p3d = position_to_p3d(posit)
+    return p3d_to_list_rc5(p3d)
+
 def p3d_to_list(p3d:Point3D):
     return [p3d.x,p3d.y,p3d.z,p3d.roll,p3d.pitch,p3d.yaw]
+
+def p3d_to_list_rc5(p3d:Point3D):
+    return [p3d.x,p3d.y,p3d.z,p3d.pitch,p3d.roll,p3d.yaw]
+
 
 def pos_v3_to_v1(p_l):
     p = Point3D(p_l[0],p_l[1],p_l[2], _roll= p_l[3],_pitch= p_l[4],_yaw= p_l[5])
@@ -72,7 +77,7 @@ class PulseRobotExt(object):
         if self.controller_v3 is RobotType.pulse_v36:   
             print("connect v36")    
             self.robot_v36 = RobotApi(host_v36,enable_logger=True,log_std_level=logging.DEBUG,enable_logfile=True, logfile_level=logging.INFO)
-            self.robot_v36.controller_state.set('off')
+            #self.robot_v36.controller_state.set('off')
             self.robot_v36.controller_state.set('run')
             #print(self.robot_v36.controller_state.get())
             #self.robot_v36.
@@ -103,9 +108,9 @@ class PulseRobotExt(object):
             #print("list2: ",list_pos)
             return position(list_pos[0:3],list_pos[3:6])
         if self.controller_v3 is RobotType.pulse_v36:  
-            list_pos = self.robot_v36.motion.linear.get_actual_position()
+            list_pos = self.robot_v36.motion.linear.get_actual_position("rad")
             #print("list1: ",list_pos)
-            list_pos =  pos_v3_to_v1(list_pos)
+            #list_pos =  pos_v3_to_v1(list_pos)
             #print("list2: ",list_pos)
             return position(list_pos[0:3],list_pos[3:6])
         else:
@@ -115,6 +120,8 @@ class PulseRobotExt(object):
         if self.controller_v3 is RobotType.pulse_v3:  
             return self.robot_v3.hold()
             #return self.robot_v3.stby()
+        if self.controller_v3 is RobotType.pulse_v36:  
+            return self.robot_v36.motion.mode.set('hold')
         else:
             
             
@@ -140,8 +147,7 @@ class PulseRobotExt(object):
             t.start()
             return 
         if self.controller_v3 is RobotType.pulse_v36:  
-            t = Thread(target=self.run_position_v3(_t_p,_velocity,_acceleration,_tcp_max_velocity,_motion_type))
-            t.start()
+            self.run_position_v36(_t_p,_velocity,_acceleration,_tcp_max_velocity,_motion_type)
             return 
         if self.controller_v3 is RobotType.pulse_v1:
             return self.robot.set_position(target_position=_t_p,
@@ -169,7 +175,19 @@ class PulseRobotExt(object):
                 tcp_max_velocity,
                 motion_type)
             return 
-        
+        if self.controller_v3 is RobotType.pulse_v36:  
+            """t = Thread(target=self.run_pose_v3(target_pose,speed,
+                velocity,
+                acceleration,
+                tcp_max_velocity,
+                motion_type))
+            t.start()"""
+            self.run_pose_v36(target_pose,speed,
+                velocity,
+                acceleration,
+                tcp_max_velocity,
+                motion_type)
+            return 
         else:
             return self.robot.set_pose(target_pose,speed,velocity ,acceleration, tcp_max_velocity,motion_type)
         #return self.robot.set_pose(target_pose,speed,velocity ,acceleration, tcp_max_velocity,motion_type)
@@ -192,14 +210,9 @@ class PulseRobotExt(object):
                      _acceleration = None,
                      _tcp_max_velocity = None, 
                      _motion_type: str = MT_LINEAR):
-        #pos v1_to_v3
-        #print("1",self.robot_v3.get_act_pos_cartesian())
-        #print("2",pos_v1_to_v3(posit_to_list(  _t_p)))
-        self.robot_v36.motion.linear.add_new_waypoint(pos_v1_to_v3(posit_to_list(  _t_p)),_velocity,_acceleration)
+        self.robot_v36.motion.linear.add_new_waypoint(posit_to_list(_t_p),_velocity,_acceleration,orientation_units="rad")
         self.robot_v36.motion.mode.set('move')
-        self.robot_v36.motion.wait_waypoint_completion(0)
-
-        #self.robot_v3.await_motion()
+        #self.robot_v36.motion.wait_waypoint_completion(0)
         return
     
     def run_pose_v3(self,target_pose:Pose,
@@ -216,12 +229,31 @@ class PulseRobotExt(object):
         #self.robot_v3.a
         #self.robot_v3.await_motion()
         return
+    def run_pose_v36(self,target_pose:Pose,
+                speed= None,
+                velocity = None,
+                acceleration = None,
+                tcp_max_velocity = None,
+                motion_type: str = MT_JOINT):
+        if speed is None: speed = 1
+        if acceleration is None: acceleration = 0.5
+        print(target_pose.angles)
+        self.robot_v36.motion.joint.add_new_waypoint(target_pose.angles,None,speed,acceleration)
+        self.robot_v36.motion.mode.set('move')
+        self.robot_v36.motion.wait_waypoint_completion(0)
+        return
 
     def run_positions_v3(self,positions: list[Position],
                                 motion_parameters: LinearMotionParameters):
         for pos in positions: self.robot_v3.move_l(pos_v1_to_v3(posit_to_list(pos)),motion_parameters.velocity,motion_parameters.acceleration) 
         self.robot_v3.run_wps()
         #self.robot_v3.await_motion()
+
+    def run_positions_v36(self,positions: list[Position],
+                                motion_parameters: LinearMotionParameters):
+        for pos in positions: self.robot_v36.motion.linear.add_new_waypoint(posit_to_list(pos),motion_parameters.velocity,motion_parameters.acceleration) 
+        self.robot_v36.motion.mode.set('move')
+
 
     def run_linear_positions(self,positions: list[Position],
                                 motion_parameters: LinearMotionParameters):

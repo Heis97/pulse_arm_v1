@@ -15,9 +15,9 @@ from KukaRobot import *
 from PulseRobotExt import *
 from Plotter import Plotter
 
-controller_v3 = RobotType.pulse_v3
+controller_v3 = RobotType.pulse_v36
 
-
+"""G1 X90 Y-45 Z0 A-90 B0 C-90"""
 def fullsum(l:"list[QPointF]"):
     p = QPointF(0,0)
     for e in l: p+=e
@@ -340,7 +340,7 @@ class RobPosThread(QtCore.QThread):
         QtCore.QThread.__init__(self)   
         self.pulse_arm = pulse_arm
         self.label = label
-        self.timeDelt = 0.001
+        self.timeDelt = 0.05
         self.start()   
         self.writing = False
         self.feedback = []
@@ -952,7 +952,7 @@ class PulseApp(QtWidgets.QWidget):
     def axis_move(self):
         but = self.sender()
         acs = 0.1  
-        vel = 0.1     
+        vel = 0.01     
         step = self.move_dist*10e-4
         x,y,z,Rx,Ry,Rz = self.mask_from_button(but.text())        
         position_delt = position([step*x, step*y, step*z], [step*Rx, step*Ry, step*Rz])
@@ -963,7 +963,6 @@ class PulseApp(QtWidgets.QWidget):
         print("position_delt",position_delt)
         print("pos_rel",pos_rel)"""
         self.pulse_robot.set_position(pos_rel , _velocity=vel, _acceleration=acs,_motion_type=MT_LINEAR)
-        #self.pulse_robot.await_stop()
 
     def mask_from_button(self,name):
         
@@ -1500,7 +1499,7 @@ class PulseApp(QtWidgets.QWidget):
 
     def stop_ex_robot(self):
         self.pulse_robot.stop()
-        self.pulse_robot.recover()
+        #self.pulse_robot.recover()
 
 
     def traj_prep(self,ps:list[Point3D],p_off=Point3D()):

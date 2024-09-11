@@ -104,6 +104,7 @@ class LinearMotion:
         validate_value(blend, BLEND_LIMITS)
         validate_value(speed, SPEED_LIMITS)
         validate_value(accel, ACCEL_LIMITS)
+        
         tcp_pose = set_position_orientation_units(
             tcp_pose, orientation_units
         )
