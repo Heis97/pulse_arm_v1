@@ -15,7 +15,7 @@ from KukaRobot import *
 from PulseRobotExt import *
 from Plotter import Plotter
 
-controller_v3 = RobotType.pulse_v36
+controller_v3 = RobotType.pulse_v3
 
 """G1 X90 Y-45 Z0 A-90 B0 C-90"""
 def fullsum(l:"list[QPointF]"):
