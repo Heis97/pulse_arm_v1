@@ -39,7 +39,7 @@ def pos_v1_to_v3(p_l):
 
 
 host_old = "http://10.10.10.20:8081"
-#host_v3 = "192.168.0.50"#cyto mb
+#host_v3 = "192.168.0.50"#cyto 
 host_v3 = "192.168.10.71"#misis
 host_v36 = "192.168.0.10"
 
