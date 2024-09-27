@@ -192,9 +192,9 @@ def calc_forward_kinem_pulse(q:Pose3D,rad:bool = False,n = 6, controller:RobotTy
     L21 = 0.156
     L31 = -0.1485
 
-    if controller is RobotType.pulse_v3:
+    """if controller is RobotType.pulse_v3:
         L2 = 0.45
-        L3 = 0.37
+        L3 = 0.37"""
 
     if controller is RobotType.pulse_v36:
         L1 = 0.1725

@@ -952,7 +952,7 @@ class PulseApp(QtWidgets.QWidget):
     def axis_move(self):
         but = self.sender()
         acs = 0.1  
-        vel = 0.01     
+        vel = 0.1     
         step = self.move_dist*10e-4
         x,y,z,Rx,Ry,Rz = self.mask_from_button(but.text())        
         position_delt = position([step*x, step*y, step*z], [step*Rx, step*Ry, step*Rz])
