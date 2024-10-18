@@ -890,7 +890,7 @@ class PulseApp(QtWidgets.QWidget):
         axis = [ax.X,ax.Y,ax.Z,ax.U,ax.V,ax.W]
         i=0
         for axe in axis:           
-            self.add_axis_buttons(axe,QtCore.QRect(100+40*i, 340, 30, 30),self.axis_jog,self.stop_robot)
+            #self.add_axis_buttons(axe,QtCore.QRect(100+40*i, 340, 30, 30),self.axis_jog,self.stop_robot)
             self.add_axis_buttons(axe,QtCore.QRect(100+40*i, 440, 30, 30),self.axis_move,None  )
             i+=1
 

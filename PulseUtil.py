@@ -185,16 +185,16 @@ def comp_matrs_ps(q:Pose3D,rad:bool = True)->list[Point3D]:
 def calc_forward_kinem_pulse(q:Pose3D,rad:bool = False,n = 6, controller:RobotType = RobotType.pulse_v36):
     L1 = 0.2311
     L2 = 0.375
-    L3 = 0.295
+    L3 = 0.295#90
     L4 = 0.1351
     L5 = 0.1825
     L6 = 0.1325
     L21 = 0.156
     L31 = -0.1485
 
-    """if controller is RobotType.pulse_v3:
-        L2 = 0.45
-        L3 = 0.37"""
+    #if controller is RobotType.pulse_v3:#90
+        #L2 = 0.45
+        #L3 = 0.37
 
     if controller is RobotType.pulse_v36:
         L1 = 0.1725
