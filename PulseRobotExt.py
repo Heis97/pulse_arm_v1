@@ -103,6 +103,12 @@ class PulseRobotExt(object):
     def get_position(self):
         if self.controller_v3 is RobotType.pulse_v3:  
             list_pos = self.robot_v3.get_act_pos_cartesian()
+
+            #angles = self.get_pose().angles
+            #pose = Pose3D(angles)
+            #position_c:Point3D = q_to_p(pose,False,RobotType.pulse_v3)
+            
+            #list_pos =  [ position_c.x,position_c.y,position_c.z,position_c.roll,position_c.pitch,position_c.yaw]
             #print("list1: ",list_pos)
             list_pos =  pos_v3_to_v1(list_pos)
             #print("list2: ",list_pos)

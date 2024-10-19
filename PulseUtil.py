@@ -184,41 +184,60 @@ def comp_matrs_ps(q:Pose3D,rad:bool = True)->list[Point3D]:
 
 def calc_forward_kinem_pulse(q:Pose3D,rad:bool = False,n = 6, controller:RobotType = RobotType.pulse_v36):
     L1 = 0.2311
-    L2 = 0.375
-    L3 = 0.295#90
+    L2 = -0.375
+    L3 = -0.295
     L4 = 0.1351
     L5 = 0.1825
     L6 = 0.1325
     L21 = 0.156
     L31 = -0.1485
 
-    #if controller is RobotType.pulse_v3:#90
-        #L2 = 0.45
-        #L3 = 0.37
+    if controller is RobotType.pulse_v3:#90
+         
+        L1 = 0.2471
+        L2 = -0.45# -90
+        L3 = -0.37# -90
+        #L2 = 0.375  #- 75
+        #L3 = 0.295  #- 75
+        L4 = 0.10815
+        L5 = 0.1825
+        L6 = 0.134
+
+        L21 = 0.1351
+        L31 = -0.10815
 
     if controller is RobotType.pulse_v36:
         L1 = 0.1725
-        L2 = 0.405
-        L3 = 0.3722
+        L2 = -0.405
+        L3 = -0.3722
         L4 = 0.1398
         L5 = 0.1398
         L6 = 0.1398
     #print(q)
+    #print(L1,L2,L3,L4,L5,L6)
     if not rad:
         q.angles = toRad(q.angles)
+    
     #q.angles.reverse()
+    """ [ q.angles[0], np.pi / 2, 0, L1],
+        [ q.angles[1],  0, -L2, 0],
+        [ q.angles[2],  0, -L3, 0],
+        [ q.angles[3], np.pi / 2, 0, L4],
+        [ q.angles[4], -np.pi / 2, 0, L5],
+        [ q.angles[5],  0, 0, L6]"""
     dh_params = [
         [ q.angles[0], np.pi / 2, 0, L1],
-        [ q.angles[1],  0, -L2, L21],
-        [ q.angles[2],  0, -L3, L31],
+        [ q.angles[1],  0, L2, L21],
+        [ q.angles[2],  0, L3, L31],
         [ q.angles[3], np.pi / 2, 0, L4],
         [ q.angles[4], -np.pi / 2, 0, L5],
         [ q.angles[5],  0, 0, L6]
+        
     ]
     #print("dh_params",dh_params)
     pos = calc_pos(dh_params[:n])
     #print("pos\n",pos)
-    rot = pulse_rot_matrix_v3(-2.43,0.55,3.1)
+    #rot = pulse_rot_matrix_v3(-2.43,0.55,3.1)
     #print("rot\n",rot)
     p = position_from_matrix_pulse(pos)
     #p=p3d_from_matrix_pulse_v3(pos)

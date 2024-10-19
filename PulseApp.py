@@ -364,9 +364,9 @@ class RobPosThread(QtCore.QThread):
             position_t = self.pulse_arm.get_position()
             #print(pose.angles)
             position:Point3D = q_to_p(pose,False,controller_v3)
-            #print(position.ToStringPulseMM())
+            
             position = p3d_cur_pulse(position,self.pulse_arm.tool,self.pulse_arm.base)
-
+            #print("mm: ",position.ToStringPulseMM())
             """m_pos_t = pulse_matrix_p(position_to_p3d(position_t))
             m_pos = pulse_matrix_p(position)
             print("m_pos")
@@ -377,8 +377,8 @@ class RobPosThread(QtCore.QThread):
 
             self.label.setText("Joint position:\n"+list_to_str(angles)+"\n\n"+"Cartesian position:\n"+position_to_str(position_t)
                                 +"\n\n"+"Cartesian position_int:\n"+position.ToStringPulseMM())  
-            self.pulse_arm.cur_posit_3d = position
-            self.pulse_arm.cur_posit = position.ToStringPulseMM(4," ")
+            self.pulse_arm.cur_posit_3d = position_to_p3d( position_t )
+            self.pulse_arm.cur_posit = position_to_p3d( position_t ).ToStringPulseMM(4," ")
             self.pulse_arm.update_buf()
             self.pulse_arm.current_progress_prog()
             self.label.setText(self.label.text()+"\n Line: "+str(self.pulse_arm.cur_i_prog)+", "+str(self.pulse_arm.cur_progr_line)+"%")
@@ -1446,10 +1446,10 @@ class PulseApp(QtWidgets.QWidget):
         self.pulse_robot.run_linear_positions(positions,linear_motion_parameters)"""
 
         vel1 = 0.5
-        vel2 = 0.008
+        vel2 = 0.030
 
         acs1 = 50
-        acs2 = 0.01
+        acs2 = 0.04
         print(positions)
         vel = vel1
         acs = acs1
@@ -1461,7 +1461,7 @@ class PulseApp(QtWidgets.QWidget):
         dn = 950
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
         for i in range(int(len(positions)/dn)+1):
-            self.pulse_robot.set_position(positions[dn*i],_velocity=vel1,_acceleration=acs1,_motion_type=MT_LINEAR)   #vel,acs1    //v3: vel2 acs2  
+            self.pulse_robot.set_position(positions[dn*i],_velocity=vel2,_acceleration=acs2,_motion_type=MT_LINEAR)   #vel,acs1    //v3: vel2 acs2  
             linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel2,acceleration=acs2)
             print("load",dn)
             if len(positions)>dn*(i+1)+1:
@@ -1506,7 +1506,7 @@ class PulseApp(QtWidgets.QWidget):
         """ps: mm, p_off: m"""
         points = []
         positions = []
-        dist_min = 1.9
+        dist_min = 2.3
         ps_filt = []
         k = 1
         for i in range(len(ps)): 
