@@ -11,6 +11,14 @@ class RobotType(Enum):
     pulse_v3 = 2
     pulse_v36 = 3
 
+def vel_div_ard(vel_nos:float,d_nos:float,d_syr:float):
+    vel = (vel_nos*d_nos*d_nos)/(d_syr*d_syr)
+    nT = float(5000)
+    p = float(1)
+    rev = float(200 * 16)
+    st = int((nT*p)/(vel*rev))
+    return st
+
 def find_center_sphere_4p(ps:list[Point3D]):
     x1 = ps[0].x; y1 = ps[0].y; z1 = ps[0].z
     x2 = ps[1].x; y2 = ps[1].y; z2 = ps[1].z
