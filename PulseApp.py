@@ -997,11 +997,11 @@ class PulseApp(QtWidgets.QWidget):
         self.coords_thread = None
 
         self.but_add_position = QPushButton('Добавить позицию', self)
-        self.but_add_position.setGeometry(QtCore.QRect(400, 340, 140, 30))
+        self.but_add_position.setGeometry(QtCore.QRect(600, 340, 140, 30))
         self.but_add_position.clicked.connect(self.add_position)
 
         self.but_clear_buf_positions = QPushButton('Очистить позиции', self)
-        self.but_clear_buf_positions.setGeometry(QtCore.QRect(400, 380, 140, 30))
+        self.but_clear_buf_positions.setGeometry(QtCore.QRect(600, 380, 140, 30))
         self.but_clear_buf_positions.clicked.connect(self.clear_buf_positions)
 
         self.lab_buf_positions = QLabel(self)
@@ -1348,8 +1348,8 @@ class PulseApp(QtWidgets.QWidget):
 
         self.text_prog_code.setText("G1 X0 Y0 Z10\nG1 X0 Y0 Z1\nG1 X0 Y30 Z1\nG1 X1 Y30\nG1 X1 Y0")
 
-        text_prog = """G1 X-258.0 Y334.0 Z326.0 A-0.3 B1.4 C-2.4\nG1 X-248.0 Y334.0 Z326.0 A-0.3 B1.4 C-2.4\nG1 X-248.0 Y344.0 Z326.0 A-0.3 B1.4 C-2.4\nG1 X-258.0 Y344.0 Z326.0 A-0.3 B1.4 C-2.4\n"""
-
+        #text_prog = """G1 X-258.0 Y334.0 Z326.0 A-0.3 B1.4 C-2.4\nG1 X-248.0 Y334.0 Z326.0 A-0.3 B1.4 C-2.4\nG1 X-248.0 Y344.0 Z326.0 A-0.3 B1.4 C-2.4\nG1 X-258.0 Y344.0 Z326.0 A-0.3 B1.4 C-2.4\n"""
+        text_prog = """G1 X58.0 Y34.0 Z26.0 A-0.3 B1.4 C-2.4\nG1 X48.0 Y34.0 Z26.0 A-0.3 B1.4 C-2.4\nG1 X48.0 Y44.0 Z26.0 A-0.3 B1.4 C-2.4\nG1 X58.0 Y44.0 Z26.0 A-0.3 B1.4 C-2.4\n"""
         self.text_prog_code.setText(text_prog)
 
 
@@ -1359,21 +1359,21 @@ class PulseApp(QtWidgets.QWidget):
             pose = Pose(self.cur_work_pose["angles"])
             print(pose.angles)
             print(self.pulse_robot.get_pose())
-            self.pulse_robot.set_pose(pose,0.1)
+            self.pulse_robot.set_pose(pose,2)
             #self.pulse_robot.await_stop()
 
     def set_cur_start_point(self):
         self.cur_start_point = self.get_cur_item_from_combo(self.combo_start_points,self.settins_pulse.start_points)
         if self.cur_start_point is not None:
-            self.pulse_robot.set_position(Position(self.cur_start_point["point"],self.cur_start_point["rotation"]),_velocity=0.1,_acceleration=0.1)
+            self.pulse_robot.set_position(Position(self.cur_start_point["point"],self.cur_start_point["rotation"]),_velocity=1,_acceleration=1)
             #self.pulse_robot.await_stop()
 
     def exec_prog_arm_rel(self):
 
         
-        positions = self.generate_traj_xyz_rel()
-        vel1 = 1
-        vel2 = 0.01
+        positions,p_fil = self.generate_traj_xyz_rel()
+        vel1 = 0.1
+        vel2 = 0.03
 
         acs1 = 50
         acs2 = 0.05
@@ -1620,7 +1620,7 @@ class PulseApp(QtWidgets.QWidget):
         p_off = Point3D(x = start_point["x"],y = start_point["y"],z = start_point["z"],
                         _roll = start_rot["roll"],_pitch = start_rot["pitch"],_yaw = start_rot["yaw"])
         ps = self.remove_rot(ps)
-        positions = self.traj_prep(ps,p_off)
+        positions,p_fil = self.traj_prep(ps,p_off)
         """pos = position(p,r)
         points.append(p)
         positions = []
@@ -1638,7 +1638,7 @@ class PulseApp(QtWidgets.QWidget):
         #for i in range(len(positions)):
             #print(i," ",positions[i])
          
-        return positions
+        return positions,p_fil
 #-----------------------------------------------------------------------------------
     def generate_traj_abc(self):        
         ps = parse_g_code_pulse(self.text_prog_code.toPlainText(),0.001)

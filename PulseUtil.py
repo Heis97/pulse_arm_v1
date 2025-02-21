@@ -873,6 +873,9 @@ def position_to_str(p,separator:str ="\n",simple:bool = False)->str:
 def position_to_p3d(p)->Point3D:
     if type(p) == Position or type(p) == PositionTimestamp:
         p = p.to_dict()
+    #if type(p) == list:
+        #print("p_list:")
+        #print(p)
     pos = p["point"]
     rot = p["rotation"]
     return Point3D (pos["x"],pos["y"],pos["z"],_roll= rot["roll"],_pitch= rot["pitch"],_yaw= rot["yaw"])
