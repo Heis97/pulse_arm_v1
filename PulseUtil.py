@@ -879,8 +879,11 @@ def position_to_p3d(p)->Point3D:
         #print(p)
     pos = p["point"]
     rot = p["rotation"]
-    return Point3D (pos["x"],pos["y"],pos["z"],_roll= rot["roll"],_pitch= rot["pitch"],_yaw= rot["yaw"])
-
+    p3d = Point3D (pos["x"],pos["y"],pos["z"],_roll= rot["roll"],_pitch= rot["pitch"],_yaw= rot["yaw"])
+    act = p["actions"]
+    if act is not None:
+        p3d.mes = act[0]
+    return p3d
 def positions_to_p3ds(ps)->list[Point3D]:
     p3ds:list[Point3D] = []
     for i in range(len(ps)):

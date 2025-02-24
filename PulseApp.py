@@ -385,8 +385,14 @@ class RobPosThread(QtCore.QThread):
             self.pulse_arm.cur_posit = position_to_p3d( position_t ).ToStringPulseMM(4," ")
             self.pulse_arm.update_buf()
             self.pulse_arm.current_progress_prog()
+            cur_com = self.pulse_arm.cur_i_prog
 
-            self.send_com_signal.emit("1")
+            if self.pulse_arm.cur_prog_3d is not None:
+                cur_p = self.pulse_arm.cur_prog_3d[cur_com]
+                mes = str(cur_p.g)+" "+str(cur_p.b)
+                self.send_com_signal.emit(mes)
+            
+            
 
 
             self.label.setText(self.label.text()+"\n Line: "+str(self.pulse_arm.cur_i_prog)+", "+str(self.pulse_arm.cur_progr_line)+"%")
@@ -1524,6 +1530,7 @@ class PulseApp(QtWidgets.QWidget):
             p = [p_off.x+ps[i].x,p_off.y+ps[i].y,p_off.z+ps[i].z]
             r = [p_off.roll+ps[i].roll*k,p_off.pitch+ps[i].pitch*k,p_off.yaw+ps[i].yaw*k]    
             #r = [0,0,0]        
+            e = str(ps[i].g)+" "+str(ps[i].b)
             pos:Position = position(p,r,blend=0.0001)  
             if i>2 and i<len(ps)-1:
                 print(p[0]*1000,p[1]*1000,p[2]*1000,r)       
@@ -1548,12 +1555,14 @@ class PulseApp(QtWidgets.QWidget):
 
                         r = (dist_min*1e-3)/part #(d*math.tan(gamma/2))/part
                         print(i," ",r)
-                        pos.blend = 0.0001 #r                              
+                        pos.blend = 0.0001 #r     
+                        pos.actions = [e]                         
                         positions.append(pos)
                         points.append(p)
                         ps_filt.append(ps[i])
             else:
                 pos.blend = 0.0001
+                pos.actions = [e]  
                 positions.append(pos)
                 points.append(p)
                 ps_filt.append(ps[i])

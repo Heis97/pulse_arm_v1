@@ -90,7 +90,7 @@ def vel_div_ard(vel_nos:float,d_nos:float,d_syr:float,dz:float):
     return st
 
 
-def parse_g_code_pulse(code:str,units:float = 1)->"list[Point3D]":
+def parse_g_code_pulse(code:str,units:float = 1,d_nos = 0.9, d_syr = 12.1, dz = 0.4)->"list[Point3D]":
     p3ds = []
     lines = code.split("\n")
     x=0 
@@ -106,10 +106,11 @@ def parse_g_code_pulse(code:str,units:float = 1)->"list[Point3D]":
     b= 0.1
     com_num = 28
     cur_extr= 0
-
+    ext = 0
+    ext_prev = 0
     e_f =0
     e_d =0
-    f =0
+    f =10
     for line in lines:        
         coords = line.split()
         if len(coords)>0:
@@ -156,12 +157,18 @@ def parse_g_code_pulse(code:str,units:float = 1)->"list[Point3D]":
                         yaw = float(coord[1:])
 
                     if coord[0]=="V":
-                        f = float(coord[1:])
-                    if coord[0]=="D":
-                        e_d = float(coord[1:])    
+                        e_f = float(coord[1:])
 
                     if coord[0]=="F":
-                        e_f = float(coord[1:])   
+                        f = float(coord[1:])
+                    if coord[0]=="D":
+                        e_d = float(coord[1:])
+                    if coord[0]=="E":
+                        ext_prev = ext
+                        ext = float(coord[1:])  
+                        if ext_prev>ext:
+                            e_d = -1  
+                        e_f = vel_div_ard(f,d_nos, d_syr, dz) 
             
             if coords[0][0]=="G":
                 r = f 

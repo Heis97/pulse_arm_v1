@@ -127,6 +127,7 @@ class Point3D(object):
     yaw:float = 0
 
     t:float = 0
+    mes:str = ""
     
     def __init__(self,x:float= 0,y:float= 0,z:float = 0,_extrude:bool = True,_r:float = 0.0,_g:float = 1.,_b:float =0.,_pitch:float = 0.0,_roll:float = 0.,_yaw:float =0.,t=0):
         self.x = x
