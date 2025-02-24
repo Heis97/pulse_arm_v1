@@ -285,13 +285,16 @@ class RemoteControlThread(QtCore.QThread):
         self.workmode = 0
         self.inp_mass = ""
         self.base = 0
-        sock = socket.socket()
-        sock.bind(('', 30006))
-        sock.listen(1)
-        self.conn, self.addr = sock.accept()
+        self.sock = socket.socket()
+        self.sock.bind(('', 30006))
+        self.sock.listen(1)
+        self.conn, self.addr = self.sock.accept()
         print ('connected:', self.addr)
         self.start()   
 
+    def send(self,mes:str):
+        print(mes)
+        self.conn.send((mes+"\n").encode())
 
     def run(self):
         while True:
@@ -336,6 +339,7 @@ class RemoteControlThread(QtCore.QThread):
             
 
 class RobPosThread(QtCore.QThread):
+    send_com_signal = QtCore.pyqtSignal(str)
     def __init__(self,pulse_arm:PulseRobotExt, label:QLabel, slot):
         QtCore.QThread.__init__(self)   
         self.pulse_arm = pulse_arm
@@ -381,6 +385,10 @@ class RobPosThread(QtCore.QThread):
             self.pulse_arm.cur_posit = position_to_p3d( position_t ).ToStringPulseMM(4," ")
             self.pulse_arm.update_buf()
             self.pulse_arm.current_progress_prog()
+
+            self.send_com_signal.emit("1")
+
+
             self.label.setText(self.label.text()+"\n Line: "+str(self.pulse_arm.cur_i_prog)+", "+str(self.pulse_arm.cur_progr_line)+"%")
             if self.writing:
                 self.feedback.append(str(pose))
@@ -840,6 +848,8 @@ class PulseApp(QtWidgets.QWidget):
     def start_remote_control(self):
         self.pulse_robot.rem_thr = RemoteControlThread(self)
         self.pulse_robot.rem_thr.prog_signal.connect(self.set_prog_text, QtCore.Qt.QueuedConnection)
+        self.coords_thread.send_com_signal.connect( self.pulse_robot.rem_thr.send, QtCore.Qt.QueuedConnection)
+        #self.pulse_robot.rem_thr.prog_signal.connect(self.set_prog_text, QtCore.Qt.QueuedConnection)
 
 
     def set_prog_text(self,val):

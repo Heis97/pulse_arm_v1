@@ -1,7 +1,7 @@
 from polygon import Point3D
 
 
-def parse_g_code(code:str)->"list[Point3D]":
+def parse_g_code(code:str,d_nos = 0.9, d_syr = 12.1, dz = 0.4)->"list[Point3D]":
     p3ds = []
     lines = code.split("\n")
     x=0 
@@ -13,6 +13,8 @@ def parse_g_code(code:str)->"list[Point3D]":
     b= 0.1
     com_num = 28
     cur_extr= 0
+    ext = 0
+    ext_prev = 0
     f = 0
     e_f = 0
     e_d = 0
@@ -55,13 +57,19 @@ def parse_g_code(code:str)->"list[Point3D]":
                     if coord[0]=="Z" or coord[0]=="A" or coord[0]=="B":
                         z = float(coord[1:])
 
-                    if coord[0]=="F":
+                    if coord[0]=="V":
                         e_f = float(coord[1:])
 
-                    if coord[0]=="V":
+                    if coord[0]=="F":
                         f = float(coord[1:])
                     if coord[0]=="D":
-                        e_d = float(coord[1:])    
+                        e_d = float(coord[1:])
+                    if coord[0]=="E":
+                        ext_prev = ext
+                        ext = float(coord[1:])  
+                        if ext_prev>ext:
+                            e_d = -1  
+                        e_f = vel_div_ard(f,d_nos, d_syr, dz)
             
             if coords[0][0]=="G":
                 r = f    
@@ -72,6 +80,15 @@ def parse_g_code(code:str)->"list[Point3D]":
                 if com_num==1:
                     p3ds.append(Point3D(x,y,z,True,r,g,b))
     return p3ds
+
+def vel_div_ard(vel_nos:float,d_nos:float,d_syr:float,dz:float):
+    vel = (vel_nos*d_nos*dz)/(d_syr*d_syr)
+    nT = float(5000)
+    p = float(1)
+    rev = float(200 * 16)
+    st = int((nT*p)/(vel*rev))
+    return st
+
 
 def parse_g_code_pulse(code:str,units:float = 1)->"list[Point3D]":
     p3ds = []
