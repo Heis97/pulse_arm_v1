@@ -178,7 +178,7 @@ def load_feedback(file)->list[Pose3D]:
         p = Pose3D(toRad(traj_d['angles']))
         p.t = timestamp_decod(traj_d['timestamp'])
         ps.append(p)
-    return ps
+    return ps   
 
 #-----------------------------------------------------------------------
 
