@@ -775,7 +775,7 @@ def ps_to_qs(traj:list[Point3D],t = 1):
 
 def compare_traj_pulse(qs_real:list[Pose3D],prog:list[Point3D],base:Point3D,st_p:Point3D,filtr_dist_g_code:float = 0.3,traj_divide:float = 0.01,blend:float = 1,vel = 20):
     ps_model = g_code_to_ps_rel_xyz(prog,base,st_p,filtr_dist_g_code,traj_divide,blend,vel)
-    qs_model = ps_to_qs(ps_model)
+    qs_model = ps_to_qs(ps_model,1)
     #qs_model = Pose3D.run_aver(qs_model,0.01)
     ps_model = qs_to_ps(qs_model)
 

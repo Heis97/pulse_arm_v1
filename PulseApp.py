@@ -439,6 +439,7 @@ class PulseApp(QtWidgets.QWidget):
 
         self.plotter = Plotter(self)
         #self.test_kin_v3()
+        self.test2()
 
     def test_kin_v3(self):
         p1 = pos_dict_to_point3d( self.settins_pulse.start_points["test_p5"])
@@ -583,8 +584,8 @@ class PulseApp(QtWidgets.QWidget):
         for i in range(len(q_draw)):
             if i < len(q.angles):
                 self.viewer3d.setMatr(solv_pms[i],q_draw[i])
-                print("qi: ",i)
-                print(solv_pms[i])
+                #print("qi: ",i)
+                #print(solv_pms[i])
             else:
                 pass
                 self.viewer3d.setMatr(solv_pms[len(q.angles)-1],q_draw[i])
@@ -771,8 +772,8 @@ class PulseApp(QtWidgets.QWidget):
         self.viewer3d.addLines_ret(ps_model,1,1,0,0.2)
         self.viewer3d.addLines_ret(ps_real,0,1,0,0.3)
         self.viewer3d.addLines_ret(ps_real_2,1,0,0,0.3)
-        #draw_plots_compare(self.plotter,qs_real,ps_real,qs_model,ps_model)
-        draw_plots_compare(self.plotter,qs_real,ps_real,qs_real_2,ps_real_2)
+        draw_plots_compare(self.plotter,qs_real,ps_real,qs_model,ps_model)
+        #draw_plots_compare(self.plotter,qs_real,ps_real,qs_real_2,ps_real_2)
         self.plotter.show()
     
     def test_cur_prog(self):
@@ -1365,7 +1366,9 @@ class PulseApp(QtWidgets.QWidget):
         self.text_prog_code.setText("G1 X0 Y0 Z10\nG1 X0 Y0 Z1\nG1 X0 Y30 Z1\nG1 X1 Y30\nG1 X1 Y0")
 
         #text_prog = """G1 X-258.0 Y334.0 Z326.0 A-0.3 B1.4 C-2.4\nG1 X-248.0 Y334.0 Z326.0 A-0.3 B1.4 C-2.4\nG1 X-248.0 Y344.0 Z326.0 A-0.3 B1.4 C-2.4\nG1 X-258.0 Y344.0 Z326.0 A-0.3 B1.4 C-2.4\n"""
-        text_prog = """G1 X58.0 Y34.0 Z26.0 A-0.3 B1.4 C-2.4\nG1 X48.0 Y34.0 Z26.0 A-0.3 B1.4 C-2.4\nG1 X48.0 Y44.0 Z26.0 A-0.3 B1.4 C-2.4\nG1 X58.0 Y44.0 Z26.0 A-0.3 B1.4 C-2.4\n"""
+        #text_prog = """G1 X58.0 Y34.0 Z26.0 A-0.3 B1.4 C-2.4\nG1 X48.0 Y34.0 Z26.0 A-0.3 B1.4 C-2.4\nG1 X48.0 Y44.0 Z26.0 A-0.3 B1.4 C-2.4\nG1 X58.0 Y44.0 Z26.0 A-0.3 B1.4 C-2.4\n"""
+
+        text_prog = "G1 X0 Y0 Z10\nG1 X0 Y0 Z0\nG1 X0 Y30 Z0\nG1 X1 Y30\nG1 X1 Y0"
         self.text_prog_code.setText(text_prog)
 
 
