@@ -439,7 +439,7 @@ class PulseApp(QtWidgets.QWidget):
 
         self.plotter = Plotter(self)
         #self.test_kin_v3()
-        self.test2()
+        #self.test2()
 
     def test_kin_v3(self):
         p1 = pos_dict_to_point3d( self.settins_pulse.start_points["test_p5"])
