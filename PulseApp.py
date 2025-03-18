@@ -1635,11 +1635,11 @@ class PulseApp(QtWidgets.QWidget):
         ps = parse_g_code_pulse(self.text_prog_code.toPlainText(),0.001)
         start_point = self.cur_start_point["point"]
         start_rot =  self.cur_start_point["rotation"]
-
+        z_off = -1.0*0.001
         points = []
         p_s = [start_point["x"],start_point["y"],start_point["z"]]
         r_s = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]
-        p_off = Point3D(x = start_point["x"],y = start_point["y"],z = start_point["z"],
+        p_off = Point3D(x = start_point["x"],y = start_point["y"],z = start_point["z"]+z_off,
                         _roll = start_rot["roll"],_pitch = start_rot["pitch"],_yaw = start_rot["yaw"])
         ps = self.remove_rot(ps)
         positions,p_fil = self.traj_prep(ps,p_off)
