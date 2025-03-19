@@ -362,8 +362,8 @@ class RobPosThread(QtCore.QThread):
             #i+=1
             #print(i)
             #try:
-            
-            angles = self.pulse_arm.get_pose().angles
+            pose_pulse = self.pulse_arm.get_pose()
+            angles = pose_pulse.angles
             pose = Pose3D(angles)
             position_t = self.pulse_arm.get_position()
             #print(pose.angles)
@@ -397,7 +397,7 @@ class RobPosThread(QtCore.QThread):
 
             self.label.setText(self.label.text()+"\n Line: "+str(self.pulse_arm.cur_i_prog)+", "+str(self.pulse_arm.cur_progr_line)+"%")
             if self.writing:
-                self.feedback.append(str(pose))
+                self.feedback.append(str(pose_pulse))
             #except BaseException:
              #   pass
 
