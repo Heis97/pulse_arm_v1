@@ -1468,7 +1468,7 @@ class PulseApp(QtWidgets.QWidget):
         self.pulse_robot.run_linear_positions(positions,linear_motion_parameters)"""
 
         vel1 = 0.5
-        vel2 = 0.020
+        vel2 = 0.060
 
         acs1 = 50
         acs2 = 0.04
