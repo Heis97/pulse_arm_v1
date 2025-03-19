@@ -1,4 +1,5 @@
 from time import sleep
+import datetime
 import sys
 from PyQt5 import QtCore,  QtWidgets
 from PyQt5.QtWidgets import (QPushButton, QLineEdit, QApplication,QTextEdit,QLabel,QComboBox,QRadioButton,QButtonGroup)
@@ -344,7 +345,7 @@ class RobPosThread(QtCore.QThread):
         QtCore.QThread.__init__(self)   
         self.pulse_arm = pulse_arm
         self.label = label
-        self.timeDelt = 0.05
+        self.timeDelt = 0.001
         self.start()   
         self.writing = False
         self.feedback = []
@@ -364,7 +365,9 @@ class RobPosThread(QtCore.QThread):
             #try:
             pose_pulse = self.pulse_arm.get_pose()
             angles = pose_pulse.angles
+            
             pose = Pose3D(angles)
+            pose.current_time = datetime.datetime.now()
             position_t = self.pulse_arm.get_position()
             #print(pose.angles)
             position:Point3D = q_to_p(pose,False,controller_v3)
@@ -397,7 +400,7 @@ class RobPosThread(QtCore.QThread):
 
             self.label.setText(self.label.text()+"\n Line: "+str(self.pulse_arm.cur_i_prog)+", "+str(self.pulse_arm.cur_progr_line)+"%")
             if self.writing:
-                self.feedback.append(str(pose_pulse))
+                self.feedback.append(str(pose))
             #except BaseException:
              #   pass
 

@@ -4,11 +4,13 @@ import enum
 from random import triangular
 import struct
 import io
+import datetime
 
 class Pose3D(object):
     angles:list[float] = []
     t:float = 0
     exist:bool = True
+    current_time = None
     def __init__(self,angles:list, t:float = 0,exist:bool =True):
         self.angles = angles.copy()
         self.t = t
@@ -111,6 +113,7 @@ class Pose3D(object):
     def __str__(self):
         s = ""
         for a in self.angles: s+=str(a)+"; "
+        if self.current_time is not None: s+=str(self.current_time) 
         return s
 
 class Point3D(object):
