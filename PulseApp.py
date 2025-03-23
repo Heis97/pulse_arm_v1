@@ -1466,8 +1466,8 @@ class PulseApp(QtWidgets.QWidget):
         print(positions[0])
         #try:
         self.pulse_robot.run_linear_positions(positions,linear_motion_parameters)"""
-        for i in range(int(len(positions))):
-            print (1000*positions[i].point.x,1000*positions[i].point.y,1000*positions[i].point.z,positions[i].rotation.roll,positions[i].rotation.pitch,positions[i].rotation.yaw)
+       # for i in range(int(len(positions))):
+           #print (1000*positions[i].point.x,1000*positions[i].point.y,1000*positions[i].point.z,positions[i].rotation.roll,positions[i].rotation.pitch,positions[i].rotation.yaw)
         vel1 = 0.5
         vel2 = 0.060
 
@@ -1477,7 +1477,6 @@ class PulseApp(QtWidgets.QWidget):
         vel = vel1
         acs = acs1
         #self.pulse_robot.set_position(positions[0],velocity=vel,acceleration=acs,motion_type=MT_LINEAR)
-        return
         vel = vel2
         acs = acs2
         print("len all",len(positions))
