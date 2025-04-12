@@ -1351,6 +1351,10 @@ class PulseApp(QtWidgets.QWidget):
         self.but_start_prog_abs.setGeometry(QtCore.QRect(1000, 800, 140, 30))
         self.but_start_prog_abs.clicked.connect(self.exec_prog_arm_abs)
 
+        self.lin_vel_prog = QLineEdit(self)
+        self.lin_vel_prog.setGeometry(QtCore.QRect(900, 840, 80, 30))
+        self.lin_vel_prog.setText("10")
+
         self.but_start_prog_rel = QPushButton('Исп. прог. относ', self)
         self.but_start_prog_rel.setGeometry(QtCore.QRect(1000, 840, 140, 30))
         self.but_start_prog_rel.clicked.connect(self.exec_prog_arm_rel)
@@ -1468,7 +1472,7 @@ class PulseApp(QtWidgets.QWidget):
         self.pulse_robot.run_linear_positions(positions,linear_motion_parameters)"""
 
         vel1 = 0.5
-        vel2 = 0.060
+        vel2 = 0.001* float( self.lin_vel_prog.text())
 
         acs1 = 50
         acs2 = 0.04
