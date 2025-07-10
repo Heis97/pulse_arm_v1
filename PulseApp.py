@@ -345,7 +345,7 @@ class RobPosThread(QtCore.QThread):
         QtCore.QThread.__init__(self)   
         self.pulse_arm = pulse_arm
         self.label = label
-        self.timeDelt = 0.001
+        self.timeDelt = 0.01
         self.start()   
         self.writing = False
         self.feedback = []
@@ -364,7 +364,7 @@ class RobPosThread(QtCore.QThread):
             #print(i)
             #try:
             pose_pulse = self.pulse_arm.get_pose()
-            angles = pose_pulse.angles
+            angles = pose_pulse.angles  
             
             pose = Pose3D(angles)
             pose.current_time = datetime.datetime.now()
@@ -1355,6 +1355,29 @@ class PulseApp(QtWidgets.QWidget):
         self.lin_vel_prog.setGeometry(QtCore.QRect(900, 840, 80, 30))
         self.lin_vel_prog.setText("10")
 
+        self.lab = QLabel(self)
+        self.lab.setGeometry(QtCore.QRect(820, 850, 80, 30))
+        self.lab.setAlignment(Qt.AlignmentFlag.AlignTop|Qt.AlignmentFlag.AlignLeft)
+        self.lab.setText('Скорость, мм/с')
+
+        self.lin_dist_prog = QLineEdit(self)
+        self.lin_dist_prog.setGeometry(QtCore.QRect(900, 880, 80, 30))
+        self.lin_dist_prog.setText("2.3")
+
+        self.lab = QLabel(self)
+        self.lab.setGeometry(QtCore.QRect(820, 890, 80, 30))
+        self.lab.setAlignment(Qt.AlignmentFlag.AlignTop|Qt.AlignmentFlag.AlignLeft)
+        self.lab.setText('Мин дист, мм')
+
+        self.lin_acs_prog = QLineEdit(self)
+        self.lin_acs_prog.setGeometry(QtCore.QRect(900, 920, 80, 30))
+        self.lin_acs_prog.setText("50")
+
+        self.lab = QLabel(self)
+        self.lab.setGeometry(QtCore.QRect(820, 930, 80, 30))
+        self.lab.setAlignment(Qt.AlignmentFlag.AlignTop|Qt.AlignmentFlag.AlignLeft)
+        self.lab.setText('Ускор, мм/с2')
+
         self.but_start_prog_rel = QPushButton('Исп. прог. относ', self)
         self.but_start_prog_rel.setGeometry(QtCore.QRect(1000, 840, 140, 30))
         self.but_start_prog_rel.clicked.connect(self.exec_prog_arm_rel)
@@ -1476,7 +1499,7 @@ class PulseApp(QtWidgets.QWidget):
         vel2 = 0.001* float( self.lin_vel_prog.text())
 
         acs1 = 50
-        acs2 = 0.04
+        acs2 =   0.001* float( self.lin_acs_prog.text())
         #print(positions)
         vel = vel1
         acs = acs1
@@ -1531,8 +1554,8 @@ class PulseApp(QtWidgets.QWidget):
     def traj_prep(self,ps:list[Point3D],p_off=Point3D()):
         """ps: mm, p_off: m"""
         points = []
-        positions = []
-        dist_min = 2.3
+        positions = [] 
+        dist_min = float( self.lin_dist_prog.text())
         ps_filt = []
         k = 1
         for i in range(len(ps)): 
