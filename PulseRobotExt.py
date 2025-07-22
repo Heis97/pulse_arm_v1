@@ -4,7 +4,8 @@ from PulseUtil import *
 from api.robot_api_v2 import *
 from api.robot_api import *
 from threading import Thread
-from api.robot_api_rc5.API.rc_api import *  # type: ignore
+#from api.robot_api_rc5.API.rc_api import *  # type: ignore
+from API38.rc_api import *
 from enum import Enum
 import datetime
 
@@ -42,7 +43,7 @@ host_old = "http://10.10.10.20:8081"
 #host_v3 = "192.168.0.50"#cyto 
 host_v3 = "192.168.10.71"#misis
 #host_v36 = "192.168.0.10"#old rc5
-host_v36 = "10.10.10.1"#new rc5
+host_v36 = "10.10.10.3"#new rc5
 
 
 class PulseRobotExt(object):
