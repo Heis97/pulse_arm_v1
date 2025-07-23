@@ -110,6 +110,40 @@ class Kinematics:
                     *tcp_pose[ORIENTATION_SLICE]
                 )
             ) if units == 'deg' else tcp_pose
+        
+    def get_dh_model(
+    ) -> PositionOrientation | None:
+
+        if units is None:
+            units = MOTION_SETUP.units
+        validate_literal('angle', units)
+        validate_length(angle_pose, JOINT_COUNT)
+        if units == 'deg':
+            angle_pose = unit_c.degrees_to_radians(*angle_pose)
+        self._controller.send(
+            Get.ctrlr_mode,
+            pack(CTRLR_FKINE_CMD_PACK_FORMAT, *angle_pose)
+        )
+        response = self._controller.receive(
+            Get.ctrlr_coms_fkine, CTRLR_FKINE_CMD_UNPACK_FORMAT
+        )
+        tcp_pose = (
+            list(response[FKINE_IKINE_RESPONSE_JOINT_POSITION_SLICE])
+        )
+        if response and response[0] == 0:
+            if coordinate_system:
+                tcp_pose = convert_position_orientation(
+                    coordinate_system,
+                    tcp_pose,
+                    orientation_units='rad',
+                    to_local=True
+                )
+            return (
+                tcp_pose[POSITION_SLICE]
+                + unit_c.radians_to_degrees(
+                    *tcp_pose[ORIENTATION_SLICE]
+                )
+            ) if units == 'deg' else tcp_pose
 
     def get_inverse(
         self,

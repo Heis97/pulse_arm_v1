@@ -182,6 +182,15 @@ def comp_matrs_ps(q:Pose3D,rad:bool = True)->list[Point3D]:
         pms.append(pm)
     return pms
 
+def get_param_rc5_0525_00_00003():
+    aadt = [
+        [1.57076,-0.00316453,0.172515,-0.00521167],
+        [0.00474843,-0.405234,0.156134,-0.00815129],
+        [0.00250139,-0.371217,-0.148534,0.00631864],
+        [1.57062,-0.00310482,0.139763,-0.00083325],
+        [-1.57085,0.00456482,0.139429,-0.00064089],
+        [0,0,0.141079,0]]
+    return aadt
 
 def calc_forward_kinem_pulse(q:Pose3D,rad:bool = False,n = 6, controller:RobotType = RobotType.pulse_v36):
     L1 = 0.2311
@@ -209,11 +218,25 @@ def calc_forward_kinem_pulse(q:Pose3D,rad:bool = False,n = 6, controller:RobotTy
 
     if controller is RobotType.pulse_v36:
         L1 = 0.1725
-        L2 = -0.405
-        L3 = -0.3722
+        L2 = 0.156
+        L3 = -0.1485
         L4 = 0.1398
         L5 = 0.1398
         L6 = 0.1398
+
+        L21 = -0.405
+        L31 = -0.3722
+
+        #RC5 A
+        """L1 = 0.1725
+        L2 = 0.156
+        L3 = -0.1485
+        L4 = 0.1398
+        L5 = 0.1398
+        L6 = 0.1398
+
+        L21 = -0.405
+        L31 = -0.3722"""
     #print(q)
     #print(L1,L2,L3,L4,L5,L6)
     if not rad:
@@ -226,15 +249,22 @@ def calc_forward_kinem_pulse(q:Pose3D,rad:bool = False,n = 6, controller:RobotTy
         [ q.angles[3], np.pi / 2, 0, L4],
         [ q.angles[4], -np.pi / 2, 0, L5],
         [ q.angles[5],  0, 0, L6]"""
+    #taad
     dh_params = [
         [ q.angles[0], np.pi / 2, 0, L1],
         [ q.angles[1],  0, L2, L21],
         [ q.angles[2],  0, L3, L31],
         [ q.angles[3], np.pi / 2, 0, L4],
         [ q.angles[4], -np.pi / 2, 0, L5],
-        [ q.angles[5],  0, 0, L6]
-        
+        [ q.angles[5],  0, 0, L6]       
     ]
+
+    if controller is RobotType.pulse_v36:
+        aadt = get_param_rc5_0525_00_00003()
+        dh_params = []
+        for i in range(6):
+            dh_params.append([q.angles[i]+aadt[i][3], aadt[i][0], aadt[i][1], aadt[i][2]])     
+    
     #print("dh_params",dh_params)
     pos = calc_pos(dh_params[:n])
     #print("pos\n",pos)

@@ -35,6 +35,7 @@ class Getters(IntEnum):
     ctrlr_coms_get_tool: int = 1122
     ctrlr_coms_get_jog_param: int = 1123
     ctrlr_coms_get_force_param: int = 1124
+    ctrlr_coms_get_dh_model: int = 1126
     ctrlr_coms_get_tool_capsule_count: int = 1127
     ctrlr_coms_get_tool_capsule: int = 1128
     ctrlr_coms_get_link_capsule_count: int = 1129

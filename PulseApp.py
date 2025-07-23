@@ -443,6 +443,39 @@ class PulseApp(QtWidgets.QWidget):
         self.plotter = Plotter(self)
         #self.test_kin_v3()
         #self.test2()
+        self.comp_rc5()
+
+    def comp_rc5(self):
+        angles = [155.107,-91.8457,82.953987,14.06147,116.421089,-83.67874]
+
+        poses = [
+            [0,-180,0,-90,0,0],
+            #[0,-90,-90,-90,0,0],
+            #[0,-90,0,0,0,0],
+            #[0,-90,0,-90,90,0],            
+            [0,-90,0,-90,0,0]
+        ]
+
+        positions = [
+            [911.2,-293.1,171.1,20.468,-89.519,69.227],
+            #[508.9,-293.46,578.65,45.837,-89.733,43.587],
+            #[-143.37,]
+            [-3.07,-288.39,1088.37,-90,0,179.5]
+        ]
+        for i in range(len(poses)):
+            self.print_pos_ang(poses[i],positions[i])
+        #print(m)
+
+    def print_pos_ang(self,angle,posit):
+        pose = Pose3D(angle)
+        pose.current_time = datetime.datetime.now()
+        #print(pose.angles)
+        position:Point3D = q_to_p(pose,False,controller_v3)
+        m = pulse_matrix_p(position)
+        position2 = p3d_from_matrix_pulse_v3(m)
+        #print(position.ToStringPulseMM(2))
+        print(posit)
+        print(position2.ToStringPulseMM(2," "))
 
     def test_kin_v3(self):
         p1 = pos_dict_to_point3d( self.settins_pulse.start_points["test_p5"])
@@ -907,6 +940,11 @@ class PulseApp(QtWidgets.QWidget):
         self.but_relax_robot.setGeometry(QtCore.QRect(100, 280, 140, 30))
         self.but_relax_robot.clicked.connect(self.relax_robot)
 
+
+        self.but_fk_robot = QPushButton('Прямая задача', self)
+        self.but_fk_robot.setGeometry(QtCore.QRect(100, 280, 140, 30))
+        self.but_fk_robot.clicked.connect(self.fk_robot_test)
+
         axis = [ax.X,ax.Y,ax.Z,ax.U,ax.V,ax.W]
         i=0
         for axe in axis:           
@@ -942,6 +980,8 @@ class PulseApp(QtWidgets.QWidget):
         radiobutton.toggled.connect(self.radio_b_cl)
         self.b_gr.addButton(radiobutton, 3)
 
+    def fk_robot_test(self):
+        self.pulse_robot.fk_robot()
 
     def radio_b_cl(self):
         radioButton:QRadioButton = self.sender()
@@ -983,6 +1023,7 @@ class PulseApp(QtWidgets.QWidget):
         print("position_delt",position_delt)
         print("pos_rel",pos_rel)"""
         self.pulse_robot.set_position(pos_rel , _velocity=vel, _acceleration=acs,_motion_type=MT_LINEAR)
+
 
     def mask_from_button(self,name):
         

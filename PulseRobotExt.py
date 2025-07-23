@@ -25,6 +25,7 @@ def p3d_to_list_rc5(p3d:Point3D):
     return [p3d.x,p3d.y,p3d.z,p3d.pitch,p3d.roll,p3d.yaw]
 
 
+
 def pos_v3_to_v1(p_l):
     p = Point3D(p_l[0],p_l[1],p_l[2], _roll= p_l[3],_pitch= p_l[4],_yaw= p_l[5])
     m = pulse_matrix_p_v3(p)
@@ -352,7 +353,8 @@ class PulseRobotExt(object):
                 self.zg = False
             return
         else:
-            return self.robot.zg_on()
+            pass
+            #return self.robot.zg_on()
             #return self.robot.relax()
     
     def status_motors(self):
@@ -397,8 +399,26 @@ class PulseRobotExt(object):
         if len(ds_win)==0: return 0
         return ds_win[0][1]
     
-    
+    def fk_robot(self):
+        if self.controller_v3 is RobotType.pulse_v36:
+            pos = self.robot_v36.motion.kinematics.get_forward([0,-90,0,-90,0,0],units="deg")
+            #pos = self.robot_v36.motion.kinematics.get_dh_model()
+            print(pos)
+
+    def get_param_rc5(self):
+        aadt = [
+            [1.57076,-0.00316453,0.172515,-0.00521167],
+            [0.00474843,-0.405234,0.156134,-0.00815129],
+            [0.00250139,-0.371217,-0.148534,0.00631864],
+            [1.57062,-0.00310482,0.139763,-0.00083325],
+            [-1.57085,0.00456482,0.139429,-0.00064089],
+            [0,0,0.141079,0]]
+        
+        return aadt
 
     #def stop(self):
         #return self.robot.stop()
+
+
+    
     

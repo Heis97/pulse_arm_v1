@@ -24,7 +24,7 @@ from API38.source.models.constants import (
     CTRLR_IKINE_OPTIMAL_CMD_PACK_FORMAT, CTRLR_IKINE_OPTIMAL_CMD_UNPACK_FORMAT,
     FKINE_IKINE_RESPONSE_JOINT_POSITION_SLICE, FKINE_SOLUTIONS_COUNT,
     JOINT_COUNT, ORIENTATION_SLICE, POSITION_ORIENTATION_LENGTH,
-    POSITION_SLICE, PREVIOUS_FKINE_SOLUTION_OFFSET, RESPONSE_CODE_OFFSET
+    POSITION_SLICE, PREVIOUS_FKINE_SOLUTION_OFFSET, RESPONSE_CODE_OFFSET,CTRLR_DH_MODEL_CMD_UNPACK_FORMAT
 )
 from API38.source.models.type_aliases import AngleUnits, PositionOrientation
 
@@ -110,6 +110,18 @@ class Kinematics:
                     *tcp_pose[ORIENTATION_SLICE]
                 )
             ) if units == 'deg' else tcp_pose
+        
+
+    def get_dh_model(self):
+        res = [0]*30
+        self._controller.send(
+            Get.ctrlr_coms_get_dh_model,
+            pack(CTRLR_DH_MODEL_CMD_UNPACK_FORMAT, *res)
+        )
+        res = self._controller.receive(
+            Get.ctrlr_coms_fkine, CTRLR_FKINE_CMD_UNPACK_FORMAT
+        )
+        return res
 
     def get_inverse(
         self,
