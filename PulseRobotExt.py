@@ -82,6 +82,7 @@ class PulseRobotExt(object):
             self.robot_v36 = RobotApi(host_v36,enable_logger=True,log_std_level=logging.DEBUG,enable_logfile=True, logfile_level=logging.INFO)
             #self.robot_v36.controller_state.set('off')
             self.robot_v36.controller_state.set('run')
+            self.robot_v36.motion.scale_setup.set(velocity=0.2, acceleration=0.2)
             #print(self.robot_v36.controller_state.get())
             #self.robot_v36.
             #print("self.robot_v36.get_robot_info()")
@@ -296,11 +297,15 @@ class PulseRobotExt(object):
         self.base = pos_dict_to_point3d(base_position.to_dict())
         if self.controller_v3 is RobotType.pulse_v3:  
             return
+        if self.controller_v3 is RobotType.pulse_v3:  
+            return
         else:
             return self.robot.change_base(base_position)
     
     def get_base(self):
         if self.controller_v3 is RobotType.pulse_v3:  
+            return
+        elif self.controller_v3 is RobotType.pulse_v36:  
             return
         else:
             return self.robot.get_base()
@@ -311,12 +316,17 @@ class PulseRobotExt(object):
             self.robot_v3.set_tool(pos_v1_to_v3(p3d_to_list( self.tool)))
             self.robot_v3.hold()
             return 
+        elif self.controller_v3 is RobotType.pulse_v36:  
+            self.robot_v36.tool.set(p3d_to_list( self.tool))
+            return
         else:
             return self.robot.change_tool_info(new_tool_info)
         #return self.robot.change_tool_info(new_tool_info)
     
     def get_tool_info(self):
         if self.controller_v3 is RobotType.pulse_v3:  
+            return
+        elif self.controller_v3 is RobotType.pulse_v36:  
             return
         else:
             return self.robot.get_tool_info()
@@ -326,19 +336,38 @@ class PulseRobotExt(object):
         if self.controller_v3 is RobotType.pulse_v3:  
             self.robot_v3.hold()
             return
-        else:
+        elif self.controller_v3 is RobotType.pulse_v1:
             return self.robot.freeze()
+        else:
+            return self.robot_v36.motion.mode.set('hold')
+            
     
-    def jogging(self,x,y,z,rx,ry,rz):
+    def jogging(self,jogs):
+        if len(jogs)<6: return
+        koords = jogs
         if self.controller_v3 is RobotType.pulse_v3:  
             speed = 0.1
             acs = 0.2
-            return self.robot_v3.set_jog_param([0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[speed]*6,[acs]*6,[acs]*6)
+            return #self.robot_v3.set_jog_param([0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[speed]*6,[acs]*6,[acs]*6)
+        elif self.controller_v3 is RobotType.pulse_v36:  
+            val = -10
+            sign = None
+            for i in range(len(koords)): 
+                if koords[i]!=0:
+                    val = i
+                    if koords[i]>0: sign='+'
+                    else: sign='-'
+
+            if sign is None: return
+
+            return self.robot_v36.motion.joint.jog_once(val,sign)
         else:
-            return self.robot.jogging(jog(x,y,z,rx,ry,rz))
+            return #self.robot.jogging(jog(x,y,z,rx,ry,rz))
     
     def await_stop(self):
         if self.controller_v3 is RobotType.pulse_v3:  
+            return
+        elif self.controller_v3 is RobotType.pulse_v36:  
             return
         else:
             return self.robot.await_stop()
@@ -352,6 +381,8 @@ class PulseRobotExt(object):
                 self.robot_v3.zg(False)
                 self.zg = False
             return
+        elif self.controller_v3 is RobotType.pulse_v36:  
+            return
         else:
             pass
             #return self.robot.zg_on()
@@ -359,6 +390,8 @@ class PulseRobotExt(object):
     
     def status_motors(self):
         if self.controller_v3 is RobotType.pulse_v3:  
+            return
+        elif self.controller_v3 is RobotType.pulse_v36:  
             return
         else:
             return self.robot.status_motors()
@@ -404,6 +437,7 @@ class PulseRobotExt(object):
             pos = self.robot_v36.motion.kinematics.get_forward([0,-90,0,-90,0,0],units="deg")
             #pos = self.robot_v36.motion.kinematics.get_dh_model()
             print(pos)
+
 
     def get_param_rc5(self):
         aadt = [

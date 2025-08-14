@@ -236,6 +236,26 @@ class SettingsPulse():
     def for_ser(self):
         return [self.tools,self.bases,self.work_poses,self.start_points]
 
+class JoggingThread(QtCore.QThread):
+    plotter_signal = QtCore.pyqtSignal(int)
+    f = None
+    args = None
+    running = False
+    def __init__(self,f,args):        
+        QtCore.QThread.__init__(self)   
+        self.f = f
+        self.args = args
+        self.running = True
+        self.start()  
+
+    
+    def run(self):
+        while self.running:
+            time.sleep(0.005)
+            self.f(self.args)
+    def stop(self):
+        self.running = False
+
 class RobAnimThread(QtCore.QThread):
     plotter_signal = QtCore.pyqtSignal(int)
 
@@ -948,7 +968,7 @@ class PulseApp(QtWidgets.QWidget):
         axis = [ax.X,ax.Y,ax.Z,ax.U,ax.V,ax.W]
         i=0
         for axe in axis:           
-            #self.add_axis_buttons(axe,QtCore.QRect(100+40*i, 340, 30, 30),self.axis_jog,self.stop_robot)
+            self.add_axis_buttons(axe,QtCore.QRect(100+40*i, 340, 30, 30),self.axis_jog,self.stop_jog)
             self.add_axis_buttons(axe,QtCore.QRect(100+40*i, 440, 30, 30),self.axis_move,None  )
             i+=1
 
@@ -1002,11 +1022,15 @@ class PulseApp(QtWidgets.QWidget):
     def relax_robot(self):
         self.pulse_robot.relax()
 
+    jogging = False
+    jogging_thread:JoggingThread = None
     def axis_jog(self):
         but = self.sender()
         acs = 0.1        
         x,y,z,Rx,Ry,Rz = self.mask_from_button(but.text())
-        self.pulse_robot.jogging(acs*x,acs*y,acs*z,acs*Rx,acs*Ry,acs*Rz)
+        self.jogging = True
+        jogs = [x,y,z,Rx,Ry,Rz]
+        self.jogging_thread = JoggingThread(self.pulse_robot.jogging,jogs)
 
 
     def axis_move(self):
@@ -1043,6 +1067,11 @@ class PulseApp(QtWidgets.QWidget):
         elif name[0]=="V": Ry = sign
         elif name[0]=="W": Rz = sign
         return x,y,z,Rx,Ry,Rz
+    
+    def stop_jog(self):
+        if self.jogging_thread is None:return
+        self.jogging_thread.stop()
+        self.jogging_thread.quit()
 
     def stop_robot(self):
         self.pulse_robot.freeze()
