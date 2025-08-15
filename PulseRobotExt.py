@@ -155,10 +155,10 @@ class PulseRobotExt(object):
         if self.controller_v3 is RobotType.pulse_v3:  
             t = Thread(target=self.run_position_v3(_t_p,_velocity,_acceleration,_tcp_max_velocity,_motion_type))
             t.start()
-            return 
+            return
         if self.controller_v3 is RobotType.pulse_v36:  
             self.run_position_v36(_t_p,_velocity,_acceleration,_tcp_max_velocity,_motion_type)
-            return 
+            return
         if self.controller_v3 is RobotType.pulse_v1:
             return self.robot.set_position(target_position=_t_p,
                                        velocity=_velocity,
@@ -261,9 +261,9 @@ class PulseRobotExt(object):
 
     def run_positions_v36(self,positions: list[Position],
                                 motion_parameters: LinearMotionParameters):
-        for pos in positions: self.robot_v36.motion.linear.add_new_waypoint(posit_to_list(pos),motion_parameters.velocity,motion_parameters.acceleration) 
+        for pos in positions: self.robot_v36.motion.linear.add_new_waypoint(posit_to_list(pos),motion_parameters.velocity,motion_parameters.acceleration,orientation_units='rad') 
         self.robot_v36.motion.mode.set('move')
-
+        return
 
     def run_linear_positions(self,positions: list[Position],
                                 motion_parameters: LinearMotionParameters):
@@ -272,6 +272,9 @@ class PulseRobotExt(object):
 
         if self.controller_v3 is RobotType.pulse_v3:  
             t = Thread(target=self.run_positions_v3(positions,motion_parameters))
+            t.start()
+        if self.controller_v3 is RobotType.pulse_v36:  
+            t = Thread(target=self.run_positions_v36(positions,motion_parameters))
             t.start()
         else:
             return self.robot.run_linear_positions(positions,motion_parameters)

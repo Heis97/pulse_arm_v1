@@ -1494,7 +1494,7 @@ class PulseApp(QtWidgets.QWidget):
         vel1 = 0.1
         vel2 = 0.03
 
-        acs1 = 50
+        acs1 = 0.3#50
         acs2 = 0.05
         print(positions)
         vel = vel1
