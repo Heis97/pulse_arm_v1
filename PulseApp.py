@@ -464,6 +464,7 @@ class PulseApp(QtWidgets.QWidget):
         #self.test_kin_v3()
         #self.test2()
         self.comp_rc5()
+        
 
     def comp_rc5(self):
         angles = [155.107,-91.8457,82.953987,14.06147,116.421089,-83.67874]
@@ -1421,9 +1422,13 @@ class PulseApp(QtWidgets.QWidget):
         self.but_start_prog_abs.setGeometry(QtCore.QRect(1000, 800, 140, 30))
         self.but_start_prog_abs.clicked.connect(self.exec_prog_arm_abs)
 
+        self.but_start_prog_abs = QPushButton('CNC to G-code', self)
+        self.but_start_prog_abs.setGeometry(QtCore.QRect(1000, 760, 140, 30))
+        self.but_start_prog_abs.clicked.connect(self.cnc_to_g_code)
+
         self.lin_vel_prog = QLineEdit(self)
         self.lin_vel_prog.setGeometry(QtCore.QRect(900, 840, 80, 30))
-        self.lin_vel_prog.setText("10")
+        self.lin_vel_prog.setText("100")
 
         self.lab = QLabel(self)
         self.lab.setGeometry(QtCore.QRect(820, 850, 80, 30))
@@ -1441,7 +1446,7 @@ class PulseApp(QtWidgets.QWidget):
 
         self.lin_acs_prog = QLineEdit(self)
         self.lin_acs_prog.setGeometry(QtCore.QRect(900, 920, 80, 30))
-        self.lin_acs_prog.setText("50")
+        self.lin_acs_prog.setText("500")
 
         self.lab = QLabel(self)
         self.lab.setGeometry(QtCore.QRect(820, 930, 80, 30))
@@ -1463,14 +1468,19 @@ class PulseApp(QtWidgets.QWidget):
         self.text_prog_code = QTextEdit(self)
         self.text_prog_code.setGeometry(QtCore.QRect(1150, 560, 500, 400))
 
-        self.text_prog_code.setText("G1 X0 Y0 Z10\nG1 X0 Y0 Z1\nG1 X0 Y30 Z1\nG1 X1 Y30\nG1 X1 Y0")
+        #self.text_prog_code.setText("G1 X0 Y0 Z10\nG1 X0 Y0 Z1\nG1 X0 Y30 Z1\nG1 X30 Y30\nG1 X30 Y0\nG1 X0 Y0")
 
         #text_prog = """G1 X-258.0 Y334.0 Z326.0 A-0.3 B1.4 C-2.4\nG1 X-248.0 Y334.0 Z326.0 A-0.3 B1.4 C-2.4\nG1 X-248.0 Y344.0 Z326.0 A-0.3 B1.4 C-2.4\nG1 X-258.0 Y344.0 Z326.0 A-0.3 B1.4 C-2.4\n"""
         #text_prog = """G1 X58.0 Y34.0 Z26.0 A-0.3 B1.4 C-2.4\nG1 X48.0 Y34.0 Z26.0 A-0.3 B1.4 C-2.4\nG1 X48.0 Y44.0 Z26.0 A-0.3 B1.4 C-2.4\nG1 X58.0 Y44.0 Z26.0 A-0.3 B1.4 C-2.4\n"""
 
-        text_prog = "G1 X0 Y0 Z10\nG1 X0 Y0 Z0\nG1 X0 Y30 Z0\nG1 X1 Y30\nG1 X1 Y0"
+        text_prog = "G1 X0 Y0 Z10\nG1 X0 Y0 Z1\nG1 X0 Y30 Z1\nG1 X30 Y30\nG1 X30 Y0\nG1 X0 Y0"
         self.text_prog_code.setText(text_prog)
 
+
+    def cnc_to_g_code(self):
+        cnc_code = self.text_prog_code.toPlainText()
+        g_code = parse_g_code_conv_cnc_to_def(cnc_code)
+        self.text_prog_code.setText(g_code )
 
     def set_cur_work_pose(self):
         self.cur_work_pose = self.get_cur_item_from_combo(self.combo_work_poses,self.settins_pulse.work_poses)
@@ -1496,7 +1506,10 @@ class PulseApp(QtWidgets.QWidget):
 
         acs1 = 0.3#50
         acs2 = 0.05
-        print(positions)
+
+        vel2 = 0.001* float( self.lin_vel_prog.text())
+        acs2 =   0.001* float( self.lin_acs_prog.text())
+        #print(positions)
         vel = vel1
         acs = acs1
         self.pulse_robot.set_position(positions[0],_velocity=vel,_acceleration=acs,_motion_type=MT_LINEAR)
@@ -1735,7 +1748,7 @@ class PulseApp(QtWidgets.QWidget):
         ps = parse_g_code_pulse(self.text_prog_code.toPlainText(),0.001)
         start_point = self.cur_start_point["point"]
         start_rot =  self.cur_start_point["rotation"]
-        z_off = -1.0*0.001
+        z_off =0#-1.0*0.001
         points = []
         p_s = [start_point["x"],start_point["y"],start_point["z"]]
         r_s = [start_rot["roll"],start_rot["pitch"],start_rot["yaw"]]

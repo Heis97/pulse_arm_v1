@@ -79,7 +79,7 @@ class PulseRobotExt(object):
             self.robot_v3.init_robot()
         if self.controller_v3 is RobotType.pulse_v36:   
             print("connect v36")    
-            self.robot_v36 = RobotApi(host_v36,enable_logger=True,log_std_level=logging.DEBUG,enable_logfile=True, logfile_level=logging.INFO)
+            self.robot_v36 = RobotApi(host_v36,enable_logger=False,log_std_level=logging.INFO,enable_logfile=True, logfile_level=logging.INFO)
             #self.robot_v36.controller_state.set('off')
             self.robot_v36.controller_state.set('run')
             self.robot_v36.motion.scale_setup.set(velocity=0.2, acceleration=0.2)
@@ -261,7 +261,7 @@ class PulseRobotExt(object):
 
     def run_positions_v36(self,positions: list[Position],
                                 motion_parameters: LinearMotionParameters):
-        for pos in positions: self.robot_v36.motion.linear.add_new_waypoint(posit_to_list(pos),motion_parameters.velocity,motion_parameters.acceleration,orientation_units='rad') 
+        for pos in positions: self.robot_v36.motion.linear.add_new_waypoint(posit_to_list(pos),motion_parameters.velocity,motion_parameters.acceleration,orientation_units='rad',blend=0.001) 
         self.robot_v36.motion.mode.set('move')
         return
 
@@ -269,6 +269,8 @@ class PulseRobotExt(object):
                                 motion_parameters: LinearMotionParameters):
         self.cur_prog_3d = positions_to_p3ds(positions)
         self.cur_i_prog = 0
+
+        
 
         if self.controller_v3 is RobotType.pulse_v3:  
             t = Thread(target=self.run_positions_v3(positions,motion_parameters))

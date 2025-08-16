@@ -183,8 +183,34 @@ def parse_g_code_pulse(code:str,units:float = 1,d_nos = 0.9, d_syr = 12.1, dz = 
 
     return p3ds
 
+def parse_g_code_conv_cnc_to_def(code:str)->str:
+    p3ds = []
+    lines = code.split("\n")
+    x=0 
+    y=0
+    z=0
+    for line in lines:        
+        coords = line.split()
+        if len(coords)>0 and (('X' in line) or ('Y' in line) or ('Z' in line)):
+            for coord in coords:
+                if coord[0]=="X":
+                    x = float(coord[1:])
+                if coord[0]=="Y":
+                    y = float(coord[1:])
+                if coord[0]=="Z":
+                    z = float(coord[1:])
+            p3ds.append(Point3D(x,y,z))
+            
+            #if li
 
+    return gen_xyz_g_code(p3ds)
 
+def gen_xyz_g_code(ps:list[Point3D]):
+    code= "" 
+    for p in ps:
+        code+="G1 X"+str(round(p.x,2))+" Y"+str(round(p.y,2))+" Z"+str(round(p.z,2))+'\n'
+
+    return code
 
 #def parse_val(val:str)->float:
 
