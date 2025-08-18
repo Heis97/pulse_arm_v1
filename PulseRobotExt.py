@@ -79,7 +79,7 @@ class PulseRobotExt(object):
             self.robot_v3.init_robot()
         if self.controller_v3 is RobotType.pulse_v36:   
             print("connect v36")    
-            self.robot_v36 = RobotApi(host_v36,enable_logger=False,log_std_level=logging.INFO,enable_logfile=True, logfile_level=logging.INFO)
+            self.robot_v36 = RobotApi(host_v36,enable_logger=True,log_std_level=logging.DEBUG,enable_logfile=True, logfile_level=logging.INFO)
             #self.robot_v36.controller_state.set('off')
             self.robot_v36.controller_state.set('run')
             self.robot_v36.motion.scale_setup.set(velocity=0.2, acceleration=0.2)
@@ -364,7 +364,15 @@ class PulseRobotExt(object):
                     else: sign='-'
 
             if sign is None: return
-
+            axis_name = None
+            if val == 0: axis_name = 'X'
+            elif val == 1: axis_name = 'Y'
+            elif val == 2: axis_name = 'Z'
+            elif val == 3: axis_name = 'Rx'
+            elif val == 4: axis_name = 'Ry'
+            elif val == 5: axis_name = 'Rz'
+            else: return
+            return self.robot_v36.motion.linear.jog_once(axis_name,sign)
             return self.robot_v36.motion.joint.jog_once(val,sign)
         else:
             return #self.robot.jogging(jog(x,y,z,rx,ry,rz))
@@ -386,8 +394,8 @@ class PulseRobotExt(object):
                 self.robot_v3.zg(False)
                 self.zg = False
             return
-        elif self.controller_v3 is RobotType.pulse_v36:  
-            return
+        elif self.controller_v3 is RobotType.pulse_v36: 
+            return self.robot_v36.motion.mode.set('move')
         else:
             pass
             #return self.robot.zg_on()

@@ -963,7 +963,7 @@ class PulseApp(QtWidgets.QWidget):
 
 
         self.but_fk_robot = QPushButton('Прямая задача', self)
-        self.but_fk_robot.setGeometry(QtCore.QRect(100, 280, 140, 30))
+        self.but_fk_robot.setGeometry(QtCore.QRect(100, 320, 140, 30))
         self.but_fk_robot.clicked.connect(self.fk_robot_test)
 
         axis = [ax.X,ax.Y,ax.Z,ax.U,ax.V,ax.W]
@@ -1021,6 +1021,8 @@ class PulseApp(QtWidgets.QWidget):
         self.pulse_robot.set_position(position_target, velocity=SPEED, acceleration=10)
 
     def relax_robot(self):
+
+
         self.pulse_robot.relax()
 
     jogging = False
