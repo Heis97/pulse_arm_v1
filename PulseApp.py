@@ -1503,6 +1503,12 @@ class PulseApp(QtWidgets.QWidget):
 
         
         positions,p_fil = self.generate_traj_xyz_rel()
+
+        #traj2 = positions_to_p3ds(positions)
+
+        #prog = gen_xyz_g_code(traj2,1000.0)
+
+        #self.text_prog_code.setText(prog )
         vel1 = 0.1
         vel2 = 0.03
 
@@ -1519,7 +1525,7 @@ class PulseApp(QtWidgets.QWidget):
         vel = vel2
         acs = acs2
         print("len all",len(positions))
-        dn = 950
+        dn = 9950
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
         for i in range(int(len(positions)/dn)+1):
             self.pulse_robot.set_position(positions[dn*i],_velocity=vel1,_acceleration=acs1,_motion_type=MT_LINEAR)        
@@ -1643,6 +1649,9 @@ class PulseApp(QtWidgets.QWidget):
         dist_min = float( self.lin_dist_prog.text())
         ps_filt = []
         k = 1
+        
+
+
         for i in range(len(ps)): 
             #print(ps[i].ToString())              
             p = [p_off.x+ps[i].x,p_off.y+ps[i].y,p_off.z+ps[i].z]
@@ -1651,7 +1660,7 @@ class PulseApp(QtWidgets.QWidget):
             e = str(ps[i].g)+" "+str(ps[i].b)
             pos:Position = position(p,r,blend=0.0001)  
             if i>2 and i<len(ps)-1:
-                print(p[0]*1000,p[1]*1000,p[2]*1000,r)       
+                #print(p[0]*1000,p[1]*1000,p[2]*1000,r)       
                 if self.dist(p,points[-1])>dist_min*1e-3:
                     p0 = Point3D(ps[i+1].x,ps[i+1].y,ps[i+1].z)
                     p1 = Point3D(p[0],p[1],p[2])
@@ -1664,20 +1673,20 @@ class PulseApp(QtWidgets.QWidget):
                     alph = Point3D.ang(v1,v2)
 
                     gamma = np.pi - abs(abs(Point3D.ang(v0,v1))%np.pi) 
-                    if abs(abs(alph)%np.pi)>0.001: 
+                    #if abs(abs(alph)%np.pi)>0.001: 
                         #print(pos)       
-                        part = 3# must be >2  
-                        d0 = v0.magnitude()
-                        d1 = v1.magnitude()
-                        d = min(d0,d1)
+                    part = 3# must be >2  
+                    d0 = v0.magnitude()
+                    d1 = v1.magnitude()
+                    d = min(d0,d1)
 
-                        r = (dist_min*1e-3)/part #(d*math.tan(gamma/2))/part
-                        print(i," ",r)
-                        pos.blend = 0.0001 #r     
-                        pos.actions = [e]                         
-                        positions.append(pos)
-                        points.append(p)
-                        ps_filt.append(ps[i])
+                    r = (dist_min*1e-3)/part #(d*math.tan(gamma/2))/part
+                    #print(i," ",r)
+                    pos.blend = 0.0001 #r     
+                    pos.actions = [e]                         
+                    positions.append(pos)
+                    points.append(p)
+                    ps_filt.append(ps[i])
             else:
                 pos.blend = 0.0001
                 pos.actions = [e]  

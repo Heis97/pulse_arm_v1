@@ -205,10 +205,10 @@ def parse_g_code_conv_cnc_to_def(code:str)->str:
 
     return gen_xyz_g_code(p3ds)
 
-def gen_xyz_g_code(ps:list[Point3D]):
+def gen_xyz_g_code(ps:list[Point3D], scale:float = 1.0):
     code= "" 
     for p in ps:
-        code+="G1 X"+str(round(p.x,2))+" Y"+str(round(p.y,2))+" Z"+str(round(p.z,2))+'\n'
+        code+="G1 X"+str(round(scale*p.x,2))+" Y"+str(round(scale*p.y,2))+" Z"+str(round(scale*p.z,2))+'\n'
 
     return code
 

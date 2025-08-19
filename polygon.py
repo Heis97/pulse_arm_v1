@@ -328,6 +328,9 @@ class Point3D(object):
         for e in l: ps.append(e.Clone().dot(p_off.Clone()))
         return ps
     
+    def divide_ps(ps:"list[Point3D]"):
+        pass
+    
     
 
 
