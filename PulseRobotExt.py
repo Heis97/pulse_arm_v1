@@ -79,7 +79,7 @@ class PulseRobotExt(object):
             self.robot_v3.init_robot()
         if self.controller_v3 is RobotType.pulse_v36:   
             print("connect v36")    
-            self.robot_v36 = RobotApi(host_v36,enable_logger=True,log_std_level=logging.DEBUG,enable_logfile=True, logfile_level=logging.INFO)
+            self.robot_v36 = RobotApi(host_v36,enable_logger=False,log_std_level=logging.DEBUG,enable_logfile=True, logfile_level=logging.INFO)
             #self.robot_v36.controller_state.set('off')
             self.robot_v36.controller_state.set('run')
             self.robot_v36.motion.scale_setup.set(velocity=0.2, acceleration=0.2)
