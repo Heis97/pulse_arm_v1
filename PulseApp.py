@@ -1525,7 +1525,7 @@ class PulseApp(QtWidgets.QWidget):
         vel = vel2
         acs = acs2
         print("len all",len(positions))
-        dn = 29950
+        dn = 5000
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
         for i in range(int(len(positions)/dn)+1):
             self.pulse_robot.set_position(positions[dn*i],_velocity=vel1,_acceleration=acs1,_motion_type=MT_LINEAR)        
