@@ -16,7 +16,7 @@ from KukaRobot import *
 from PulseRobotExt import *
 from Plotter import Plotter
 
-controller_v3 = RobotType.pulse_v36
+controller_v3 = RobotType.pulse_v3
 
 """G1 X90 Y-45 Z0 A-90 B0 C-90"""
 def fullsum(l:"list[QPointF]"):
@@ -463,7 +463,7 @@ class PulseApp(QtWidgets.QWidget):
         self.plotter = Plotter(self)
         #self.test_kin_v3()
         #self.test2()
-        self.comp_rc5()
+        #self.comp_rc5()
         
 
     def comp_rc5(self):
@@ -1430,7 +1430,7 @@ class PulseApp(QtWidgets.QWidget):
 
         self.lin_vel_prog = QLineEdit(self)
         self.lin_vel_prog.setGeometry(QtCore.QRect(900, 840, 80, 30))
-        self.lin_vel_prog.setText("100")
+        self.lin_vel_prog.setText("20")
 
         self.lab = QLabel(self)
         self.lab.setGeometry(QtCore.QRect(820, 850, 80, 30))
@@ -1448,7 +1448,7 @@ class PulseApp(QtWidgets.QWidget):
 
         self.lin_acs_prog = QLineEdit(self)
         self.lin_acs_prog.setGeometry(QtCore.QRect(900, 920, 80, 30))
-        self.lin_acs_prog.setText("500")
+        self.lin_acs_prog.setText("40")
 
         self.lab = QLabel(self)
         self.lab.setGeometry(QtCore.QRect(820, 930, 80, 30))
@@ -1525,7 +1525,8 @@ class PulseApp(QtWidgets.QWidget):
         vel = vel2
         acs = acs2
         print("len all",len(positions))
-        dn = 5000
+        dn = 950
+        if controller_v3 is RobotType.pulse_v3: dn = 5000 
         linear_motion_parameters = LinearMotionParameters(interpolation_type=InterpolationType.BLEND,velocity=vel,acceleration=acs)
         for i in range(int(len(positions)/dn)+1):
             self.pulse_robot.set_position(positions[dn*i],_velocity=vel1,_acceleration=acs1,_motion_type=MT_LINEAR)        

@@ -77,7 +77,7 @@ class PulseRobotExt(object):
             print("connect v3")    
             self.robot_v3 = RobotAPI(host_v3)
             self.robot_v3.init_robot()
-        if self.controller_v3 is RobotType.pulse_v36:   
+        elif self.controller_v3 is RobotType.pulse_v36:   
             print("connect v36")    
             self.robot_v36 = RobotApi(host_v36,enable_logger=False,log_std_level=logging.DEBUG,enable_logfile=True, logfile_level=logging.INFO)
             #self.robot_v36.controller_state.set('off')
@@ -96,7 +96,7 @@ class PulseRobotExt(object):
     def get_pose(self):
         if self.controller_v3 is RobotType.pulse_v3:  
             return Pose(self.robot_v3.get_act_pos_q())
-        if self.controller_v3 is RobotType.pulse_v36:  
+        elif self.controller_v3 is RobotType.pulse_v36:  
             #print(self.robot_v36.motion.joint.get_actual_position())
             return Pose(self.robot_v36.motion.joint.get_actual_position())
         else:
@@ -117,7 +117,7 @@ class PulseRobotExt(object):
             list_pos =  pos_v3_to_v1(list_pos)
             #print("list2: ",list_pos)
             return position(list_pos[0:3],list_pos[3:6])
-        if self.controller_v3 is RobotType.pulse_v36:  
+        elif self.controller_v3 is RobotType.pulse_v36:  
             list_pos = self.robot_v36.motion.linear.get_actual_position("rad")
             #print("list1: ",list_pos)
             #list_pos =  pos_v3_to_v1(list_pos)
@@ -130,7 +130,7 @@ class PulseRobotExt(object):
         if self.controller_v3 is RobotType.pulse_v3:  
             return self.robot_v3.hold()
             #return self.robot_v3.stby()
-        if self.controller_v3 is RobotType.pulse_v36:  
+        elif self.controller_v3 is RobotType.pulse_v36:  
             return self.robot_v36.motion.mode.set('hold')
         else:
             
@@ -156,10 +156,10 @@ class PulseRobotExt(object):
             t = Thread(target=self.run_position_v3(_t_p,_velocity,_acceleration,_tcp_max_velocity,_motion_type))
             t.start()
             return
-        if self.controller_v3 is RobotType.pulse_v36:  
+        elif self.controller_v3 is RobotType.pulse_v36:  
             self.run_position_v36(_t_p,_velocity,_acceleration,_tcp_max_velocity,_motion_type)
             return
-        if self.controller_v3 is RobotType.pulse_v1:
+        elif self.controller_v3 is RobotType.pulse_v1:
             return self.robot.set_position(target_position=_t_p,
                                        velocity=_velocity,
                                        acceleration=_acceleration,
@@ -185,7 +185,7 @@ class PulseRobotExt(object):
                 tcp_max_velocity,
                 motion_type)
             return 
-        if self.controller_v3 is RobotType.pulse_v36:  
+        elif self.controller_v3 is RobotType.pulse_v36:  
             """t = Thread(target=self.run_pose_v3(target_pose,speed,
                 velocity,
                 acceleration,
@@ -275,7 +275,7 @@ class PulseRobotExt(object):
         if self.controller_v3 is RobotType.pulse_v3:  
             t = Thread(target=self.run_positions_v3(positions,motion_parameters))
             t.start()
-        if self.controller_v3 is RobotType.pulse_v36:  
+        elif self.controller_v3 is RobotType.pulse_v36:  
             t = Thread(target=self.run_positions_v36(positions,motion_parameters))
             t.start()
         else:
@@ -302,7 +302,7 @@ class PulseRobotExt(object):
         self.base = pos_dict_to_point3d(base_position.to_dict())
         if self.controller_v3 is RobotType.pulse_v3:  
             return
-        if self.controller_v3 is RobotType.pulse_v3:  
+        elif self.controller_v3 is RobotType.pulse_v3:  
             return
         else:
             return self.robot.change_base(base_position)
