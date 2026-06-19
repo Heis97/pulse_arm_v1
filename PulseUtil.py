@@ -133,7 +133,6 @@ def calibrate_tcp_4p(points:list[Point3D]):
             tcp_aver+=tcp
             print(tcp*1000)
 
-
         
         return tcp_aver/len(ps)
 
