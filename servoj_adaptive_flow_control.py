@@ -9,10 +9,10 @@ import math
 import time
 from typing import Tuple
 
-from API import RobotApi
+from  api.robot_api_rc5v15.API.rc_api import *
 
 # Конфигурация
-ROBOT_IP: str = "127.0.0.1"
+ROBOT_IP: str = "10.10.10.3"
 STREAM_DURATION_S: float = 50.0
 CYCLE_TIME_S: float = 0.002  # 2 мс (500 Гц)
 START_POSE_DEG: Tuple[float, ...] = (0.0, -120.0, 120.0, -90.0, -90.0, 0.0)
@@ -42,7 +42,7 @@ def target_pose_at(
 
 # Основная программа
 def adaptive_flow_control_servoj(robot_ip: str) -> None:
-    with RobotApi(
+    with RobotApi15(
         ip=robot_ip,
         show_std_traceback=True,
         autoconnect=True,

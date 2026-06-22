@@ -45,6 +45,7 @@ host_old = "http://10.10.10.20:8081"
 host_v3 = "192.168.10.71"#misis
 #host_v36 = "192.168.0.10"#old rc5
 host_v36 = "10.10.10.3"#new rc5
+host_v36b = "10.10.10.3"#new rc5
 
 
 class PulseRobotExt(object):
@@ -91,7 +92,7 @@ class PulseRobotExt(object):
             #print("________________________-")
         elif self.controller_v3 is RobotType.pulse_v36b:   
             print("connect v36b")    
-            self.robot_v36b = RobotApi15(host_v36,enable_logger=False,log_std_level=logging.DEBUG,enable_logfile=True, logfile_level=logging.INFO)
+            self.robot_v36b = RobotApi15(host_v36b,enable_logger=False,log_std_level=logging.DEBUG,enable_logfile=True, logfile_level=logging.INFO)
             #self.robot_v36.controller_state.set('off')
             self.robot_v36b.controller.state.set('run')
             self.robot_v36b.motion.scale_setup.set(velocity=0.2, acceleration=0.2)
