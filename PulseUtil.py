@@ -10,6 +10,7 @@ class RobotType(Enum):
     pulse_v1 = 1
     pulse_v3 = 2
     pulse_v36 = 3
+    pulse_v36b = 4 #b 1.5 api vers
 
 
 def find_center_sphere_4p(ps:list[Point3D]):
