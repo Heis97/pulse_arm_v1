@@ -13,9 +13,9 @@ from  api.robot_api_rc5v15.API.rc_api import *
 
 # Конфигурация
 ROBOT_IP: str = "10.10.10.3"
-STREAM_DURATION_S: float = 50.0
+STREAM_DURATION_S: float = 10.0
 CYCLE_TIME_S: float = 0.002  # 2 мс (500 Гц)
-START_POSE_DEG: Tuple[float, ...] = (0.0, -120.0, 120.0, -90.0, -90.0, 0.0)
+START_POSE_DEG: Tuple[float, ...] = (36.0, -120.0, 120.0, -90.0, -90.0, 0.0)
 
 # Параметры flow-control
 TARGET_BURST: int = 16  # Максимальный размер пачки за один цикл
@@ -34,9 +34,9 @@ def target_pose_at(
 ) -> Tuple[float, ...]:
     """Генерирует целевую позу на момент времени t_s."""
     p = list(base_pose)
-    p[0] += 4.0 * amplitude * math.sin(2 * math.pi * frequency_hz / 10 * t_s)
-    p[4] += 3.0 * amplitude * math.sin(2 * math.pi * frequency_hz * t_s)
-    p[5] += 4.0 * amplitude * math.sin(2 * math.pi * frequency_hz * t_s)
+    #p[3] += 1.0 * amplitude * math.sin(2 * math.pi * frequency_hz / 10 * t_s)
+    #p[4] += 3.0 * amplitude * math.sin(2 * math.pi * frequency_hz * t_s)
+    p[5] += 1.0 * amplitude * math.sin(2 * math.pi * frequency_hz * t_s)
     return tuple(p)
 
 
@@ -51,7 +51,7 @@ def adaptive_flow_control_servoj(robot_ip: str) -> None:
         # 1. Подготовка и переход в стартовую позу
         robot.controller.state.set("off")
         robot.payload.set(mass=0.0, tcp_mass_center=(0.0, 0.0, 0.0))
-        robot.motion.scale_setup.set(velocity=1.0, acceleration=1.0)
+        robot.motion.scale_setup.set(velocity=0.1, acceleration=0.1)
         robot.controller.state.set("run", await_sec=120)
 
         robot.motion.joint.add_new_waypoint(
@@ -71,7 +71,7 @@ def adaptive_flow_control_servoj(robot_ip: str) -> None:
 
         base_pose = tuple(robot.motion.joint.get_actual_position(units="rad"))
         amplitude = math.radians(25.0)
-        frequency_hz = 0.5
+        frequency_hz = 15
         total_samples = max(
             int(math.ceil(STREAM_DURATION_S / CYCLE_TIME_S)), 1
         )
