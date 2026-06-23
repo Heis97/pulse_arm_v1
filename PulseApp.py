@@ -1428,6 +1428,14 @@ class PulseApp(QtWidgets.QWidget):
         self.but_start_prog_abs.setGeometry(QtCore.QRect(1000, 760, 140, 30))
         self.but_start_prog_abs.clicked.connect(self.cnc_to_g_code)
 
+        self.but_real_time_control_on = QPushButton('Управление реал. вр.', self)
+        self.but_real_time_control_on.setGeometry(QtCore.QRect(650, 800, 140, 30))
+        self.but_real_time_control_on.clicked.connect(self.real_time_control_on)
+
+        self.but_real_time_control_off = QPushButton('Остановить', self)
+        self.but_real_time_control_off.setGeometry(QtCore.QRect(650, 840, 140, 30))
+        self.but_real_time_control_off.clicked.connect(self.real_time_control_off)
+
         self.lin_vel_prog = QLineEdit(self)
         self.lin_vel_prog.setGeometry(QtCore.QRect(900, 840, 80, 30))
         self.lin_vel_prog.setText("20")
@@ -1478,6 +1486,11 @@ class PulseApp(QtWidgets.QWidget):
         text_prog = "G1 X0 Y0 Z10\nG1 X0 Y0 Z1\nG1 X0 Y30 Z1\nG1 X30 Y30\nG1 X30 Y0\nG1 X0 Y0"
         self.text_prog_code.setText(text_prog)
 
+    def real_time_control_on(self):
+        self.pulse_robot.start_servo_control()
+
+    def real_time_control_off(self):
+        self.pulse_robot.stop_servo_control()
 
     def cnc_to_g_code(self):
         cnc_code = self.text_prog_code.toPlainText()

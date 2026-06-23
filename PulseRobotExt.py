@@ -55,7 +55,7 @@ class PulseRobotExt(object):
     robot_v36: RobotApi
     robot_v36b: RobotApi15
     base: Point3D = Point3D(0,0,0)
-    tool: Point3D= Point3D(0,0,0)
+    tool: Point3D = Point3D(0,0,0)
     cur_posit :str = ""
     buf_pos_3d : list[Point3D] = []
     buf_len:int = 20
@@ -537,9 +537,81 @@ class PulseRobotExt(object):
             #pos = self.robot_v36.motion.kinematics.get_dh_model()
             print(pos)
 
+    def start_servo_control(self):
+        if self.controller_v3 is RobotType.pulse_v36b:
+            self.robot_v36b.motion.realtime.set_servoj_params(gain=800.0, lookahead_time=0.005)
+            self.servo_running = True
+            self.robot_v36b.motion.mode.set("realtime")
+            t = Thread(target=self.servo_handler())
+            t.start()
+
+
+    servo_running = False
+
+    def stop_servo_control(self):
+        if self.controller_v3 is RobotType.pulse_v36b:
+            self.servo_running = False
 
     
+    def servo_handler(self):
+        # Параметры flow-control
+        TARGET_BURST: int = 16  # Максимальный размер пачки за один цикл
+        SAFETY_MARGIN: int = 1  # Резерв слотов для избежания переполнения
+        ACK_TIMEOUT_S: float = 1.0  # Таймаут ожидания подтверждения от контроллера
+        POLL_INTERVAL_S: float = 0.002  # Базовый интервал опроса RTD-статуса
+        CYCLE_TIME_S: float = 0.002  # 2 мс (500 Гц)
 
+        last_rtd_ts = None
+        while self.servo_running:
+            # Опрос статуса очереди
+            status = self.robot_v36b.motion.realtime.get_motion_queue_status()
+            if status is None:
+                continue
+
+            # Пропускаем повторный опрос, если данные не обновились
+            if status.timestamp == last_rtd_ts:
+                time.sleep(POLL_INTERVAL_S)
+                continue
+            last_rtd_ts = status.timestamp
+
+            # Рассчитываем безопасное количество точек для отправки
+            usable = max(status.available_slots - SAFETY_MARGIN, 0)
+            burst = min(usable, TARGET_BURST)
+            if burst <= 0:
+                time.sleep(POLL_INTERVAL_S)
+                continue
+
+            # Отправляем пачку
+            base_cnt = status.received_count
+            for _ in range(burst):
+                t_s = samples_sent * CYCLE_TIME_S
+                p = (36.0, -120.0, 120.0, -90.0, -90.0, 0.0)
+                print(p)
+                self.robot_v36b.motion.realtime.servoj(p,time=CYCLE_TIME_S,units='deg')
+                samples_sent += 1
+
+            # Блокирующее ожидание подтверждения (flow-control)
+            self.robot_v36b.motion.realtime.wait_waypoints_received(
+                base_received_count=base_cnt,
+                expected_delta=burst,
+                timeout=ACK_TIMEOUT_S,
+            )
+            time.sleep(0)  # Yield GIL после ACK
+
+            # Периодический вывод прогресса
+            """now = time.monotonic()
+            if now - last_log_ts >= PROGRESS_LOG_S:
+                pct = (samples_sent / total_samples) * 100
+                print(
+                    f"  Прогресс: {samples_sent}/{total_samples} ({pct:.1f}%)"
+                )
+                last_log_ts = now"""
+
+        
+        self.robot_v36b.motion.realtime.stopj()
+        print("Движение завершено. Робот остановлен.")
+
+        self.robot_v36b.motion.mode.set("hold")
 
     def get_param_rc5(self):
         aadt = [

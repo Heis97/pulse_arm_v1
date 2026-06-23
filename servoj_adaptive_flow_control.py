@@ -124,7 +124,7 @@ def adaptive_flow_control_servoj(robot_ip: str) -> None:
                     timeout=ACK_TIMEOUT_S,
                 )
                 time.sleep(0)  # Yield GIL после ACK
-
+                
                 # Периодический вывод прогресса
                 now = time.monotonic()
                 if now - last_log_ts >= PROGRESS_LOG_S:
