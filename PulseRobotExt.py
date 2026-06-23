@@ -560,7 +560,7 @@ class PulseRobotExt(object):
         ACK_TIMEOUT_S: float = 1.0  # Таймаут ожидания подтверждения от контроллера
         POLL_INTERVAL_S: float = 0.002  # Базовый интервал опроса RTD-статуса
         CYCLE_TIME_S: float = 0.002  # 2 мс (500 Гц)
-
+        samples_sent =0
         last_rtd_ts = None
         while self.servo_running:
             # Опрос статуса очереди
