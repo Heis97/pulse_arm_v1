@@ -587,9 +587,9 @@ class PulseRobotExt(object):
             base_cnt = status.received_count
             for _ in range(burst):
                 t_s = self.samples_sent * CYCLE_TIME_S
-                p = (36.0, -120.0, 120.0, -90.0, -90.0, 0.0)
+                #p = (36.0, -120.0, 120.0, -90.0, -90.0, 0.0)
                 print(target_pos)
-                self.robot_v36b.motion.realtime.servoj(p,time=CYCLE_TIME_S,units='deg')
+                self.robot_v36b.motion.realtime.servoj(target_pos,time=CYCLE_TIME_S,units='deg')
                 self.samples_sent += 1
 
             # Блокирующее ожидание подтверждения (flow-control)

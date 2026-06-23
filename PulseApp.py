@@ -375,11 +375,11 @@ class RobPosThread(QtCore.QThread):
         self.target_pos_servo = (36.0, -120.0, 120.0, -90.0, -90.0, 0.0)
         #data_signal = QtCore.pyqtSignal(str)
         slot.connect(self.set_writing)
-        slot2.connect(self.set_writing)
+        slot2.connect(self.set_target_pos_servo)
     def set_target_pos_servo(self,val):
-        
+        print("signal",val)
         self.target_pos_servo = str_to_tuple(val)
-        
+        print(self.target_pos_servo)
 
     def set_writing(self,val):
         self.writing = val
@@ -393,8 +393,10 @@ class RobPosThread(QtCore.QThread):
             #print(i)
             #try:
             if self.pulse_arm.servo_running:
+                
                 self.pulse_arm.servo_handler(self.target_pos_servo)
             else:
+                
                 pose_pulse = self.pulse_arm.get_pose()
                 angles = pose_pulse.angles  
                 
@@ -405,6 +407,7 @@ class RobPosThread(QtCore.QThread):
                 position:Point3D = q_to_p(pose,False,controller_v3)
                 
                 position = p3d_cur_pulse(position,self.pulse_arm.tool,self.pulse_arm.base)
+                self.label.setText("Joint position:\n"+list_to_str(angles)+"\n\n")
                 sleep(self.timeDelt)
 
             #print("mm: ",position.ToStringPulseMM())
@@ -1512,6 +1515,7 @@ class PulseApp(QtWidgets.QWidget):
 
     def set_servo_target_pos(self):
         p_str = self.lin_servo_target_pos.text()
+        print("emit",p_str)
         self.servo_target_signal.emit(p_str)
 
     def real_time_control_on(self):
