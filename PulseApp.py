@@ -221,6 +221,9 @@ def draw_plots_compare(plotter,qs1,ps1,qs2,ps2):
 
 
 
+
+
+
 class SettingsPulse():
     tools:dict = None
     bases:dict = None
@@ -361,16 +364,22 @@ class RemoteControlThread(QtCore.QThread):
 
 class RobPosThread(QtCore.QThread):
     send_com_signal = QtCore.pyqtSignal(str)
-    def __init__(self,pulse_arm:PulseRobotExt, label:QLabel, slot):
+    def __init__(self,pulse_arm:PulseRobotExt, label:QLabel, slot,slot2):
         QtCore.QThread.__init__(self)   
         self.pulse_arm = pulse_arm
         self.label = label
-        self.timeDelt = 0.01
+        self.timeDelt = 0.002
         self.start()   
         self.writing = False
         self.feedback = []
+        self.target_pos_servo = (36.0, -120.0, 120.0, -90.0, -90.0, 0.0)
         #data_signal = QtCore.pyqtSignal(str)
         slot.connect(self.set_writing)
+        slot2.connect(self.set_writing)
+    def set_target_pos_servo(self,val):
+        
+        self.target_pos_servo = str_to_tuple(val)
+        
 
     def set_writing(self,val):
         self.writing = val
@@ -383,16 +392,21 @@ class RobPosThread(QtCore.QThread):
             #i+=1
             #print(i)
             #try:
-            pose_pulse = self.pulse_arm.get_pose()
-            angles = pose_pulse.angles  
-            
-            pose = Pose3D(angles)
-            pose.current_time = datetime.datetime.now()
-            position_t = self.pulse_arm.get_position()
-            #print(pose.angles)
-            position:Point3D = q_to_p(pose,False,controller_v3)
-            
-            position = p3d_cur_pulse(position,self.pulse_arm.tool,self.pulse_arm.base)
+            if self.pulse_arm.servo_running:
+                self.pulse_arm.servo_handler(self.target_pos_servo)
+            else:
+                pose_pulse = self.pulse_arm.get_pose()
+                angles = pose_pulse.angles  
+                
+                pose = Pose3D(angles)
+                pose.current_time = datetime.datetime.now()
+                position_t = self.pulse_arm.get_position()
+                #print(pose.angles)
+                position:Point3D = q_to_p(pose,False,controller_v3)
+                
+                position = p3d_cur_pulse(position,self.pulse_arm.tool,self.pulse_arm.base)
+                sleep(self.timeDelt)
+
             #print("mm: ",position.ToStringPulseMM())
             """m_pos_t = pulse_matrix_p(position_to_p3d(position_t))
             m_pos = pulse_matrix_p(position)
@@ -402,8 +416,10 @@ class RobPosThread(QtCore.QThread):
             print(m_pos_t)"""
             
 
-            self.label.setText("Joint position:\n"+list_to_str(angles)+"\n\n"+"Cartesian position:\n"+position_to_str(position_t)
+            """self.label.setText("Joint position:\n"+list_to_str(angles)+"\n\n"+"Cartesian position:\n"+position_to_str(position_t)
                                 +"\n\n"+"Cartesian position_int:\n"+position.ToStringPulseMM())  
+            
+
             self.pulse_arm.cur_posit_3d = position_to_p3d( position_t )
             self.pulse_arm.cur_posit = position_to_p3d( position_t ).ToStringPulseMM(4," ")
             self.pulse_arm.update_buf()
@@ -420,12 +436,12 @@ class RobPosThread(QtCore.QThread):
 
             self.label.setText(self.label.text()+"\n Line: "+str(self.pulse_arm.cur_i_prog)+", "+str(self.pulse_arm.cur_progr_line)+"%")
             if self.writing:
-                self.feedback.append(str(pose))
+                self.feedback.append(str(pose))"""
             #except BaseException:
              #   pass
 
         
-            sleep(self.timeDelt)
+            #
 
 
 
@@ -449,7 +465,7 @@ class PulseApp(QtWidgets.QWidget):
     q_draw = [0,0,0,0,0,0,0]
     plotter:Plotter = None
     writing_signal = QtCore.pyqtSignal(bool)
-
+    servo_target_signal = QtCore.pyqtSignal(str)
     move_dist = 10
     
 
@@ -928,7 +944,7 @@ class PulseApp(QtWidgets.QWidget):
 
     def connect_robot(self):
         self.pulse_robot = PulseRobotExt(controller_v3)        
-        self.coords_thread = RobPosThread(self.pulse_robot,self.lab_coord,self.writing_signal)
+        self.coords_thread = RobPosThread(self.pulse_robot,self.lab_coord,self.writing_signal,self.servo_target_signal)
 
 
     def disconnect_robot(self):
@@ -1436,6 +1452,14 @@ class PulseApp(QtWidgets.QWidget):
         self.but_real_time_control_off.setGeometry(QtCore.QRect(650, 840, 140, 30))
         self.but_real_time_control_off.clicked.connect(self.real_time_control_off)
 
+        self.but_set_servo_target_pos = QPushButton('Установить позицию', self)
+        self.but_set_servo_target_pos.setGeometry(QtCore.QRect(650, 880, 140, 30))
+        self.but_set_servo_target_pos.clicked.connect(self.set_servo_target_pos)
+
+        self.lin_servo_target_pos = QLineEdit(self)
+        self.lin_servo_target_pos.setGeometry(QtCore.QRect(650, 920, 140, 30))
+        self.lin_servo_target_pos.setText("36.0, -120.0, 120.0, -90.0, -90.0, 0.0")
+
         self.lin_vel_prog = QLineEdit(self)
         self.lin_vel_prog.setGeometry(QtCore.QRect(900, 840, 80, 30))
         self.lin_vel_prog.setText("20")
@@ -1485,6 +1509,10 @@ class PulseApp(QtWidgets.QWidget):
 
         text_prog = "G1 X0 Y0 Z10\nG1 X0 Y0 Z1\nG1 X0 Y30 Z1\nG1 X30 Y30\nG1 X30 Y0\nG1 X0 Y0"
         self.text_prog_code.setText(text_prog)
+
+    def set_servo_target_pos(self):
+        p_str = self.lin_servo_target_pos.text()
+        self.servo_target_signal.emit(p_str)
 
     def real_time_control_on(self):
         self.pulse_robot.start_servo_control()

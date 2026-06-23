@@ -12,6 +12,28 @@ class RobotType(Enum):
     pulse_v36 = 3
     pulse_v36b = 4 #b 1.5 api vers
 
+def str_to_tuple(s: str) -> tuple[float, ...]:
+    """
+    Преобразует строку с числами, разделёнными запятыми, в кортеж float.
+    Пример: "1.2, 3.4, 5.6" -> (1.2, 3.4, 5.6)
+    """
+    if not s.strip():
+        return ()
+    parts = s.split(',')
+    result = []
+    for part in parts:
+        part = part.strip()
+        if part:  # игнорируем пустые фрагменты
+            result.append(float(part))
+    return tuple(result)
+
+
+def tuple_to_str(t: tuple[float, ...]) -> str:
+    """
+    Преобразует кортеж float в строку с числами, разделёнными запятой и пробелом.
+    Пример: (1.2, 3.4, 5.6) -> "1.2, 3.4, 5.6"
+    """
+    return ', '.join(str(x) for x in t)
 
 def find_center_sphere_4p(ps:list[Point3D]):
     x1 = ps[0].x; y1 = ps[0].y; z1 = ps[0].z

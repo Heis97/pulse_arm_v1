@@ -47,6 +47,12 @@ host_v3 = "192.168.10.71"#misis
 host_v36 = "10.10.10.3"#new rc5
 host_v36b = "10.10.10.3"#new rc5
 
+TARGET_BURST: int = 16  # Максимальный размер пачки за один цикл
+SAFETY_MARGIN: int = 1  # Резерв слотов для избежания переполнения
+ACK_TIMEOUT_S: float = 1.0  # Таймаут ожидания подтверждения от контроллера
+POLL_INTERVAL_S: float = 0.002  # Базовый интервал опроса RTD-статуса
+CYCLE_TIME_S: float = 0.002  # 2 мс (500 Гц)
+
 
 class PulseRobotExt(object):
     zg = False
@@ -537,58 +543,54 @@ class PulseRobotExt(object):
             #pos = self.robot_v36.motion.kinematics.get_dh_model()
             print(pos)
 
+    
+    samples_sent =0
+    last_rtd_ts = None
+    servo_running = False
+
     def start_servo_control(self):
         if self.controller_v3 is RobotType.pulse_v36b:
-            self.robot_v36b.motion.realtime.set_servoj_params(gain=800.0, lookahead_time=0.005)
-            self.servo_running = True
+            self.robot_v36b.motion.realtime.set_servoj_params(gain=800.0, lookahead_time=0.005)            
             self.robot_v36b.motion.mode.set("realtime")
-            t = Thread(target=self.servo_handler())
-            t.start()
-
-
-    servo_running = False
+            self.servo_running = True
 
     def stop_servo_control(self):
         if self.controller_v3 is RobotType.pulse_v36b:
             self.servo_running = False
+            self.robot_v36b.motion.realtime.stopj()
+            self.robot_v36b.motion.mode.set("hold") 
 
     
-    def servo_handler(self):
+    def servo_handler(self,target_pos):
         # Параметры flow-control
-        TARGET_BURST: int = 16  # Максимальный размер пачки за один цикл
-        SAFETY_MARGIN: int = 1  # Резерв слотов для избежания переполнения
-        ACK_TIMEOUT_S: float = 1.0  # Таймаут ожидания подтверждения от контроллера
-        POLL_INTERVAL_S: float = 0.002  # Базовый интервал опроса RTD-статуса
-        CYCLE_TIME_S: float = 0.002  # 2 мс (500 Гц)
-        samples_sent =0
-        last_rtd_ts = None
-        while self.servo_running:
+        
+        if self.servo_running:
             # Опрос статуса очереди
             status = self.robot_v36b.motion.realtime.get_motion_queue_status()
             if status is None:
-                continue
+                return
 
             # Пропускаем повторный опрос, если данные не обновились
-            if status.timestamp == last_rtd_ts:
+            if status.timestamp == self.last_rtd_ts:
                 time.sleep(POLL_INTERVAL_S)
-                continue
-            last_rtd_ts = status.timestamp
+                return
+            self.last_rtd_ts = status.timestamp
 
             # Рассчитываем безопасное количество точек для отправки
             usable = max(status.available_slots - SAFETY_MARGIN, 0)
             burst = min(usable, TARGET_BURST)
             if burst <= 0:
                 time.sleep(POLL_INTERVAL_S)
-                continue
-
+                return
+            
             # Отправляем пачку
             base_cnt = status.received_count
             for _ in range(burst):
-                t_s = samples_sent * CYCLE_TIME_S
+                t_s = self.samples_sent * CYCLE_TIME_S
                 p = (36.0, -120.0, 120.0, -90.0, -90.0, 0.0)
-                print(p)
+                print(target_pos)
                 self.robot_v36b.motion.realtime.servoj(p,time=CYCLE_TIME_S,units='deg')
-                samples_sent += 1
+                self.samples_sent += 1
 
             # Блокирующее ожидание подтверждения (flow-control)
             self.robot_v36b.motion.realtime.wait_waypoints_received(
@@ -608,10 +610,7 @@ class PulseRobotExt(object):
                 last_log_ts = now"""
 
         
-        self.robot_v36b.motion.realtime.stopj()
-        print("Движение завершено. Робот остановлен.")
-
-        self.robot_v36b.motion.mode.set("hold")
+        
 
     def get_param_rc5(self):
         aadt = [
