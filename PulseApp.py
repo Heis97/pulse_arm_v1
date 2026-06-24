@@ -324,7 +324,7 @@ class RemoteControlThread(QtCore.QThread):
         self.conn.settimeout(0.01)
         while True:
             sleep(0.01)
-            mes_ang = list_to_str(self.pulse_arm.cur_angles) + "\n"
+            mes_ang = list_to_str(self.pulse_arm.cur_angles, " ",False) + "\n"
             try:
                 self.send(mes_ang)
             except (BrokenPipeError, ConnectionResetError):

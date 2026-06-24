@@ -902,12 +902,15 @@ def pose_to_list(p)->list:
         p = p.to_dict()
     return p["angles"]
 
-def list_to_str(p,separator:str ="\n")->list: 
+def list_to_str(p,separator:str ="\n",pre:bool = True)->list: 
     ns = ["X: ","Y: ","Z: ","Rx: ","Ry: ","Rz: "]
     ret = ""
     for i in range(6):
         pre = ns[i]
-        ret+= pre+str(p[i])+separator
+        if pre:
+            ret+= pre+str(p[i])+separator
+        else:
+            ret+= str(p[i])+separator
     return ret
 
 def position_to_str(p,separator:str ="\n",simple:bool = False)->str:
