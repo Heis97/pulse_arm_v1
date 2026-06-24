@@ -321,50 +321,72 @@ class RemoteControlThread(QtCore.QThread):
         self.conn.send((mes+"\n").encode())
 
     def run(self):
+        self.conn.settimeout(0.01)
         while True:
             sleep(0.01)
-            mes_ang = list_to_str(self.pulse_arm.cur_angles)+"\n"
-            self.send(mes_ang)
-            print("send: ",mes_ang)
-            data = self.conn.recv(1024)
-            #print(len(data))
-            if len(data)>1:
-                data = str(data.decode())
-                data_in =data.split(" ")
-                #print(data[0])
-                #print(len(data_in))
-                
-                if len(data_in)==1:
-                    if "a" in data:
-                        print("Auto")
-                        self.workmode = 1
-                    elif "m" in data:
-                        print("Manual")
-                        self.workmode = 0
-                    elif "s" in data:
-                        print("Start")
-                        #print(self.inp_mass)
-                        print(len(self.inp_mass))
-                        self.prog_signal.emit(self.inp_mass)
-                        #self.pulse_app.text_prog_code.setText(self.inp_mass)
-                        self.workmode = 3
+            mes_ang = list_to_str(self.pulse_arm.cur_angles) + "\n"
+            try:
+                self.send(mes_ang)
+            except (BrokenPipeError, ConnectionResetError):
+                print("Клиент отключился при отправке")
+                break
 
-                    elif "c" in data:
-                        print("Clear")
-                        self.inp_mass = ""
-                    
-                    elif "b" in data:
-                        print("Base")
-                        self.base = 1
-                    elif "f" in data:
-                        #print("pos",self.pulse_arm.cur_posit)
-                        pos = self.pulse_arm.cur_posit+" pulse \n"
-                        print(pos.encode())
-                        self.conn.send(pos.encode())
-                        self.workmode = 0
-                if len(data_in)>5:
-                    #print("data add")
-                    self.inp_mass+=data
+            try:
+                data = self.conn.recv(1024)
+                if not data:  # клиент закрыл соединение
+                    print("Соединение закрыто клиентом")
+                    break
+                # Обработка полученных данных
+                data_str = data.decode().strip()
+                if data_str:
+                    # Ваша логика обработки команд
+                    self.process_command(data_str)
+            except socket.timeout:
+                # Ничего не пришло – просто продолжаем цикл
+                continue
+            except Exception as e:
+                print(f"Ошибка при приёме: {e}")
+                break
+    
+    def process_command(self,data_str):
+
+        if len(data_str)>1:
+            data = data_str
+            data_in =data.split(" ")
+            #print(data[0])
+            #print(len(data_in))
+            
+            if len(data_in)==1:
+                if "a" in data:
+                    print("Auto")
+                    self.workmode = 1
+                elif "m" in data:
+                    print("Manual")
+                    self.workmode = 0
+                elif "s" in data:
+                    print("Start")
+                    #print(self.inp_mass)
+                    print(len(self.inp_mass))
+                    self.prog_signal.emit(self.inp_mass)
+                    #self.pulse_app.text_prog_code.setText(self.inp_mass)
+                    self.workmode = 3
+
+                elif "c" in data:
+                    print("Clear")
+                    self.inp_mass = ""
+                
+                elif "b" in data:
+                    print("Base")
+                    self.base = 1
+                elif "f" in data:
+                    #print("pos",self.pulse_arm.cur_posit)
+                    pos = self.pulse_arm.cur_posit+" pulse \n"
+                    print(pos.encode())
+                    self.conn.send(pos.encode())
+                    self.workmode = 0
+            if len(data_in)>5:
+                #print("data add")
+                self.inp_mass+=data
             
 
 class RobPosThread(QtCore.QThread):
