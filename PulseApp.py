@@ -323,7 +323,9 @@ class RemoteControlThread(QtCore.QThread):
     def run(self):
         while True:
             sleep(0.01)
-            self.send(list_to_str(self.pulse_arm.cur_angles))
+            mes_ang = list_to_str(self.pulse_arm.cur_angles)+"\n"
+            self.send(mes_ang)
+            print("send: ",mes_ang)
             data = self.conn.recv(1024)
             #print(len(data))
             if len(data)>1:
