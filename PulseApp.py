@@ -388,6 +388,7 @@ class RobPosThread(QtCore.QThread):
 
     def run(self):
         i=0
+        servo_is_running= False
         while True:
             #i+=1
             #print(i)
@@ -395,7 +396,14 @@ class RobPosThread(QtCore.QThread):
             if self.pulse_arm.servo_running:
                 
                 self.pulse_arm.servo_handler(self.target_pos_servo)
+                servo_is_running = True
             else:
+
+                if servo_is_running:
+                    servo_is_running = False
+                    self.pulse_arm.stop_servo_control_sec()
+                
+
                 
                 pose_pulse = self.pulse_arm.get_pose()
                 angles = pose_pulse.angles  

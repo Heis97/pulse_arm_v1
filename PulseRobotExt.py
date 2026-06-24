@@ -557,6 +557,11 @@ class PulseRobotExt(object):
     def stop_servo_control(self):
         if self.controller_v3 is RobotType.pulse_v36b:
             self.servo_running = False
+            #self.robot_v36b.motion.realtime.stopj()
+            #self.robot_v36b.motion.mode.set("hold") 
+
+    def stop_servo_control_sec(self):
+        if self.controller_v3 is RobotType.pulse_v36b:
             self.robot_v36b.motion.realtime.stopj()
             self.robot_v36b.motion.mode.set("hold") 
 
