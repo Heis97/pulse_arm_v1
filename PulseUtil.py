@@ -249,6 +249,17 @@ def calc_forward_kinem_pulse(q:Pose3D,rad:bool = False,n = 6, controller:RobotTy
         L21 = -0.405
         L31 = -0.3722
 
+    if controller is RobotType.pulse_v36b:
+        L1 = 0.1725
+        L2 = -0.405
+        L3 = -0.37
+        L4 = 0.1398
+        L5 = 0.1398
+        L6 = 0.141
+
+        L21 = 0.156
+        L31 = -0.148
+
         #RC5 A
         """L1 = 0.1725
         L2 = 0.156
@@ -274,9 +285,9 @@ def calc_forward_kinem_pulse(q:Pose3D,rad:bool = False,n = 6, controller:RobotTy
     #taad
     dh_params = [
         [ q.angles[0], np.pi / 2, 0, L1],
-        [ q.angles[1],  0, L2, L21],
-        [ q.angles[2],  0, L3, L31],
-        [ q.angles[3], np.pi / 2, 0, L4],
+        [ q.angles[1],  0, L2, 0],
+        [ q.angles[2],  0, L3, 0],
+        [ q.angles[3], np.pi / 2, 0, L4+L21+L31],
         [ q.angles[4], -np.pi / 2, 0, L5],
         [ q.angles[5],  0, 0, L6]       
     ]

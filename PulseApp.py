@@ -482,25 +482,25 @@ class PulseApp(QtWidgets.QWidget):
         self.plotter = Plotter(self)
         #self.test_kin_v3()
         #self.test2()
-        #self.comp_rc5()
+        self.comp_rc5()
         
 
     def comp_rc5(self):
         angles = [155.107,-91.8457,82.953987,14.06147,116.421089,-83.67874]
 
         poses = [
-            [0,-180,0,-90,0,0],
-            #[0,-90,-90,-90,0,0],
+            #[0,-180,0,-90,0,0],
+            [155.107,-91.8457,82.953987,14.06147,116.421089,-83.67874],
             #[0,-90,0,0,0,0],
             #[0,-90,0,-90,90,0],            
-            [0,-90,0,-90,0,0]
+            #[0,-90,0,-90,0,0]
         ]
-
+        
         positions = [
-            [911.2,-293.1,171.1,20.468,-89.519,69.227],
-            #[508.9,-293.46,578.65,45.837,-89.733,43.587],
+            #[911.2,-293.1,171.1,20.468,-89.519,69.227],
+            [463.73, -123.02, 484.86, 2.41, 1.47, 1.5],
             #[-143.37,]
-            [-3.07,-288.39,1088.37,-90,0,179.5]
+            #[-3.07,-288.39,1088.37,-90,0,179.5]
         ]
         for i in range(len(poses)):
             self.print_pos_ang(poses[i],positions[i])
@@ -511,6 +511,7 @@ class PulseApp(QtWidgets.QWidget):
         pose.current_time = datetime.datetime.now()
         #print(pose.angles)
         position:Point3D = q_to_p(pose,False,controller_v3)
+
         m = pulse_matrix_p(position)
         position2 = p3d_from_matrix_pulse_v3(m)
         #print(position.ToStringPulseMM(2))
