@@ -351,7 +351,7 @@ class RemoteControlThread(QtCore.QThread):
                 break
     
     def process_command(self,data_str:str):
-        #print(data_str)
+        print(data_str)
         if len(data_str)>1:
             data = data_str.strip()
             data_in =data.split(" ")
