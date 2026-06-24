@@ -300,6 +300,8 @@ class RobAnimThread(QtCore.QThread):
 
 class RemoteControlThread(QtCore.QThread):
     prog_signal = QtCore.pyqtSignal(str) 
+    command_signal = QtCore.pyqtSignal(str) 
+    servo_signal = QtCore.pyqtSignal(str) 
     def __init__(self,pulse_app:"PulseApp"):
         QtCore.QThread.__init__(self)  
         
@@ -324,7 +326,7 @@ class RemoteControlThread(QtCore.QThread):
         self.conn.settimeout(0.01)
         while True:
             sleep(0.01)
-            mes_ang = list_to_str(self.pulse_arm.cur_angles, " ",False) + "\n"
+            mes_ang = list_to_str(self.pulse_arm.cur_angles, ", ",False) + "\n"
             try:
                 self.send(mes_ang)
             except (BrokenPipeError, ConnectionResetError):
@@ -378,15 +380,31 @@ class RemoteControlThread(QtCore.QThread):
                 elif "b" in data:
                     print("Base")
                     self.base = 1
+                
+
+
                 elif "f" in data:
                     #print("pos",self.pulse_arm.cur_posit)
                     pos = self.pulse_arm.cur_posit+" pulse \n"
                     print(pos.encode())
                     self.conn.send(pos.encode())
                     self.workmode = 0
+
+                
+                elif "d" in data:
+                    print("servo_on")
+                    self.prog_signal.emit("d")
+
+                elif "e" in data:
+                    print("servo_off")
+                    self.prog_signal.emit("e")
             if len(data_in)>5:
                 #print("data add")
-                self.inp_mass+=data
+                if "pose" in data_in[0] and len(data_in)>6:
+                    self.servo_signal.emit(data)
+                
+                pass
+                #self.inp_mass+=data
             
 
 class RobPosThread(QtCore.QThread):
@@ -972,9 +990,28 @@ class PulseApp(QtWidgets.QWidget):
     def start_remote_control(self):
         self.pulse_robot.rem_thr = RemoteControlThread(self)
         self.pulse_robot.rem_thr.prog_signal.connect(self.set_prog_text, QtCore.Qt.QueuedConnection)
+
+        self.pulse_robot.rem_thr.command_signal.connect(self.set_command, QtCore.Qt.QueuedConnection)
+        self.pulse_robot.rem_thr.servo_signal.connect(self.set_pos_servo, QtCore.Qt.QueuedConnection)
+
         self.coords_thread.send_com_signal.connect( self.pulse_robot.rem_thr.send, QtCore.Qt.QueuedConnection)
         #self.pulse_robot.rem_thr.prog_signal.connect(self.set_prog_text, QtCore.Qt.QueuedConnection)
 
+    def set_command(self,val):
+        if "d" in val:
+            self.real_time_control_on()
+        elif "e" in val:
+            self.real_time_control_off()
+        
+
+    def set_pos_servo(self,data:str):
+        data_in = data.split(" ")
+        if "pose" in data_in[0] and len(data_in)>6:
+            p_str = self.prep_for_p_str(data_in)
+            self.set_servo_target_pos_str(p_str)
+    
+    def prep_for_p_str(self):
+        pass
 
     def set_prog_text(self,val):
         self.text_prog_code.setText(val)
@@ -1557,6 +1594,9 @@ class PulseApp(QtWidgets.QWidget):
     def set_servo_target_pos(self):
         p_str = self.lin_servo_target_pos.text()
         print("emit",p_str)
+        self.servo_target_signal.emit(p_str)
+
+    def set_servo_target_pos_str(self,p_str):
         self.servo_target_signal.emit(p_str)
 
     def real_time_control_on(self):
