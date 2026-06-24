@@ -319,7 +319,7 @@ class RemoteControlThread(QtCore.QThread):
         self.start()   
 
     def send(self,mes:str):
-        print(mes)
+        #print(mes)
         self.conn.send((mes+"\n").encode())
 
     def run(self):
@@ -350,10 +350,10 @@ class RemoteControlThread(QtCore.QThread):
                 print(f"Ошибка при приёме: {e}")
                 break
     
-    def process_command(self,data_str):
-
+    def process_command(self,data_str:str):
+        #print(data_str)
         if len(data_str)>1:
-            data = data_str
+            data = data_str.strip()
             data_in =data.split(" ")
             #print(data[0])
             #print(len(data_in))
@@ -393,15 +393,31 @@ class RemoteControlThread(QtCore.QThread):
                 
                 elif "d" in data:
                     print("servo_on")
-                    self.prog_signal.emit("d")
+                    self.command_signal.emit("ddd")
 
                 elif "e" in data:
                     print("servo_off")
-                    self.prog_signal.emit("e")
-            if len(data_in)>5:
+                    self.command_signal.emit("eee")
+            if len(data_in)>1:
                 #print("data add")
-                if "pose" in data_in[0] and len(data_in)>6:
-                    self.servo_signal.emit(data)
+                print(data)
+                data_pose = data.replace("  "," ")
+                data_pose = data_pose.replace("  "," ")
+                data_pose = data_pose.replace(", ",",")
+                data_pose = data_pose.replace(" ,",",")
+                print(data_pose)
+                print(len(data_pose.split(" ")))
+                if len(data_pose.split(" "))<2:
+                    return
+                liter = data_pose.split(" ")[0]
+                data_pose = data_pose.split(" ")[1]
+                len_q = len(data_pose.split(","))
+                print(data_pose)
+                print("ose" in liter,liter)
+                print(len_q)
+                if "ose" in liter and len_q==6:
+
+                    self.servo_signal.emit(data_pose)
                 
                 pass
                 #self.inp_mass+=data
@@ -997,18 +1013,20 @@ class PulseApp(QtWidgets.QWidget):
         self.coords_thread.send_com_signal.connect( self.pulse_robot.rem_thr.send, QtCore.Qt.QueuedConnection)
         #self.pulse_robot.rem_thr.prog_signal.connect(self.set_prog_text, QtCore.Qt.QueuedConnection)
 
-    def set_command(self,val):
+    def set_command(self,val:str):
+        print("emit set_com")
         if "d" in val:
+            print("emit servo on")
             self.real_time_control_on()
         elif "e" in val:
+            print("emit servo off")
             self.real_time_control_off()
         
 
     def set_pos_servo(self,data:str):
-        data_in = data.split(" ")
-        if "pose" in data_in[0] and len(data_in)>6:
-            p_str = self.prep_for_p_str(data_in)
-            self.set_servo_target_pos_str(p_str)
+
+        
+        self.set_servo_target_pos_str(data)
     
     def prep_for_p_str(self):
         pass
@@ -1593,10 +1611,11 @@ class PulseApp(QtWidgets.QWidget):
 
     def set_servo_target_pos(self):
         p_str = self.lin_servo_target_pos.text()
-        print("emit",p_str)
+        #print("emit",p_str)
         self.servo_target_signal.emit(p_str)
 
     def set_servo_target_pos_str(self,p_str):
+        print("emit",p_str)
         self.servo_target_signal.emit(p_str)
 
     def real_time_control_on(self):

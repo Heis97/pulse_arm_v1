@@ -594,7 +594,7 @@ class PulseRobotExt(object):
             for _ in range(burst):
                 t_s = self.samples_sent * CYCLE_TIME_S
                 #p = (36.0, -120.0, 120.0, -90.0, -90.0, 0.0)
-                print(target_pos)
+                #print(target_pos)
                 self.robot_v36b.motion.realtime.servoj(target_pos,time=CYCLE_TIME_S,units='deg')
                 self.samples_sent += 1
 
