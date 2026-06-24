@@ -63,6 +63,7 @@ class PulseRobotExt(object):
     base: Point3D = Point3D(0,0,0)
     tool: Point3D = Point3D(0,0,0)
     cur_posit :str = ""
+    cur_angles :tuple[float] = (0,0,0,0,0,0)
     buf_pos_3d : list[Point3D] = []
     buf_len:int = 20
     cur_posit_3d : Point3D = None

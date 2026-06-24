@@ -322,6 +322,8 @@ class RemoteControlThread(QtCore.QThread):
 
     def run(self):
         while True:
+            sleep(0.01)
+            self.send(list_to_str(self.pulse_arm.cur_angles))
             data = self.conn.recv(1024)
             #print(len(data))
             if len(data)>1:
@@ -329,6 +331,7 @@ class RemoteControlThread(QtCore.QThread):
                 data_in =data.split(" ")
                 #print(data[0])
                 #print(len(data_in))
+                
                 if len(data_in)==1:
                     if "a" in data:
                         print("Auto")
@@ -394,7 +397,9 @@ class RobPosThread(QtCore.QThread):
             #print(i)
             #try:
             if self.pulse_arm.servo_running:
-                
+                pose_pulse = self.pulse_arm.get_pose()
+                self.pulse_arm.cur_angles = pose_pulse.angles
+                self.label.setText("Joint position:\n"+list_to_str(pose_pulse.angles)+"\n\n")
                 self.pulse_arm.servo_handler(self.target_pos_servo)
                 servo_is_running = True
             else:
@@ -406,6 +411,9 @@ class RobPosThread(QtCore.QThread):
 
                 
                 pose_pulse = self.pulse_arm.get_pose()
+                self.pulse_arm.cur_angles = pose_pulse.angles
+                #print(self.pulse_arm.cur_angles)
+
                 angles = pose_pulse.angles  
                 
                 pose = Pose3D(angles)
