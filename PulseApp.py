@@ -1557,7 +1557,7 @@ class PulseApp(QtWidgets.QWidget):
 
         self.lin_servo_target_pos = QLineEdit(self)
         self.lin_servo_target_pos.setGeometry(QtCore.QRect(650, 920, 140, 30))
-        self.lin_servo_target_pos.setText("36.0, -120.0, 120.0, -90.0, -90.0, 0.0")
+        self.lin_servo_target_pos.setText("28.0, -75.0, 120.0, -30.0, 30.0, 0.0")
 
         self.lin_vel_prog = QLineEdit(self)
         self.lin_vel_prog.setGeometry(QtCore.QRect(900, 840, 80, 30))
