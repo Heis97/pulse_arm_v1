@@ -438,9 +438,9 @@ class RobPosThread(QtCore.QThread):
         slot.connect(self.set_writing)
         slot2.connect(self.set_target_pos_servo)
     def set_target_pos_servo(self,val):
-        print("signal",val)
+        #print("signal",val)
         self.target_pos_servo = str_to_tuple(val)
-        print(self.target_pos_servo)
+        #print(self.target_pos_servo)
 
     def set_writing(self,val):
         self.writing = val
@@ -465,15 +465,19 @@ class RobPosThread(QtCore.QThread):
                 if servo_is_running:
                     servo_is_running = False
                     self.pulse_arm.stop_servo_control_sec()
+
+                
                 
 
                 
                 pose_pulse = self.pulse_arm.get_pose()
                 self.pulse_arm.cur_angles = pose_pulse.angles
+
+
                 #print(self.pulse_arm.cur_angles)
 
                 angles = pose_pulse.angles  
-                
+                self.target_pos_servo = pose_pulse.angles
                 pose = Pose3D(angles)
                 pose.current_time = datetime.datetime.now()
                 position_t = self.pulse_arm.get_position()
