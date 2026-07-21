@@ -1,9 +1,10 @@
 from time import sleep
+import time
 import datetime
 import sys
 from PyQt5 import QtCore,  QtWidgets
 from PyQt5.QtWidgets import (QPushButton, QLineEdit, QApplication,QTextEdit,QLabel,QComboBox,QRadioButton,QButtonGroup)
-from PyQt5.QtCore import Qt,QRect,QPointF
+from PyQt5.QtCore import Qt,QRect, QTimer,QPointF
 from enum import Enum
 import json
 import math
@@ -15,6 +16,24 @@ from PulseUtil import *
 from KukaRobot import *
 from PulseRobotExt import *
 from Plotter import Plotter
+from datetime import datetime
+
+
+import ctypes
+from ctypes import wintypes
+
+# Объявляем функции WinAPI
+winmm = ctypes.WinDLL('winmm')
+timeBeginPeriod = winmm.timeBeginPeriod
+timeBeginPeriod.argtypes = [wintypes.UINT]
+timeBeginPeriod.restype = wintypes.UINT
+timeEndPeriod = winmm.timeEndPeriod
+timeEndPeriod.argtypes = [wintypes.UINT]
+timeEndPeriod.restype = wintypes.UINT
+
+# Включаем разрешение 1 мс
+timeBeginPeriod(1)
+
 
 controller_v3 = RobotType.pulse_v36b
 
@@ -405,18 +424,18 @@ class RemoteControlThread(QtCore.QThread):
                 data_pose = data_pose.replace("  "," ")
                 data_pose = data_pose.replace(", ",",")
                 data_pose = data_pose.replace(" ,",",")
-                print(data_pose)
-                print(len(data_pose.split(" ")))
+                print("data_pose",data_pose)
+                #print(len(data_pose.split(" ")))
                 if len(data_pose.split(" "))<2:
                     return
                 liter = data_pose.split(" ")[0]
                 data_pose = data_pose.split(" ")[1]
                 len_q = len(data_pose.split(","))
-                print(data_pose)
-                print("ose" in liter,liter)
-                print(len_q)
+                #print(data_pose)
+                #print("ose" in liter,liter)
+                #print(len_q)
                 if "ose" in liter and len_q==6:
-
+                    print("data_pose",data_pose)
                     self.servo_signal.emit(data_pose)
                 
                 pass
@@ -425,6 +444,7 @@ class RemoteControlThread(QtCore.QThread):
 
 class RobPosThread(QtCore.QThread):
     send_com_signal = QtCore.pyqtSignal(str)
+    mcs = 0
     def __init__(self,pulse_arm:PulseRobotExt, label:QLabel, slot,slot2):
         QtCore.QThread.__init__(self)   
         self.pulse_arm = pulse_arm
@@ -434,9 +454,16 @@ class RobPosThread(QtCore.QThread):
         self.writing = False
         self.feedback = []
         self.target_pos_servo = (36.0, -120.0, 120.0, -90.0, -90.0, 0.0)
+
+        #self.interval = 2
+        #self.timer = None
         #data_signal = QtCore.pyqtSignal(str)
         slot.connect(self.set_writing)
         slot2.connect(self.set_target_pos_servo)
+        self._running = True  
+        winmm = ctypes.WinDLL('winmm')
+        winmm.timeBeginPeriod(1)
+        self.mcs = datetime.now().microsecond
     def set_target_pos_servo(self,val):
         #print("signal",val)
         self.target_pos_servo = str_to_tuple(val)
@@ -447,82 +474,110 @@ class RobPosThread(QtCore.QThread):
         if self.writing:
             self.feedback = []
 
+    def run_v1(self):
+        self.timer = QTimer()
+        # Подключаем метод, который будет вызываться постоянно
+        self.timer.timeout.connect(self.do_work)
+        # Запускаем таймер с заданным интервалом
+        self.mcs = datetime.now().microsecond
+        self.timer.start(self.interval)
+        print("run")
+        # Запускаем цикл обработки событий потока
+        self.exec_()
     def run(self):
+        # Запоминаем время следующего вызова
+        next_time = time.perf_counter()
+        
+        while self._running:
+            # Выполняем полезную работу
+            self.do_work()
+            
+            # Планируем следующий вызов через 1 мс
+            next_time += 0.001
+            sleep_time = next_time - time.perf_counter()
+            if sleep_time > 0:
+                time.sleep(sleep_time)   # точный сон после timeBeginPeriod(1)
+            else:
+                # Если мы отстали (do_work заняла >1 мс) — переносим точку отсчёта
+                next_time = time.perf_counter() + 0.001
+    def do_work(self):
         i=0
         servo_is_running= False
-        while True:
-            #i+=1
-            #print(i)
-            #try:
-            if self.pulse_arm.servo_running:
-                pose_pulse = self.pulse_arm.get_pose()
-                self.pulse_arm.cur_angles = pose_pulse.angles
-                self.label.setText("Joint position:\n"+list_to_str(pose_pulse.angles)+"\n\n")
-                self.pulse_arm.servo_handler(self.target_pos_servo)
-                servo_is_running = True
-            else:
-
-                if servo_is_running:
-                    servo_is_running = False
-                    self.pulse_arm.stop_servo_control_sec()
-
-                
-                
-
-                
-                pose_pulse = self.pulse_arm.get_pose()
-                self.pulse_arm.cur_angles = pose_pulse.angles
-
-
-                #print(self.pulse_arm.cur_angles)
-
-                angles = pose_pulse.angles  
-                self.target_pos_servo = pose_pulse.angles
-                pose = Pose3D(angles)
-                pose.current_time = datetime.datetime.now()
-                position_t = self.pulse_arm.get_position()
-                #print(pose.angles)
-                position:Point3D = q_to_p(pose,False,controller_v3)
-                
-                position = p3d_cur_pulse(position,self.pulse_arm.tool,self.pulse_arm.base)
-                self.label.setText("Joint position:\n"+list_to_str(angles)+"\n\n")
-                sleep(self.timeDelt)
-
-            #print("mm: ",position.ToStringPulseMM())
-            """m_pos_t = pulse_matrix_p(position_to_p3d(position_t))
-            m_pos = pulse_matrix_p(position)
-            print("m_pos")
-            print(m_pos)
-            print("m_pos_t")
-            print(m_pos_t)"""
-            
-
-            """self.label.setText("Joint position:\n"+list_to_str(angles)+"\n\n"+"Cartesian position:\n"+position_to_str(position_t)
-                                +"\n\n"+"Cartesian position_int:\n"+position.ToStringPulseMM())  
-            
-
-            self.pulse_arm.cur_posit_3d = position_to_p3d( position_t )
-            self.pulse_arm.cur_posit = position_to_p3d( position_t ).ToStringPulseMM(4," ")
-            self.pulse_arm.update_buf()
-            self.pulse_arm.current_progress_prog()
-            cur_com = self.pulse_arm.cur_i_prog
-
-            if self.pulse_arm.cur_prog_3d is not None:
-                cur_p = self.pulse_arm.cur_prog_3d[cur_com]
-                mes = str(cur_p.g)+" "+str(cur_p.b)
-                self.send_com_signal.emit(mes)
-            
-            
-
-
-            self.label.setText(self.label.text()+"\n Line: "+str(self.pulse_arm.cur_i_prog)+", "+str(self.pulse_arm.cur_progr_line)+"%")
-            if self.writing:
-                self.feedback.append(str(pose))"""
-            #except BaseException:
-             #   pass
-
         
-            #
+        #while True:
+        #i+=1
+        #print(i)
+        #try:
+        dt_cur = datetime.now().microsecond - self.mcs
+        if(dt_cur>1900):
+            print(dt_cur)
+        self.mcs =datetime.now().microsecond
+        if self.pulse_arm.servo_running:
+            pose_pulse = self.pulse_arm.get_pose()
+            self.pulse_arm.cur_angles = pose_pulse.angles
+            #self.label.setText("Joint position:\n"+list_to_str(pose_pulse.angles)+"\n\n")
+            self.pulse_arm.servo_handler(self.target_pos_servo)
+            servo_is_running = True
+
+        else:
+            #pass
+            if servo_is_running:
+                servo_is_running = False
+                self.pulse_arm.stop_servo_control_sec()
+
+            pose_pulse = self.pulse_arm.get_pose()
+            self.pulse_arm.cur_angles = pose_pulse.angles
+            self.target_pos_servo = pose_pulse.angles
+            """#print(self.pulse_arm.cur_angles)
+
+            angles = pose_pulse.angles  
+            self.target_pos_servo = pose_pulse.angles
+            pose = Pose3D(angles)
+            pose.current_time = datetime.datetime.now()
+            position_t = self.pulse_arm.get_position()
+            #print(pose.angles)
+            position:Point3D = q_to_p(pose,False,controller_v3)
+            
+            position = p3d_cur_pulse(position,self.pulse_arm.tool,self.pulse_arm.base)
+            self.label.setText("Joint position:\n"+list_to_str(angles)+"\n\n")"""
+
+        #sleep(self.timeDelt)
+
+        #print("mm: ",position.ToStringPulseMM())
+        """m_pos_t = pulse_matrix_p(position_to_p3d(position_t))
+        m_pos = pulse_matrix_p(position)
+        print("m_pos")
+        print(m_pos)
+        print("m_pos_t")
+        print(m_pos_t)"""
+        
+
+        """self.label.setText("Joint position:\n"+list_to_str(angles)+"\n\n"+"Cartesian position:\n"+position_to_str(position_t)
+                            +"\n\n"+"Cartesian position_int:\n"+position.ToStringPulseMM())  
+        
+
+        self.pulse_arm.cur_posit_3d = position_to_p3d( position_t )
+        self.pulse_arm.cur_posit = position_to_p3d( position_t ).ToStringPulseMM(4," ")
+        self.pulse_arm.update_buf()
+        self.pulse_arm.current_progress_prog()
+        cur_com = self.pulse_arm.cur_i_prog
+
+        if self.pulse_arm.cur_prog_3d is not None:
+            cur_p = self.pulse_arm.cur_prog_3d[cur_com]
+            mes = str(cur_p.g)+" "+str(cur_p.b)
+            self.send_com_signal.emit(mes)
+        
+        
+
+
+        self.label.setText(self.label.text()+"\n Line: "+str(self.pulse_arm.cur_i_prog)+", "+str(self.pulse_arm.cur_progr_line)+"%")
+        if self.writing:
+            self.feedback.append(str(pose))"""
+        #except BaseException:
+            #   pass
+
+    
+        #
 
 
 
@@ -586,7 +641,7 @@ class PulseApp(QtWidgets.QWidget):
 
     def print_pos_ang(self,angle,posit):
         pose = Pose3D(angle)
-        pose.current_time = datetime.datetime.now()
+        pose.current_time = datetime.now()
         #print(pose.angles)
         position:Point3D = q_to_p(pose,False,controller_v3)
 
@@ -974,9 +1029,9 @@ class PulseApp(QtWidgets.QWidget):
 
     def build_connection(self):
 
-        self.viewer3d = GLWidget(self)
+        """self.viewer3d = GLWidget(self)
         self.viewer3d.setGeometry(QtCore.QRect(900, 10, 600, 600))
-        self.viewer3d.draw_start_frame(10.)
+        self.viewer3d.draw_start_frame(10.)"""
         #self.draw_rob3d()
 
         self.but_connect_robot = QPushButton('Подключиться', self)
@@ -1561,7 +1616,7 @@ class PulseApp(QtWidgets.QWidget):
 
         self.lin_servo_target_pos = QLineEdit(self)
         self.lin_servo_target_pos.setGeometry(QtCore.QRect(650, 920, 140, 30))
-        self.lin_servo_target_pos.setText("28.0, -75.0, 120.0, -30.0, 30.0, 0.0")
+        self.lin_servo_target_pos.setText("55.0, -70.0, 125.0, -67.0, 49.0, -20.0")
 
         self.lin_vel_prog = QLineEdit(self)
         self.lin_vel_prog.setGeometry(QtCore.QRect(900, 840, 80, 30))
@@ -2011,3 +2066,4 @@ if __name__ == '__main__':
     pulse = PulseApp()
     pulse.show()
     sys.exit(app.exec_())
+    timeEndPeriod(1)

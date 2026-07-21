@@ -41,6 +41,7 @@ def pos_v1_to_v3(p_l):
 
 
 host_old = "http://10.10.10.20:8081"
+
 #host_v3 = "192.168.0.50"#cyto 
 host_v3 = "192.168.10.71"#misis
 #host_v36 = "192.168.0.10"#old rc5
@@ -49,7 +50,7 @@ host_v36b = "10.10.10.3"#new rc5
 
 TARGET_BURST: int = 16  # Максимальный размер пачки за один цикл
 SAFETY_MARGIN: int = 1  # Резерв слотов для избежания переполнения
-ACK_TIMEOUT_S: float = 1.0  # Таймаут ожидания подтверждения от контроллера
+ACK_TIMEOUT_S: float = 0.05  # Таймаут ожидания подтверждения от контроллера
 POLL_INTERVAL_S: float = 0.002  # Базовый интервал опроса RTD-статуса
 CYCLE_TIME_S: float = 0.002  # 2 мс (500 Гц)
 
@@ -566,8 +567,27 @@ class PulseRobotExt(object):
             self.robot_v36b.motion.realtime.stopj()
             self.robot_v36b.motion.mode.set("hold") 
 
-    
+    last_rtd_ts = None
+    real_time_count = 0
     def servo_handler(self,target_pos):
+        if self.servo_running:
+
+            status = self.robot_v36b.motion.realtime.get_motion_queue_status()
+            
+            if status.timestamp[1] == self.last_rtd_ts:
+                #time.sleep(POLL_INTERVAL_S)
+                #return
+                pass
+            self.last_rtd_ts = status.timestamp[1]
+            self.real_time_count+=1
+            if status.available_slots>10: print(status,self.real_time_count)
+            if status.available_slots>8:
+                self.robot_v36b.motion.realtime.servoj(target_pos,time=CYCLE_TIME_S,units='deg')
+                #self.robot_v36b.motion.realtime.servoj(target_pos,time=CYCLE_TIME_S,units='deg')
+                #self.robot_v36b.motion.realtime.servoj(target_pos,time=CYCLE_TIME_S,units='deg')
+            
+            
+    def servo_handler_v1(self,target_pos):
         # Параметры flow-control
         
         if self.servo_running:
@@ -599,12 +619,13 @@ class PulseRobotExt(object):
                 self.samples_sent += 1
 
             # Блокирующее ожидание подтверждения (flow-control)
-            self.robot_v36b.motion.realtime.wait_waypoints_received(
+            """self.robot_v36b.motion.realtime.wait_waypoints_received(
                 base_received_count=base_cnt,
                 expected_delta=burst,
                 timeout=ACK_TIMEOUT_S,
             )
-            time.sleep(0)  # Yield GIL после ACK
+            time.sleep(0)  # Yield GIL после ACK"""
+            print(base_cnt,burst)
 
             # Периодический вывод прогресса
             """now = time.monotonic()

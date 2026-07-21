@@ -449,7 +449,7 @@ class Realtime(LoggerMixin):
         deadline = time.monotonic() + timeout
         last_status: MotionQueueStatus | None = None
         poll_interval = self._RECOMMENDED_TIME
-
+        #print(time.monotonic(),deadline)
         while time.monotonic() < deadline:
             status = self.get_motion_queue_status()
             if status is not None:
@@ -467,7 +467,7 @@ class Realtime(LoggerMixin):
                     return status
 
             time.sleep(poll_interval)
-
+        #print(expected_delta,base_received_count,last_count)
         # Timeout reached
         last_count = last_status.received_count if last_status else None
         raise ApiError(
