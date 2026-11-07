@@ -19,10 +19,10 @@ from Plotter import Plotter
 from datetime import datetime
 
 
-import ctypes
-from ctypes import wintypes
+#import ctypes
+#from ctypes import wintypes
 
-# Объявляем функции WinAPI
+"""# Объявляем функции WinAPI
 winmm = ctypes.WinDLL('winmm')
 timeBeginPeriod = winmm.timeBeginPeriod
 timeBeginPeriod.argtypes = [wintypes.UINT]
@@ -32,7 +32,7 @@ timeEndPeriod.argtypes = [wintypes.UINT]
 timeEndPeriod.restype = wintypes.UINT
 
 # Включаем разрешение 1 мс
-timeBeginPeriod(1)
+timeBeginPeriod(1)"""
 
 
 controller_v3 = RobotType.pulse_v36b
@@ -335,6 +335,7 @@ class RemoteControlThread(QtCore.QThread):
         self.sock.listen(1)
         self.conn, self.addr = self.sock.accept()
         print ('connected:', self.addr)
+        self._running = True
         self.start()   
 
     def send(self,mes:str):
@@ -342,33 +343,53 @@ class RemoteControlThread(QtCore.QThread):
         self.conn.send((mes+"\n").encode())
 
     def run(self):
-        self.conn.settimeout(0.01)
-        while True:
-            sleep(0.01)
-            mes_ang = list_to_str(self.pulse_arm.cur_angles, ", ",False) + "\n"
-            try:
-                self.send(mes_ang)
-            except (BrokenPipeError, ConnectionResetError):
-                print("Клиент отключился при отправке")
-                break
-
-            try:
-                data = self.conn.recv(1024)
-                if not data:  # клиент закрыл соединение
-                    print("Соединение закрыто клиентом")
-                    break
-                # Обработка полученных данных
-                data_str = data.decode().strip()
-                if data_str:
-                    # Ваша логика обработки команд
-                    self.process_command(data_str)
-            except socket.timeout:
-                # Ничего не пришло – просто продолжаем цикл
-                continue
-            except Exception as e:
-                print(f"Ошибка при приёме: {e}")
-                break
+        # Запоминаем время следующего вызова
+        next_time = time.perf_counter()
+        
+        while self._running:
+            # Выполняем полезную работу
+            self.do_work()
+            #time.sleep(0.1)
+            # Планируем следующий вызов через 1 мс
+            next_time += 0.02
+            sleep_time = next_time - time.perf_counter()
+            if sleep_time > 0:
+                time.sleep(sleep_time)   # точный сон после timeBeginPeriod(1)
+            else:
+                # Если мы отстали (do_work заняла >1 мс) — переносим точку отсчёта
+                next_time = time.perf_counter() + 0.02
     
+    def do_work(self):
+        self.conn.settimeout(0.01)
+        #while True:
+            #sleep(0.01)
+        mes_ang = list_to_str(self.pulse_arm.cur_angles, ", ",False) + "\n"
+        #print(mes_ang)
+        try:
+            self.send(mes_ang)
+            #print("mes_ang send")
+        except Exception as e:
+            print(f"err send: {e}")
+            
+
+        try:
+            data = self.conn.recv(1024)
+            if not data:  # клиент закрыл соединение
+                return
+                #print("Соединение закрыто клиентом")
+                
+            # Обработка полученных данных
+            data_str = data.decode().strip()
+            if data_str:
+                # Ваша логика обработки команд
+                self.process_command(data_str)
+        except socket.timeout:
+            # Ничего не пришло – просто продолжаем цикл
+            return
+        except Exception as e:
+            print(f"Ошибка при приёме: {e}")
+           
+
     def process_command(self,data_str:str):
         print(data_str)
         if len(data_str)>1:
@@ -450,7 +471,7 @@ class RobPosThread(QtCore.QThread):
         self.pulse_arm = pulse_arm
         self.label = label
         self.timeDelt = 0.002
-        self.start()   
+        
         self.writing = False
         self.feedback = []
         self.target_pos_servo = (36.0, -120.0, 120.0, -90.0, -90.0, 0.0)
@@ -461,9 +482,11 @@ class RobPosThread(QtCore.QThread):
         slot.connect(self.set_writing)
         slot2.connect(self.set_target_pos_servo)
         self._running = True  
-        winmm = ctypes.WinDLL('winmm')
-        winmm.timeBeginPeriod(1)
+        #winmm = ctypes.WinDLL('winmm')
+        #winmm.timeBeginPeriod(1)
         self.mcs = datetime.now().microsecond
+
+        self.start()   
     def set_target_pos_servo(self,val):
         #print("signal",val)
         self.target_pos_servo = str_to_tuple(val)
@@ -528,6 +551,7 @@ class RobPosThread(QtCore.QThread):
             pose_pulse = self.pulse_arm.get_pose()
             self.pulse_arm.cur_angles = pose_pulse.angles
             self.target_pos_servo = pose_pulse.angles
+            #print(self.pulse_arm.cur_angles)
             """#print(self.pulse_arm.cur_angles)
 
             angles = pose_pulse.angles  

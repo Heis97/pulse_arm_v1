@@ -46,7 +46,8 @@ host_old = "http://10.10.10.20:8081"
 host_v3 = "192.168.10.71"#misis
 #host_v36 = "192.168.0.10"#old rc5
 host_v36 = "10.10.10.3"#new rc5
-host_v36b = "10.10.10.3"#new rc5
+#host_v36b = "10.10.10.3"#new rc5
+host_v36b = "127.0.0.1"#new rc5
 
 TARGET_BURST: int = 16  # Максимальный размер пачки за один цикл
 SAFETY_MARGIN: int = 1  # Резерв слотов для избежания переполнения
