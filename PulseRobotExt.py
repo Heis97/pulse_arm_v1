@@ -425,6 +425,12 @@ class PulseRobotExt(object):
             return self.robot_v36b.motion.mode.set('hold')
         else:
             return
+
+    def get_input(self,ind)->bool:
+        if self.controller_v3 is RobotType.pulse_v36b:
+            return self.robot_v36b.io.digital.get_input(ind)
+        else:
+            return
             
     
     def jogging(self,jogs):

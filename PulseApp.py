@@ -551,6 +551,11 @@ class RobPosThread(QtCore.QThread):
             pose_pulse = self.pulse_arm.get_pose()
             self.pulse_arm.cur_angles = pose_pulse.angles
             self.target_pos_servo = pose_pulse.angles
+
+            inp0 = int(self.pulse_arm.get_input(0))
+            if inp0==1:
+                self.pulse_arm.freeze()
+            #print(inp0)
             #print(self.pulse_arm.cur_angles)
             """#print(self.pulse_arm.cur_angles)
 
@@ -1168,7 +1173,7 @@ class PulseApp(QtWidgets.QWidget):
         i=0
         for axe in axis:           
             self.add_axis_buttons(axe,QtCore.QRect(100+40*i, 340, 30, 30),self.axis_jog,self.stop_jog)
-            self.add_axis_buttons(axe,QtCore.QRect(100+40*i, 440, 30, 30),self.axis_move,None  )
+            self.add_axis_buttons(axe,QtCore.QRect(100+40*i, 440, 30, 30),self.axis_move,self.stop_robot  )
             i+=1
 
         self.b_gr = QButtonGroup()
